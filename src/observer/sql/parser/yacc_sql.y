@@ -89,10 +89,14 @@ UnboundAggregateExpr *create_aggregate_expression(const char *aggregate_name,
         STRING_T
         FLOAT_T
         VECTOR_T
+        DATE_T
         HELP
         EXIT
         DOT //QUOTE
         INTO
+        FIELDS
+        TERMINATED 
+        ENCLOSED 
         VALUES
         FROM
         WHERE
@@ -376,6 +380,7 @@ type:
     | STRING_T { $$ = static_cast<int>(AttrType::CHARS); }
     | FLOAT_T  { $$ = static_cast<int>(AttrType::FLOATS); }
     | VECTOR_T { $$ = static_cast<int>(AttrType::VECTORS); }
+    | DATE_T   { $$ = static_cast<int>(AttrType::DATES); }
     ;
 primary_key:
     /* empty */
@@ -697,6 +702,17 @@ load_data_stmt:
       $$ = new ParsedSqlNode(SCF_LOAD_DATA);
       $$->load_data.relation_name = $7;
       $$->load_data.file_name = tmp_file_name;
+      free(tmp_file_name);
+    }
+    | LOAD DATA INFILE SSS INTO TABLE ID SSS FIELDS TERMINATED BY SSS ENCLOSED BY SSS
+    {
+       char *tmp_file_name = common::substr($4, 1, strlen($4) - 2);
+      
+      $$ = new ParsedSqlNode(SCF_LOAD_DATA);
+      $$->load_data.relation_name = $7;
+      $$->load_data.file_name = tmp_file_name;
+      $$->load_data.terminated_by = $12;
+      $$->load_data.enclosed_by = $15;
       free(tmp_file_name);
     }
     ;

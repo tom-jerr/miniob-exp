@@ -19,6 +19,8 @@ See the Mulan PSL v2 for more details. */
 #include "common/lang/sstream.h"
 #include "common/lang/string.h"
 #include "common/log/log.h"
+#include "common/date.h"
+#include "common/type/attr_type.h"
 
 Value::Value(int val) { set_int(val); }
 
@@ -125,6 +127,10 @@ void Value::set_data(char *data, int length)
       value_.bool_value_ = *(int *)data != 0;
       length_            = length;
     } break;
+    case AttrType::DATES: {
+      value_.date_value_ = *(int32_t *)data;
+      length_            = length;
+    } break;
     default: {
       LOG_WARN("unknown data type: %d", attr_type_);
     } break;
@@ -152,6 +158,20 @@ void Value::set_boolean(bool val)
   attr_type_         = AttrType::BOOLEANS;
   value_.bool_value_ = val;
   length_            = sizeof(val);
+}
+
+void Value::set_date(const Date &date_val)
+{
+  reset();
+  attr_type_ = AttrType::DATES;
+  if (date_val.is_valid()) {
+    value_.date_value_ = date_val.value();
+    length_            = sizeof(int32_t);
+  } else {
+    LOG_WARN("invalid date value");
+    value_.date_value_ = 0;
+    length_            = 0;
+  }
 }
 
 void Value::set_string(const char *s, int len /*= 0*/)
@@ -189,6 +209,9 @@ void Value::set_value(const Value &value)
     } break;
     case AttrType::BOOLEANS: {
       set_boolean(value.get_boolean());
+    } break;
+    case AttrType::DATES: {
+      set_date(value.get_date());
     } break;
     default: {
       ASSERT(false, "got an invalid value type");
@@ -229,7 +252,10 @@ string Value::to_string() const
   return res;
 }
 
-int Value::compare(const Value &other) const { return DataType::type_instance(this->attr_type_)->compare(*this, other); }
+int Value::compare(const Value &other) const
+{
+  return DataType::type_instance(this->attr_type_)->compare(*this, other);
+}
 
 int Value::get_int() const
 {
@@ -326,4 +352,24 @@ bool Value::get_boolean() const
     }
   }
   return false;
+}
+
+Date Value::get_date() const
+{
+  switch (attr_type_) {
+    case AttrType::DATES: {
+      return Date(value_.date_value_);
+    } break;
+    case AttrType::CHARS: {
+      // 尝试从字符串解析日期
+      if (value_.pointer_value_ != nullptr) {
+        return Date::from_string(string(value_.pointer_value_));
+      }
+      return Date();  // 无效日期
+    } break;
+    default: {
+      LOG_WARN("cannot convert type %d to date", attr_type_);
+      return Date();  // 无效日期
+    }
+  }
 }

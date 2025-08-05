@@ -15,6 +15,8 @@ See the Mulan PSL v2 for more details. */
 #pragma once
 
 #include "common/sys/rc.h"
+#include <string>
+#include <vector>
 
 class SQLStageEvent;
 class Table;
@@ -33,5 +35,16 @@ public:
   RC execute(SQLStageEvent *sql_event);
 
 private:
-  void load_data(Table *table, const char *file_name, SqlResult *sql_result);
+  void load_data(
+      Table *table, const char *file_name, std::string terminated, std::string enclosed, SqlResult *sql_result);
 };
+
+/**
+ * @brief 解析CSV行，针对ClickBench数据集优化
+ * @param line CSV行字符串（会被修改）
+ * @param file_values 解析后的字段值向量
+ * @param terminated 字段分隔符
+ * @param enclosed 字段引号字符
+ */
+void parse_csv_line(
+    char *line, std::vector<std::string> &file_values, const std::string &terminated, const std::string &enclosed);

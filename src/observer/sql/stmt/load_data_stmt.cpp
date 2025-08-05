@@ -42,7 +42,11 @@ RC LoadDataStmt::create(Db *db, const LoadDataSqlNode &load_data, Stmt *&stmt)
     LOG_WARN("no such file to load. file name=%s, error=%s", load_data.file_name.c_str(), strerror(errno));
     return RC::FILE_NOT_EXIST;
   }
+  if (!load_data.terminated_by.empty() && !load_data.enclosed_by.empty()) {
+    stmt = new LoadDataStmt(table, load_data.file_name.c_str(), load_data.terminated_by, load_data.enclosed_by);
+  } else {
+    stmt = new LoadDataStmt(table, load_data.file_name.c_str());
+  }
 
-  stmt = new LoadDataStmt(table, load_data.file_name.c_str());
   return rc;
 }

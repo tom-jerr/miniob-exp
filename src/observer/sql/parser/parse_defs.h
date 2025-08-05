@@ -223,6 +223,8 @@ struct LoadDataSqlNode
 {
   string relation_name;
   string file_name;
+  string terminated_by{""};  ///< 导出值的修饰符
+  string enclosed_by{""};    ///< 导出列的结束符
 };
 
 /**
