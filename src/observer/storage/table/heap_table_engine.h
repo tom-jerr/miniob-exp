@@ -35,6 +35,7 @@ public:
     return RC::UNSUPPORTED;
   }
   RC get_record(const RID &rid, Record &record) override;
+  RC get_record_by_key(const char *key, int key_len, Record &record) override { return RC::UNSUPPORTED; }
 
   RC create_index(Trx *trx, const FieldMeta *field_meta, const char *index_name) override;
   RC get_record_scanner(RecordScanner *&scanner, Trx *trx, ReadWriteMode mode) override;

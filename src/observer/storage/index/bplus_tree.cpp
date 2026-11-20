@@ -1721,6 +1721,12 @@ RC BplusTreeHandler::get_value(const char *user_key, int key_len, const char *&v
   return rc;
 }
 
+void BplusTreeHandler::set_next_rowid(int64_t next_rowid)
+{
+  file_header_.next_rowid = next_rowid;
+  header_dirty_           = true;
+}
+
 RC BplusTreeHandler::get_entry(const char *user_key, int key_len, list<RID> &rids)
 {
   BplusTreeScanner scanner(*this);

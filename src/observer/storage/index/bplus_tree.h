@@ -602,6 +602,11 @@ public:
   RC get_value(const char *user_key, int key_len, const char *&value, int &value_len);
 
   /**
+   * @brief 更新头部持久化的 next_rowid（聚簇表引擎使用）
+   */
+  void set_next_rowid(int64_t next_rowid);
+
+  /**
    * @brief 为 COMPOSITE 模式指定逐字段比较规则
    */
   RC set_composite_spec(const vector<KeyComparator::Field> &fields);

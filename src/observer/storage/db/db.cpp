@@ -35,6 +35,10 @@ Db::~Db()
   for (auto &iter : opened_tables_) {
     delete iter.second;
   }
+  opened_tables_.clear();
+
+  // 先关闭 buffer pool：关闭文件时会刷新脏页并写日志，此时 log handler 仍然有效
+  buffer_pool_manager_.reset();
 
   if (log_handler_) {
     // 停止日志并等待写入完成

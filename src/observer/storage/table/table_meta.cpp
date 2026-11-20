@@ -322,8 +322,9 @@ int TableMeta::deserialize(istream &is)
       LOG_ERROR("Invalid table meta. primary keys is not array, json value=%s", fields_value.toStyledString().c_str());
       return -1;
     }
-    const int              primary_key_num = primary_keys_value.size();
-    vector<string> primary_keys(primary_key_num);
+    const int         primary_key_num = primary_keys_value.size();
+    vector<string>    primary_keys;
+    primary_keys.reserve(primary_key_num);
     for (int i = 0; i < primary_key_num; i++) {
       const Json::Value &field_name_value = primary_keys_value[i];
       if (!field_name_value.isString()) {

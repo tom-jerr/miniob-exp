@@ -43,6 +43,16 @@ public:
   virtual RC delete_record_with_trx(const Record &record, Trx *trx)                               = 0;
   virtual RC update_record_with_trx(const Record &old_record, const Record &new_record, Trx *trx) = 0;
   virtual RC get_record(const RID &rid, Record &record)                                           = 0;
+  /**
+   * @brief 按主键编码取记录
+   * @details 仅支持以主键聚簇的引擎实现；其它引擎返回 UNSUPPORTED
+   */
+  virtual RC get_record_by_key(const char *key, int key_len, Record &record) = 0;
+  /**
+   * @brief 新建表时初始化引擎
+   * @details 默认与 open 相同；需要区分建表与重启的引擎覆盖它
+   */
+  virtual RC create() { return open(); }
 
   virtual RC     create_index(Trx *trx, const FieldMeta *field_meta, const char *index_name) = 0;
   virtual RC     get_record_scanner(RecordScanner *&scanner, Trx *trx, ReadWriteMode mode)   = 0;

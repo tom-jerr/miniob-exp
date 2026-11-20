@@ -34,6 +34,7 @@ See the Mulan PSL v2 for more details. */
 #include "storage/record/lsm_record_scanner.h"
 #include "storage/table/heap_table_engine.h"
 #include "storage/table/lsm_table_engine.h"
+#include "storage/table/btree_table_engine.h"
 
 Table::~Table()
 {
@@ -56,11 +57,6 @@ RC Table::create(Db *db, int32_t table_id, const char *path, const char *name, c
   if (attributes.size() == 0) {
     LOG_WARN("Invalid arguments. table_name=%s, attribute_count=%d", name, attributes.size());
     return RC::INVALID_ARGUMENT;
-  }
-
-  if (storage_engine == StorageEngine::BTREE) {
-    LOG_WARN("btree storage engine is not ready. table=%s", name);
-    return RC::UNSUPPORTED;
   }
 
   RC rc = RC::SUCCESS;
@@ -118,12 +114,14 @@ RC Table::create(Db *db, int32_t table_id, const char *path, const char *name, c
     engine_ = make_unique<HeapTableEngine>(&table_meta_, db_, this);
   } else if (table_meta_.storage_engine() == StorageEngine::LSM) {
     engine_ = make_unique<LsmTableEngine>(&table_meta_, db_, this);
+  } else if (table_meta_.storage_engine() == StorageEngine::BTREE) {
+    engine_ = make_unique<BtreeTableEngine>(&table_meta_, db_, this);
   } else {
     rc = RC::UNSUPPORTED;
     LOG_WARN("Unsupported storage engine type: %d", table_meta_.storage_engine());
     return rc;
   }
-  rc = engine_->open();
+  rc = engine_->create();
   if (rc != RC::SUCCESS) {
     LOG_WARN("Failed to open table %s due to engine open failed.", data_file.c_str());
     return rc;
@@ -165,6 +163,8 @@ RC Table::open(Db *db, const char *meta_file, const char *base_dir)
     engine_ = make_unique<HeapTableEngine>(&table_meta_, db_, this);
   }  else if (table_meta_.storage_engine() == StorageEngine::LSM) {
     engine_ = make_unique<LsmTableEngine>(&table_meta_, db_, this);
+  } else if (table_meta_.storage_engine() == StorageEngine::BTREE) {
+    engine_ = make_unique<BtreeTableEngine>(&table_meta_, db_, this);
   } else {
     rc = RC::UNSUPPORTED;
     LOG_ERROR("Unsupported storage engine type: %d", table_meta_.storage_engine());
@@ -207,6 +207,11 @@ RC Table::update_record_with_trx(const Record &old_record, const Record &new_rec
 RC Table::get_record(const RID &rid, Record &record)
 {
   return engine_->get_record(rid, record);
+}
+
+RC Table::get_record_by_key(const char *key, int key_len, Record &record)
+{
+  return engine_->get_record_by_key(key, key_len, record);
 }
 
 const char *Table::name() const { return table_meta_.name(); }

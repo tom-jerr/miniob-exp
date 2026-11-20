@@ -88,6 +88,7 @@ public:
   RC delete_record_with_trx(const Record &record, Trx *trx);
   RC update_record_with_trx(const Record &old_record, const Record &new_record, Trx *trx);
   RC get_record(const RID &rid, Record &record);
+  RC get_record_by_key(const char *key, int key_len, Record &record);
 
   // TODO refactor
   RC create_index(Trx *trx, const FieldMeta *field_meta, const char *index_name);

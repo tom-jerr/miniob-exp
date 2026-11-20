@@ -113,6 +113,11 @@ MvccTrx::~MvccTrx() {}
 
 RC MvccTrx::insert_record(Table *table, Record &record)
 {
+  if (table->table_meta().storage_engine() == StorageEngine::BTREE) {
+    LOG_WARN("btree storage engine only supports vacuous trx. table=%s", table->name());
+    return RC::UNSUPPORTED;
+  }
+
   Field begin_field;
   Field end_field;
   trx_fields(table, begin_field, end_field);
@@ -136,6 +141,11 @@ RC MvccTrx::insert_record(Table *table, Record &record)
 
 RC MvccTrx::delete_record(Table *table, Record &record)
 {
+  if (table->table_meta().storage_engine() == StorageEngine::BTREE) {
+    LOG_WARN("btree storage engine only supports vacuous trx. table=%s", table->name());
+    return RC::UNSUPPORTED;
+  }
+
   Field begin_field;
   Field end_field;
   trx_fields(table, begin_field, end_field);
