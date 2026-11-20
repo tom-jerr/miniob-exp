@@ -2262,7 +2262,7 @@ RC BplusTreeScanner::fix_user_key(
 
   // 这里很粗暴，变长字段才需要做调整，其它默认都不需要做调整
   assert(tree_handler_.file_header_.attr_type == AttrType::CHARS);
-  assert(strlen(user_key) >= static_cast<size_t>(key_len));
+  // key_len 就是可读长度；键可能是已补齐的二进制主键编码，不能用 strlen 判断
 
   *should_inclusive = false;
 

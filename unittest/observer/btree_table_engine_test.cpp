@@ -323,3 +323,63 @@ TEST_F(BtreeTableEngineTest, secondary_and_primary_index_scans_survive_restart)
   ASSERT_NE(nullptr, pk_index);
   ASSERT_EQ(RC::SUCCESS, db_->sync());
 }
+
+TEST_F(BtreeTableEngineTest, char_primary_key_with_secondary_index)
+{
+  init_db();
+
+  vector<AttrInfoSqlNode> attrs;
+  AttrInfoSqlNode         key_attr;
+  key_attr.name   = "k";
+  key_attr.type   = AttrType::CHARS;
+  key_attr.length = 5;
+  attrs.push_back(key_attr);
+  AttrInfoSqlNode value_attr;
+  value_attr.name   = "v";
+  value_attr.type   = AttrType::INTS;
+  value_attr.length = sizeof(int);
+  attrs.push_back(value_attr);
+
+  ASSERT_EQ(RC::SUCCESS,
+      db_->create_table("t_char", attrs, {"k"}, StorageFormat::ROW_FORMAT, StorageEngine::BTREE));
+  Table *table = db_->find_table("t_char");
+  ASSERT_NE(nullptr, table);
+
+  auto insert_char_row = [&](const char *key, int value) {
+    vector<Value> values(2);
+    values[0].set_string(key);
+    values[1].set_int(value);
+    Record record;
+    ASSERT_EQ(RC::SUCCESS, table->make_record(values.size(), values.data(), record));
+    ASSERT_EQ(RC::SUCCESS, table->insert_record(record));
+  };
+  insert_char_row("b", 2);
+  insert_char_row("a", 1);
+
+  char   key[5] = {'a', 0, 0, 0, 0};
+  Record fetched;
+  ASSERT_EQ(RC::SUCCESS, table->get_record_by_key(key, sizeof(key), fetched));
+  int value = 0;
+  memcpy(&value, fetched.data() + 5, sizeof(value));
+  ASSERT_EQ(1, value);
+
+  const FieldMeta *v_field = table->table_meta().field("v");
+  ASSERT_NE(nullptr, v_field);
+  ASSERT_EQ(RC::SUCCESS, table->create_index(nullptr, v_field, "i_v"));
+  Index *v_index = table->find_index("i_v");
+  ASSERT_NE(nullptr, v_index);
+
+  int           probe     = 2;
+  const char   *idx_value = nullptr;
+  int           idx_len   = 0;
+  IndexScanner *scanner   = v_index->create_scanner(
+      reinterpret_cast<const char *>(&probe), sizeof(probe), true,
+      reinterpret_cast<const char *>(&probe), sizeof(probe), true);
+  ASSERT_NE(nullptr, scanner);
+  ASSERT_EQ(RC::SUCCESS, scanner->next_entry(idx_value, idx_len));
+  ASSERT_EQ(RC::SUCCESS, v_index->get_record(table, idx_value, idx_len, fetched));
+  ASSERT_EQ(0, memcmp("b", fetched.data(), 1));
+  memcpy(&value, fetched.data() + 5, sizeof(value));
+  ASSERT_EQ(2, value);
+  scanner->destroy();
+}
