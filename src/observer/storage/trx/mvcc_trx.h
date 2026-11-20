@@ -109,6 +109,9 @@ public:
   int64_t snapshot_seq() const { return snapshot_seq_; }
   bool    started() const { return started_; }
 
+protected:
+  MvccTrxKit &trx_kit() { return trx_kit_; }
+
 private:
   RC   commit_with_trx_id(int64_t commit_id);
   void trx_fields(Table *table, Field &begin_xid_field, Field &end_xid_field) const;

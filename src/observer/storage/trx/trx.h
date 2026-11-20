@@ -107,6 +107,7 @@ public:
   {
     VACUOUS,  ///< 空的事务管理器，不做任何事情
     MVCC,     ///< 支持MVCC的事务管理器
+    OCC,      ///< 快照隔离OCC事务管理器
     LSM,      ///< 支持LSM的事务管理器
   };
 
@@ -158,6 +159,7 @@ public:
 
   virtual int32_t id() const = 0;
   TrxKit::Type    type() const { return type_; }
+  void            set_type(TrxKit::Type type) { type_ = type; }
 
 private:
   TrxKit::Type type_;
