@@ -109,6 +109,7 @@ UnboundAggregateExpr *create_aggregate_expression(const char *aggregate_name,
         EXPLAIN
         STORAGE
         FORMAT
+        ENGINE
         PRIMARY
         KEY
         ANALYZE
@@ -173,6 +174,7 @@ UnboundAggregateExpr *create_aggregate_expression(const char *aggregate_name,
 %type <condition_list>      where
 %type <condition_list>      condition_list
 %type <cstring>             storage_format
+%type <cstring>             storage_engine
 %type <key_list>            primary_key
 %type <key_list>            attr_list
 %type <relation_list>       rel_list
@@ -321,7 +323,7 @@ drop_index_stmt:      /*drop index 语句的语法解析树*/
     }
     ;
 create_table_stmt:    /*create table 语句的语法解析树*/
-    CREATE TABLE ID LBRACE attr_def_list primary_key RBRACE storage_format
+    CREATE TABLE ID LBRACE attr_def_list primary_key RBRACE storage_format storage_engine
     {
       $$ = new ParsedSqlNode(SCF_CREATE_TABLE);
       CreateTableSqlNode &create_table = $$->create_table;
@@ -337,6 +339,9 @@ create_table_stmt:    /*create table 语句的语法解析树*/
       }
       if ($8 != nullptr) {
         create_table.storage_format = $8;
+      }
+      if ($9 != nullptr) {
+        create_table.storage_engine = $9;
       }
     }
     ;
@@ -455,6 +460,17 @@ storage_format:
     | STORAGE FORMAT EQ ID
     {
       $$ = $4;
+    }
+    ;
+
+storage_engine:
+    /* empty */
+    {
+      $$ = nullptr;
+    }
+    | ENGINE EQ ID
+    {
+      $$ = $3;
     }
     ;
     

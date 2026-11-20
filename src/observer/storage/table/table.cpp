@@ -58,6 +58,11 @@ RC Table::create(Db *db, int32_t table_id, const char *path, const char *name, c
     return RC::INVALID_ARGUMENT;
   }
 
+  if (storage_engine == StorageEngine::BTREE) {
+    LOG_WARN("btree storage engine is not ready. table=%s", name);
+    return RC::UNSUPPORTED;
+  }
+
   RC rc = RC::SUCCESS;
 
   // 使用 table_name.table记录一个表的元数据

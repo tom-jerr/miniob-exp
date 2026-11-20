@@ -150,7 +150,7 @@ RC Db::init(const char *name, const char *dbpath, const char *trx_kit_name, cons
   return rc;
 }
 
-RC Db::create_table(const char *table_name, span<const AttrInfoSqlNode> attributes, const vector<string>& primary_keys, const StorageFormat storage_format)
+RC Db::create_table(const char *table_name, span<const AttrInfoSqlNode> attributes, const vector<string>& primary_keys, const StorageFormat storage_format, const StorageEngine storage_engine)
 {
   RC rc = RC::SUCCESS;
   // check table_name
@@ -159,12 +159,17 @@ RC Db::create_table(const char *table_name, span<const AttrInfoSqlNode> attribut
     return RC::SCHEMA_TABLE_EXIST;
   }
 
+  StorageEngine actual_engine = storage_engine;
+  if (actual_engine == StorageEngine::UNKNOWN_ENGINE) {
+    actual_engine = get_storage_engine();
+  }
+
   // 文件路径可以移到Table模块
   string  table_file_path = table_meta_file(path_.c_str(), table_name);
   Table  *table           = new Table();
   int32_t table_id        = next_table_id_++;
   rc = table->create(this, table_id, table_file_path.c_str(), table_name, path_.c_str(), attributes, primary_keys, storage_format,
-                     get_storage_engine());
+                     actual_engine);
   if (rc != RC::SUCCESS) {
     LOG_ERROR("Failed to create table %s.", table_name);
     delete table;

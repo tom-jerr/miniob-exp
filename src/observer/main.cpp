@@ -47,7 +47,7 @@ void usage()
   cout << "-n: buffer pool memory size in byte" << endl;
   cout << "-d: durbility mode. {vacuous(default), disk}" << endl;
   // TODO: support multi dbs(storage/db/db.h) and remove this options
-  cout << "-E: storage engine. {heap(default), lsm}" << endl;
+  cout << "-E: storage engine. {heap(default), lsm, btree}" << endl;
 }
 
 void parse_parameter(int argc, char **argv)

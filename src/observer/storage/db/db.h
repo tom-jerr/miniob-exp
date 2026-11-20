@@ -66,9 +66,11 @@ public:
    * @param table_name 表名
    * @param attributes 表的属性
    * @param storage_format 表的存储格式
+   * @param storage_engine 存储引擎；UNKNOWN_ENGINE 表示使用数据库的默认引擎
    */
   RC create_table(const char *table_name, span<const AttrInfoSqlNode> attributes, const vector<string> &primary_keys,
-      const StorageFormat storage_format = StorageFormat::ROW_FORMAT);
+      const StorageFormat storage_format = StorageFormat::ROW_FORMAT,
+      const StorageEngine storage_engine = StorageEngine::UNKNOWN_ENGINE);
 
   /**
    * @brief 根据表名查找表
@@ -127,6 +129,8 @@ private:
       engine = StorageEngine::HEAP;
     } else if (0 == strcasecmp(storage_engine_.c_str(), "lsm")) {
       engine = StorageEngine::LSM;
+    } else if (0 == strcasecmp(storage_engine_.c_str(), "btree")) {
+      engine = StorageEngine::BTREE;
     } else {
       engine = StorageEngine::UNKNOWN_ENGINE;
     }
