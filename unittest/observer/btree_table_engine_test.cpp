@@ -21,6 +21,7 @@ See the Mulan PSL v2 for more details. */
 #include "common/lang/memory.h"
 #include "common/types.h"
 #include "storage/db/db.h"
+#include "storage/index/index.h"
 #include "storage/record/record_scanner.h"
 #include "storage/table/table.h"
 #include "storage/trx/trx.h"
@@ -228,4 +229,97 @@ TEST_F(BtreeTableEngineTest, composite_primary_key_orders_by_fields)
   ASSERT_EQ(RC::SUCCESS,
       table->get_record_by_key(reinterpret_cast<const char *>(key), sizeof(key), fetched));
   ASSERT_EQ(22, record_int(fetched, 2));
+}
+
+TEST_F(BtreeTableEngineTest, secondary_and_primary_index_scans_survive_restart)
+{
+  init_db();
+  Table *table = create_table("t_idx", {"id", "v"}, {"id"});
+  ASSERT_NE(nullptr, table);
+
+  const int row_num = 5;
+  for (int i = 1; i <= row_num; i++) {
+    Record record = make_int_record(table, {i, i * 10});
+    ASSERT_EQ(RC::SUCCESS, table->insert_record(record));
+  }
+
+  const FieldMeta *v_field = table->table_meta().field("v");
+  ASSERT_NE(nullptr, v_field);
+  ASSERT_EQ(RC::SUCCESS, table->create_index(nullptr, v_field, "idx_v"));
+
+  Index *v_index = table->find_index("idx_v");
+  ASSERT_NE(nullptr, v_index);
+
+  auto scan_secondary = [&](int key, vector<int> &ids) {
+    IndexScanner *scanner =
+        v_index->create_scanner(reinterpret_cast<const char *>(&key), sizeof(key), true,
+            reinterpret_cast<const char *>(&key), sizeof(key), true);
+    ASSERT_NE(nullptr, scanner);
+    const char *value = nullptr;
+    int         value_len = 0;
+    Record      record;
+    while (RC::SUCCESS == scanner->next_entry(value, value_len)) {
+      ASSERT_EQ(RC::SUCCESS, v_index->get_record(table, value, value_len, record));
+      ids.push_back(record_int(record, 0));
+    }
+    scanner->destroy();
+  };
+
+  vector<int> ids;
+  scan_secondary(20, ids);
+  ASSERT_EQ(1, static_cast<int>(ids.size()));
+  ASSERT_EQ(2, ids[0]);
+
+  Record to_delete;
+  for (Record &record : scan_all(table)) {
+    if (record_int(record, 0) == 2) {
+      to_delete = record;
+      break;
+    }
+  }
+  ASSERT_EQ(2, record_int(to_delete, 0));
+  ASSERT_EQ(RC::SUCCESS, table->delete_record(to_delete));
+  ids.clear();
+  scan_secondary(20, ids);
+  ASSERT_TRUE(ids.empty());
+  ASSERT_EQ(row_num - 1, static_cast<int>(scan_all(table).size()));
+
+  Index *pk_index = table->find_index_by_field("id");
+  ASSERT_NE(nullptr, pk_index);
+  int          key   = 3;
+  const char  *value = nullptr;
+  int          value_len = 0;
+  IndexScanner *pk_scanner = pk_index->create_scanner(
+      reinterpret_cast<const char *>(&key), sizeof(key), true, reinterpret_cast<const char *>(&key), sizeof(key), true);
+  ASSERT_NE(nullptr, pk_scanner);
+  ASSERT_EQ(RC::SUCCESS, pk_scanner->next_entry(value, value_len));
+  Record fetched;
+  ASSERT_EQ(RC::SUCCESS, pk_index->get_record(table, value, value_len, fetched));
+  ASSERT_EQ(3, record_int(fetched, 0));
+  ASSERT_EQ(sizeof(int), fetched.key().size());
+  int fetched_key = 0;
+  memcpy(&fetched_key, fetched.key().data(), sizeof(fetched_key));
+  ASSERT_EQ(3, fetched_key);
+  ASSERT_EQ(RC::RECORD_EOF, pk_scanner->next_entry(value, value_len));
+  pk_scanner->destroy();
+
+  ASSERT_EQ(RC::SUCCESS, table->delete_record(fetched));
+  ASSERT_EQ(row_num - 2, static_cast<int>(scan_all(table).size()));
+
+  ASSERT_EQ(RC::SUCCESS, db_->sync());
+  db_.reset();
+  init_db();
+
+  table = db_->find_table("t_idx");
+  ASSERT_NE(nullptr, table);
+  v_index = table->find_index("idx_v");
+  ASSERT_NE(nullptr, v_index);
+  ids.clear();
+  scan_secondary(40, ids);
+  ASSERT_EQ(1, static_cast<int>(ids.size()));
+  ASSERT_EQ(4, ids[0]);
+
+  pk_index = table->find_index_by_field("id");
+  ASSERT_NE(nullptr, pk_index);
+  ASSERT_EQ(RC::SUCCESS, db_->sync());
 }

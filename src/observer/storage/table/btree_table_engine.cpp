@@ -12,14 +12,27 @@ See the Mulan PSL v2 for more details. */
 #include "common/lang/string.h"
 #include "common/log/log.h"
 #include "storage/common/meta_util.h"
+#include "storage/db/db.h"
+#include "storage/index/btree_pk_index.h"
 #include "storage/record/btree_record_scanner.h"
 #include "storage/table/table.h"
+
+#include <errno.h>
+#include <fstream>
 
 namespace {
 
 constexpr int ROWID_KEY_SIZE = static_cast<int>(sizeof(uint64_t));
 
 }  // namespace
+
+BtreeTableEngine::~BtreeTableEngine()
+{
+  for (Index *index : indexes_) {
+    delete index;
+  }
+  indexes_.clear();
+}
 
 RC BtreeTableEngine::create()
 {
@@ -54,7 +67,7 @@ RC BtreeTableEngine::create()
   }
 
   next_rowid_ = 0;
-  return RC::SUCCESS;
+  return build_primary_index();
 }
 
 RC BtreeTableEngine::open()
@@ -88,16 +101,28 @@ RC BtreeTableEngine::open()
           table_meta_->name(), header.key_mode, header.key_length);
       return RC::INVALID_ARGUMENT;
     }
-    return recover_next_rowid();
+    rc = recover_next_rowid();
+    if (rc != RC::SUCCESS) {
+      return rc;
+    }
+  } else {
+    if (header.key_mode != static_cast<int32_t>(BplusTreeKeyMode::COMPOSITE) || header.key_length != pk_size_) {
+      LOG_WARN("btree table key mode mismatch. table=%s, key_mode=%d, key_length=%d, pk_size=%d",
+          table_meta_->name(), header.key_mode, header.key_length, pk_size_);
+      return RC::INVALID_ARGUMENT;
+    }
+
+    rc = tree_.set_composite_spec(pk_specs_);
+    if (rc != RC::SUCCESS) {
+      return rc;
+    }
   }
 
-  if (header.key_mode != static_cast<int32_t>(BplusTreeKeyMode::COMPOSITE) || header.key_length != pk_size_) {
-    LOG_WARN("btree table key mode mismatch. table=%s, key_mode=%d, key_length=%d, pk_size=%d",
-        table_meta_->name(), header.key_mode, header.key_length, pk_size_);
-    return RC::INVALID_ARGUMENT;
+  rc = build_primary_index();
+  if (rc != RC::SUCCESS) {
+    return rc;
   }
-
-  return tree_.set_composite_spec(pk_specs_);
+  return open_indexes();
 }
 
 RC BtreeTableEngine::open_data_file()
@@ -123,6 +148,56 @@ RC BtreeTableEngine::build_key_specs()
     }
     pk_specs_.push_back({field->type(), field->offset(), field->len()});
     pk_size_ += field->len();
+  }
+  return RC::SUCCESS;
+}
+
+RC BtreeTableEngine::build_primary_index()
+{
+  primary_index_.reset();
+  if (pk_specs_.size() != 1) {
+    return RC::SUCCESS;
+  }
+
+  const string    &field_name = table_meta_->primary_keys()[0];
+  const FieldMeta *field      = table_meta_->field(field_name.c_str());
+  if (field == nullptr) {
+    LOG_WARN("primary key field not found. table=%s, field=%s", table_meta_->name(), field_name.c_str());
+    return RC::SCHEMA_FIELD_MISSING;
+  }
+
+  IndexMeta primary_meta;
+  RC        rc = primary_meta.init("__primary__", *field);
+  if (rc != RC::SUCCESS) {
+    return rc;
+  }
+
+  primary_index_ = std::make_unique<BtreePkIndex>(&tree_, primary_meta, *field, pk_size_);
+  return RC::SUCCESS;
+}
+
+RC BtreeTableEngine::open_indexes()
+{
+  const int index_num = table_meta_->index_num();
+  for (int i = 0; i < index_num; i++) {
+    const IndexMeta *index_meta = table_meta_->index(i);
+    const FieldMeta *field_meta = table_meta_->field(index_meta->field());
+    if (field_meta == nullptr) {
+      LOG_WARN("index field not found. table=%s, index=%s, field=%s",
+          table_meta_->name(), index_meta->name(), index_meta->field());
+      return RC::INTERNAL;
+    }
+
+    BtreePkIndex *index      = new BtreePkIndex();
+    string        index_file = table_index_file(db_->path().c_str(), table_meta_->name(), index_meta->name());
+    RC            rc         = index->open(table_, index_file.c_str(), *index_meta, *field_meta);
+    if (rc != RC::SUCCESS) {
+      LOG_WARN("failed to open index. table=%s, index=%s, file=%s, rc=%s",
+          table_meta_->name(), index_meta->name(), index_file.c_str(), strrc(rc));
+      delete index;
+      return rc;
+    }
+    indexes_.push_back(index);
   }
   return RC::SUCCESS;
 }
@@ -278,7 +353,86 @@ RC BtreeTableEngine::get_record_by_key(const char *key, int key_len, Record &rec
 
 RC BtreeTableEngine::create_index(Trx *trx, const FieldMeta *field_meta, const char *index_name)
 {
-  return RC::UNSUPPORTED;
+  if (common::is_blank(index_name) || field_meta == nullptr) {
+    LOG_WARN("invalid arguments. table=%s", table_meta_->name());
+    return RC::INVALID_ARGUMENT;
+  }
+
+  IndexMeta new_index_meta;
+  RC        rc = new_index_meta.init(index_name, *field_meta);
+  if (rc != RC::SUCCESS) {
+    return rc;
+  }
+
+  BtreePkIndex *index      = new BtreePkIndex();
+  string        index_file = table_index_file(db_->path().c_str(), table_meta_->name(), index_name);
+
+  rc = index->create(table_, index_file.c_str(), new_index_meta, *field_meta);
+  if (rc != RC::SUCCESS) {
+    LOG_WARN("failed to create index. table=%s, index=%s, rc=%s", table_meta_->name(), index_name, strrc(rc));
+    delete index;
+    return rc;
+  }
+
+  RecordScanner *scanner = nullptr;
+  rc                     = get_record_scanner(scanner, trx, ReadWriteMode::READ_ONLY);
+  if (rc != RC::SUCCESS) {
+    delete index;
+    return rc;
+  }
+
+  Record record;
+  while (OB_SUCC(rc = scanner->next(record))) {
+    string key;
+    rc = build_key_from_record(record, key);
+    if (rc == RC::SUCCESS) {
+      rc = index->insert_entry(record.data(), key.data(), key.size());
+    }
+    if (rc != RC::SUCCESS) {
+      break;
+    }
+  }
+  if (rc == RC::RECORD_EOF) {
+    rc = RC::SUCCESS;
+  }
+  scanner->close_scan();
+  delete scanner;
+  if (rc != RC::SUCCESS) {
+    LOG_WARN("failed to fill index. table=%s, index=%s, rc=%s", table_meta_->name(), index_name, strrc(rc));
+    delete index;
+    return rc;
+  }
+
+  indexes_.push_back(index);
+
+  TableMeta new_table_meta(*table_meta_);
+  rc = new_table_meta.add_index(new_index_meta);
+  if (rc != RC::SUCCESS) {
+    return rc;
+  }
+
+  string  tmp_file = table_meta_file(db_->path().c_str(), table_meta_->name()) + ".tmp";
+  fstream fs;
+  fs.open(tmp_file, std::ios_base::out | std::ios_base::binary | std::ios_base::trunc);
+  if (!fs.is_open()) {
+    LOG_WARN("failed to open meta file for write. file=%s", tmp_file.c_str());
+    return RC::IOERR_OPEN;
+  }
+  if (new_table_meta.serialize(fs) < 0) {
+    LOG_WARN("failed to serialize table meta. file=%s", tmp_file.c_str());
+    return RC::IOERR_WRITE;
+  }
+  fs.close();
+
+  const string meta_file = table_meta_file(db_->path().c_str(), table_meta_->name());
+  if (0 != rename(tmp_file.c_str(), meta_file.c_str())) {
+    LOG_WARN("failed to rename meta file. from=%s, to=%s, errno=%d", tmp_file.c_str(), meta_file.c_str(), errno);
+    return RC::IOERR_WRITE;
+  }
+  table_meta_->swap(new_table_meta);
+
+  LOG_INFO("successfully added index. table=%s, index=%s", table_meta_->name(), index_name);
+  return RC::SUCCESS;
 }
 
 RC BtreeTableEngine::get_record_scanner(RecordScanner *&scanner, Trx *trx, ReadWriteMode mode)
@@ -330,6 +484,11 @@ Index *BtreeTableEngine::find_index_by_field(const char *field_name) const
     if (0 == strcmp(index->index_meta().field(), field_name)) {
       return index;
     }
+  }
+
+  if (primary_index_ != nullptr && pk_specs_.size() == 1 &&
+      0 == strcmp(table_meta_->primary_keys()[0].c_str(), field_name)) {
+    return primary_index_.get();
   }
   return nullptr;
 }

@@ -132,6 +132,10 @@ public:
   {
     mode_   = BplusTreeKeyMode::COMPOSITE;
     fields_ = fields;
+    if (fields.size() == 1) {
+      // 单字段聚簇主键的 key 就是该属性，扫描器仍可用属性比较器做边界预检
+      attr_comparator_.init(fields[0].type, fields[0].len);
+    }
   }
 
   void init_rowid() { mode_ = BplusTreeKeyMode::ROWID; }

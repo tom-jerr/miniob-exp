@@ -13,7 +13,7 @@ See the Mulan PSL v2 for more details. */
 #include "storage/table/table_engine.h"
 #include "storage/index/index.h"
 #include "storage/index/bplus_tree.h"
-#include "storage/db/db.h"
+#include "storage/index/btree_pk_index.h"
 
 class Table;
 
@@ -28,7 +28,7 @@ class BtreeTableEngine : public TableEngine
 public:
   friend class Table;
   BtreeTableEngine(TableMeta *table_meta, Db *db, Table *table) : TableEngine(table_meta), db_(db), table_(table) {}
-  ~BtreeTableEngine() override = default;
+  ~BtreeTableEngine() override;
 
   RC create() override;
   RC open() override;
@@ -59,6 +59,8 @@ public:
 private:
   RC open_data_file();
   RC build_key_specs();
+  RC build_primary_index();
+  RC open_indexes();
   RC build_key_from_record(const Record &record, string &key) const;
   RC build_key_from_data(const char *data, string &key) const;
   RC recover_next_rowid();
@@ -72,4 +74,5 @@ private:
   vector<KeyComparator::Field> pk_specs_;  ///< 空表示 rowid 模式
   int                          pk_size_ = 0;
   uint64_t                     next_rowid_ = 0;
+  unique_ptr<BtreePkIndex>     primary_index_;  ///< 单列主键时暴露的聚簇索引
 };

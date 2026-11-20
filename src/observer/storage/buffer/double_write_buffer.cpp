@@ -74,7 +74,11 @@ RC DiskDoubleWriteBuffer::open_file(const char *filename)
 
 RC DiskDoubleWriteBuffer::flush_page()
 {
-  sync();
+  // 只刷新 double write buffer 自己的文件；全系统 sync() 会阻塞在无关设备上
+  if (file_desc_ >= 0 && fsync(file_desc_) != 0) {
+    LOG_WARN("failed to fsync double write buffer. errno=%d:%s", errno, strerror(errno));
+    return RC::IOERR_WRITE;
+  }
 
   for (const auto &pair : dblwr_pages_) {
     RC rc = write_page(pair.second);

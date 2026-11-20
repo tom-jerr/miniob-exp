@@ -2028,10 +2028,16 @@ RC BplusTreeScanner::open(const char *left_user_key, int left_len, bool left_inc
   inited_        = true;
   first_emitted_ = false;
 
+  const auto key_mode = static_cast<BplusTreeKeyMode>(tree_handler_.file_header_.key_mode);
+  // 单字段聚簇主键（COMPOSITE 且 key 就是该属性）与普通属性索引一样需要补齐 CHARS 键
+  const bool attr_key = tree_handler_.is_attr_mode() ||
+      (key_mode == BplusTreeKeyMode::COMPOSITE &&
+          tree_handler_.file_header_.key_length == tree_handler_.file_header_.attr_length);
+
   LatchMemo &latch_memo = mtr_.latch_memo();
 
   // 校验输入的键值是否是合法范围
-  if (left_user_key && right_user_key && tree_handler_.is_attr_mode()) {
+  if (left_user_key && right_user_key && attr_key) {
     const auto &attr_comparator = tree_handler_.key_comparator_.attr_comparator();
     const int   result          = attr_comparator(left_user_key, right_user_key);
     if (result > 0 ||  // left < right
@@ -2057,7 +2063,7 @@ RC BplusTreeScanner::open(const char *left_user_key, int left_len, bool left_inc
   } else {
 
     char *fixed_left_key = const_cast<char *>(left_user_key);
-    if (tree_handler_.is_attr_mode() && tree_handler_.file_header_.attr_type == AttrType::CHARS) {
+    if (attr_key && tree_handler_.file_header_.attr_type == AttrType::CHARS) {
       bool should_inclusive_after_fix = false;
       rc = fix_user_key(left_user_key, left_len, true /*greater*/, &fixed_left_key, &should_inclusive_after_fix);
       if (OB_FAIL(rc)) {
@@ -2119,7 +2125,7 @@ RC BplusTreeScanner::open(const char *left_user_key, int left_len, bool left_inc
 
     char *fixed_right_key          = const_cast<char *>(right_user_key);
     bool  should_include_after_fix = false;
-    if (tree_handler_.is_attr_mode() && tree_handler_.file_header_.attr_type == AttrType::CHARS) {
+    if (attr_key && tree_handler_.file_header_.attr_type == AttrType::CHARS) {
       rc = fix_user_key(right_user_key, right_len, false /*want_greater*/, &fixed_right_key, &should_include_after_fix);
       if (OB_FAIL(rc)) {
         LOG_WARN("failed to fix right user key. rc=%s", strrc(rc));
