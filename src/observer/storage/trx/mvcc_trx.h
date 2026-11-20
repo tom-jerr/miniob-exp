@@ -107,6 +107,7 @@ public:
   int32_t id() const override { return static_cast<int32_t>(trx_id_); }
 
   int64_t snapshot_seq() const { return snapshot_seq_; }
+  bool    started() const { return started_; }
 
 private:
   RC   commit_with_trx_id(int64_t commit_id);

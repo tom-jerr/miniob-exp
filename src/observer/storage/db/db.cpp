@@ -25,6 +25,8 @@ See the Mulan PSL v2 for more details. */
 #include "storage/table/table.h"
 #include "storage/table/table_meta.h"
 #include "storage/trx/trx.h"
+#include "storage/trx/mvcc_gc.h"
+#include "storage/trx/mvcc_trx.h"
 #include "storage/clog/disk_log_handler.h"
 #include "storage/clog/integrated_log_replayer.h"
 
@@ -255,6 +257,15 @@ void Db::all_tables(vector<string> &table_names) const
 RC Db::sync()
 {
   RC rc = RC::SUCCESS;
+  // 显式 sync 时做一次 MVCC 死版本回收；没有后台线程，也不在提交路径上扫描。
+  if (dynamic_cast<MvccTrxKit *>(trx_kit_.get()) != nullptr) {
+    MvccGc gc;
+    rc = gc.collect(*this);
+    if (rc != RC::SUCCESS) {
+      LOG_WARN("failed to collect mvcc garbage. db=%s, rc=%d:%s", name_.c_str(), rc, strrc(rc));
+      return rc;
+    }
+  }
   // 调用所有表的sync函数刷新数据到磁盘
   for (const auto &table_pair : opened_tables_) {
     Table *table = table_pair.second;
