@@ -17,7 +17,9 @@ See the Mulan PSL v2 for more details. */
 
 #pragma once
 
+#include <stdint.h>
 #include <string.h>
+#include <vector>
 
 #include "common/lang/comparator.h"
 #include "common/lang/memory.h"
@@ -47,6 +49,22 @@ enum class BplusTreeOperationType
   READ,
   INSERT,
   DELETE,
+};
+
+/**
+ * @brief 叶子节点中键值对的布局与比较方式
+ * @ingroup BPlusTree
+ * @details ATTR_RID 是传统单字段索引：key = attr + RID，value = RID。
+ * ATTR_MEMCMP_VALUE 是二级索引：key = attr + value，value 按字节比较（保存主键编码）。
+ * COMPOSITE 是聚簇主键索引：key 为多字段拼接，按字段逐项比较，value 为整行数据。
+ * ROWID 是聚簇隐藏主键索引：key 为 8 字节自增 rowid，value 为整行数据。
+ */
+enum class BplusTreeKeyMode
+{
+  ATTR_RID = 0,
+  ATTR_MEMCMP_VALUE,
+  COMPOSITE,
+  ROWID,
 };
 
 /**
@@ -89,24 +107,90 @@ private:
 class KeyComparator
 {
 public:
-  void init(AttrType type, int length) { attr_comparator_.init(type, length); }
+  struct Field
+  {
+    AttrType type;
+    int      offset;
+    int      len;
+  };
+
+  void init(AttrType type, int length)
+  {
+    mode_         = BplusTreeKeyMode::ATTR_RID;
+    value_length_ = static_cast<int>(sizeof(RID));
+    attr_comparator_.init(type, length);
+  }
+
+  void init_attr_value(AttrType type, int attr_length, int value_length)
+  {
+    mode_         = BplusTreeKeyMode::ATTR_MEMCMP_VALUE;
+    value_length_ = value_length;
+    attr_comparator_.init(type, attr_length);
+  }
+
+  void init_composite(const vector<Field> &fields)
+  {
+    mode_   = BplusTreeKeyMode::COMPOSITE;
+    fields_ = fields;
+  }
+
+  void init_rowid() { mode_ = BplusTreeKeyMode::ROWID; }
+
+  BplusTreeKeyMode mode() const { return mode_; }
 
   const AttrComparator &attr_comparator() const { return attr_comparator_; }
 
   int operator()(const char *v1, const char *v2) const
   {
-    int result = attr_comparator_(v1, v2);
-    if (result != 0) {
-      return result;
-    }
+    switch (mode_) {
+      case BplusTreeKeyMode::ATTR_RID: {
+        int result = attr_comparator_(v1, v2);
+        if (result != 0) {
+          return result;
+        }
 
-    const RID *rid1 = (const RID *)(v1 + attr_comparator_.attr_length());
-    const RID *rid2 = (const RID *)(v2 + attr_comparator_.attr_length());
-    return RID::compare(rid1, rid2);
+        const RID *rid1 = (const RID *)(v1 + attr_comparator_.attr_length());
+        const RID *rid2 = (const RID *)(v2 + attr_comparator_.attr_length());
+        return RID::compare(rid1, rid2);
+      }
+      case BplusTreeKeyMode::ATTR_MEMCMP_VALUE: {
+        int result = attr_comparator_(v1, v2);
+        if (result != 0) {
+          return result;
+        }
+        return memcmp(v1 + attr_comparator_.attr_length(), v2 + attr_comparator_.attr_length(), value_length_);
+      }
+      case BplusTreeKeyMode::COMPOSITE: {
+        for (const Field &field : fields_) {
+          Value left;
+          left.set_type(field.type);
+          left.set_data(v1 + field.offset, field.len);
+          Value right;
+          right.set_type(field.type);
+          right.set_data(v2 + field.offset, field.len);
+          int result = DataType::type_instance(field.type)->compare(left, right);
+          if (result != 0) {
+            return result;
+          }
+        }
+        return 0;
+      }
+      case BplusTreeKeyMode::ROWID: {
+        uint64_t left  = 0;
+        uint64_t right = 0;
+        memcpy(&left, v1, sizeof(left));
+        memcpy(&right, v2, sizeof(right));
+        return left < right ? -1 : (left > right ? 1 : 0);
+      }
+    }
+    return 0;
   }
 
 private:
-  AttrComparator attr_comparator_;
+  BplusTreeKeyMode mode_         = BplusTreeKeyMode::ATTR_RID;
+  AttrComparator   attr_comparator_;
+  int              value_length_ = static_cast<int>(sizeof(RID));
+  vector<Field>    fields_;
 };
 
 /**
@@ -168,17 +252,26 @@ private:
  */
 struct IndexFileHeader
 {
+  static constexpr int32_t CURRENT_VERSION = 2;
+
   IndexFileHeader()
   {
     memset(this, 0, sizeof(IndexFileHeader));
-    root_page = BP_INVALID_PAGE_NUM;
+    root_page      = BP_INVALID_PAGE_NUM;
+    format_version = CURRENT_VERSION;
+    value_size     = sizeof(RID);
+    key_mode       = static_cast<int32_t>(BplusTreeKeyMode::ATTR_RID);
   }
   PageNum  root_page;          ///< 根节点在磁盘中的页号
   int32_t  internal_max_size;  ///< 内部节点最大的键值对数
   int32_t  leaf_max_size;      ///< 叶子节点最大的键值对数
   int32_t  attr_length;        ///< 键值的长度
-  int32_t  key_length;         ///< attr length + sizeof(RID)
+  int32_t  key_length;         ///< 叶子节点中 key 的字节数
   AttrType attr_type;          ///< 键值的类型
+  int32_t  format_version;     ///< 0 表示旧格式（value 固定为 RID）
+  int32_t  value_size;         ///< 叶子节点中 value 的字节数
+  int32_t  key_mode;           ///< BplusTreeKeyMode
+  int64_t  next_rowid;         ///< 聚簇表引擎持久化的下一个 rowid
 
   const string to_string() const
   {
@@ -189,7 +282,11 @@ struct IndexFileHeader
        << "attr_type:" << attr_type_to_string(attr_type) << ","
        << "root_page:" << root_page << ","
        << "internal_max_size:" << internal_max_size << ","
-       << "leaf_max_size:" << leaf_max_size << ";";
+       << "leaf_max_size:" << leaf_max_size << ","
+       << "format_version:" << format_version << ","
+       << "value_size:" << value_size << ","
+       << "key_mode:" << key_mode << ","
+       << "next_rowid:" << next_rowid << ";";
 
     return ss.str();
   }
@@ -461,8 +558,12 @@ public:
    */
   RC create(LogHandler &log_handler, BufferPoolManager &bpm, const char *file_name, AttrType attr_type, int attr_length,
       int internal_max_size = -1, int leaf_max_size = -1);
+  RC create(LogHandler &log_handler, BufferPoolManager &bpm, const char *file_name, AttrType attr_type, int attr_length,
+      int key_size, int value_size, BplusTreeKeyMode key_mode, int internal_max_size = -1, int leaf_max_size = -1);
   RC create(LogHandler &log_handler, DiskBufferPool &buffer_pool, AttrType attr_type, int attr_length,
       int internal_max_size = -1, int leaf_max_size = -1);
+  RC create(LogHandler &log_handler, DiskBufferPool &buffer_pool, AttrType attr_type, int attr_length, int key_size,
+      int value_size, BplusTreeKeyMode key_mode, int internal_max_size = -1, int leaf_max_size = -1);
 
   /**
    * @brief 打开一个B+树
@@ -480,18 +581,30 @@ public:
 
   /**
    * @brief 此函数向IndexHandle对应的索引中插入一个索引项。
-   * @details 参数user_key指向要插入的属性值，参数rid标识该索引项对应的元组，
-   * 即向索引中插入一个值为（user_key，rid）的键值对
-   * @note 这里假设user_key的内存大小与attr_length 一致
+   * @details 参数user_key指向要插入的属性值（ATTR 模式）或整条 key（COMPOSITE/ROWID 模式），
+   * 参数value是叶子节点保存的值（传统索引中为 RID 的字节）。
+   * @note ATTR 模式下 user_key 的内存大小与 attr_length 一致
    */
-  RC insert_entry(const char *user_key, const RID *rid);
+  RC insert_entry(const char *user_key, const char *value, int value_len);
 
   /**
-   * @brief 从IndexHandle句柄对应的索引中删除一个值为（user_key，rid）的索引项
-   * @return RECORD_INVALID_KEY 指定值不存在
-   * @note 这里假设user_key的内存大小与attr_length 一致
+   * @brief 从IndexHandle句柄对应的索引中删除一个值为（user_key，value）的索引项
+   * @return RECORD_NOT_EXIST 指定值不存在
+   * @note ATTR 模式下 user_key 的内存大小与 attr_length 一致
    */
-  RC delete_entry(const char *user_key, const RID *rid);
+  RC delete_entry(const char *user_key, const char *value, int value_len);
+
+  /**
+   * @brief 按 key 精确查找第一条 value
+   * @details ATTR 模式下 key_len 必须为 attr_length，COMPOSITE/ROWID 模式下必须为 key_length
+   * @return RECORD_NOT_EXIST 没有匹配的索引项
+   */
+  RC get_value(const char *user_key, int key_len, const char *&value, int &value_len);
+
+  /**
+   * @brief 为 COMPOSITE 模式指定逐字段比较规则
+   */
+  RC set_composite_spec(const vector<KeyComparator::Field> &fields);
 
   bool is_empty() const;
 
@@ -615,12 +728,13 @@ protected:
   /**
    * @brief 在叶子节点插入一个元素
    */
-  RC insert_entry_into_leaf_node(BplusTreeMiniTransaction &mtr, Frame *frame, const char *pkey, const RID *rid);
+  RC insert_entry_into_leaf_node(
+      BplusTreeMiniTransaction &mtr, Frame *frame, const char *key, const char *value, int value_len);
 
   /**
    * @brief 创建一个新的B+树
    */
-  RC create_new_tree(BplusTreeMiniTransaction &mtr, const char *key, const RID *rid);
+  RC create_new_tree(BplusTreeMiniTransaction &mtr, const char *key, const char *value, int value_len);
 
   /**
    * @brief 更新根节点的页号
@@ -633,7 +747,14 @@ protected:
   RC adjust_root(BplusTreeMiniTransaction &mtr, Frame *root_frame);
 
 private:
-  common::MemPoolItem::item_unique_ptr make_key(const char *user_key, const RID &rid);
+  bool is_attr_mode() const
+  {
+    return file_header_.key_mode == static_cast<int32_t>(BplusTreeKeyMode::ATTR_RID) ||
+           file_header_.key_mode == static_cast<int32_t>(BplusTreeKeyMode::ATTR_MEMCMP_VALUE);
+  }
+
+  common::MemPoolItem::item_unique_ptr make_key(const char *user_key, bool is_min);
+  common::MemPoolItem::item_unique_ptr make_entry_key(const char *user_key, const char *value, int value_len);
 
 protected:
   LogHandler     *log_handler_      = nullptr;  /// 日志处理器
@@ -690,6 +811,15 @@ public:
   RC next_entry(RID &rid);
 
   /**
+   * @brief 获取下一条记录，同时返回整条 key 和 value
+   * @param[out] value 叶子节点保存的值，仅在下次推进前有效
+   * @param[out] value_len value 的字节数（header.value_size）
+   * @param[out] key 整条叶子 key（长度 = header.key_length），仅在下次推进前有效
+   * @return RC RECORD_EOF 表示遍历完成
+   */
+  RC next_entry(const char *&value, int &value_len, const char *&key);
+
+  /**
    * @brief 关闭当前扫描器
    * @details 可以不调用，在析构函数时会自动执行
    */
@@ -702,6 +832,11 @@ private:
   RC fix_user_key(const char *user_key, int key_len, bool want_greater, char **fixed_key, bool *should_inclusive);
 
   void fetch_item(RID &rid);
+
+  /**
+   * @brief 推进到下一个位置，不读取内容
+   */
+  RC advance();
 
   /**
    * @brief 判断是否到了扫描的结束位置
