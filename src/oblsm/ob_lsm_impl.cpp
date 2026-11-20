@@ -76,8 +76,15 @@ RC ObLsmImpl::recover()
     return rc;
   }
 
-  // Recover memtable from WAL file.
-  wal_ = std::make_unique<WAL>();
+  // Recover the current memtable from its WAL file.
+  if (new_memtable_record) {
+    memtable_id_.store(new_memtable_record->memtable_id);
+  }
+  rc = recover_from_wal();
+  if (rc != RC::SUCCESS) {
+    LOG_ERROR("Failed to recover from wal, rc=%s", strrc(rc));
+    return rc;
+  }
 
   // After recover from the old manifest file, write the snapshot into a new manifest file.
   if (!compaction_records.empty()) {
@@ -148,9 +155,37 @@ RC ObLsmImpl::put(const string_view &key, const string_view &value)
   return rc;
 }
 
+RC ObLsmImpl::recover_from_wal()
+{
+  const string wal_file = get_wal_path(memtable_id_.load());
+
+  WAL               wal;
+  vector<WalRecord> records;
+  RC                rc = wal.recover(wal_file, records);
+  if (rc != RC::SUCCESS) {
+    return rc;
+  }
+
+  uint64_t next_seq = seq_.load();
+  for (const WalRecord &record : records) {
+    mem_table_->put(record.seq, record.key, record.val);
+    if (record.seq + 1 > next_seq) {
+      next_seq = record.seq + 1;
+    }
+  }
+  seq_.store(next_seq);
+
+  wal_ = std::make_unique<WAL>();
+  rc   = wal_->open(wal_file);
+  if (rc != RC::SUCCESS) {
+    LOG_WARN("failed to open wal for append. file=%s, rc=%s", wal_file.c_str(), strrc(rc));
+  }
+  return rc;
+}
+
 RC ObLsmImpl::batch_put(const vector<pair<string, string>> &kvs) { return RC::UNIMPLEMENTED; }
 
-RC ObLsmImpl::remove(const string_view &key) { return RC::UNIMPLEMENTED; }
+RC ObLsmImpl::remove(const string_view &key) { return put(key, string_view("", 0)); }
 
 RC ObLsmImpl::try_freeze_memtable()
 {
@@ -314,9 +349,9 @@ string ObLsmImpl::get_wal_path(uint64_t memtable_id)
 
 RC ObLsmImpl::get(const string_view &key, string *value)
 {
-  RC                 rc = RC::SUCCESS;
-  unique_lock<mutex> lock(mu_);
-  auto               iter = unique_ptr<ObLsmIterator>(new_iterator(ObLsmReadOptions{}));
+  RC rc = RC::SUCCESS;
+  // new_iterator 自己会加锁并复制所需状态；这里不能再持锁，否则会自死锁
+  auto iter = unique_ptr<ObLsmIterator>(new_iterator(ObLsmReadOptions{}));
   iter->seek(key);
   if (iter->valid() && iter->key() == key) {
     if (iter->value().empty()) {

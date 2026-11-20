@@ -19,6 +19,7 @@ using namespace oceanbase;
 
 /**
  * @brief lsm table engine
+ * @details 行保存在 ObLsm，key 为 Codec(table_id, 自增 rid)，二级索引叶子保存 rid
  */
 class LsmTableEngine : public TableEngine
 {
@@ -26,12 +27,12 @@ public:
   LsmTableEngine(TableMeta *table_meta, Db *db, Table *table)
       : TableEngine(table_meta), db_(db), table_(table), lsm_(db->lsm())
   {}
-  ~LsmTableEngine() override = default;
+  ~LsmTableEngine() override;
 
   RC insert_record(Record &record) override;
-  RC delete_record(const Record &record) override { return RC::UNIMPLEMENTED; }
-  RC insert_record_with_trx(Record &record, Trx *trx) override { return RC::UNIMPLEMENTED; }
-  RC delete_record_with_trx(const Record &record, Trx *trx) override { return RC::UNIMPLEMENTED; }
+  RC delete_record(const Record &record) override;
+  RC insert_record_with_trx(Record &record, Trx *trx) override;
+  RC delete_record_with_trx(const Record &record, Trx *trx) override;
   RC update_record_with_trx(const Record &old_record, const Record &new_record, Trx *trx) override
   {
     return RC::UNIMPLEMENTED;
@@ -39,20 +40,27 @@ public:
   RC get_record(const RID &rid, Record &record) override { return RC::UNIMPLEMENTED; }
   RC get_record_by_key(const char *key, int key_len, Record &record) override { return RC::UNSUPPORTED; }
 
-  RC create_index(Trx *trx, const FieldMeta *field_meta, const char *index_name) override { return RC::UNIMPLEMENTED; }
+  RC create_index(Trx *trx, const FieldMeta *field_meta, const char *index_name) override;
   RC get_record_scanner(RecordScanner *&scanner, Trx *trx, ReadWriteMode mode) override;
   RC get_chunk_scanner(ChunkFileScanner &scanner, Trx *trx, ReadWriteMode mode) override { return RC::UNIMPLEMENTED; }
-  RC visit_record(const RID &rid, function<bool(Record &)> visitor) override { return RC::UNIMPLEMENTED; }
-  // TODO:
-  RC     sync() override { return RC::SUCCESS; }
-  Index *find_index(const char *index_name) const override { return nullptr; }
-  Index *find_index_by_field(const char *field_name) const override { return nullptr; }
+  RC visit_record(const RID &rid, function<bool(Record &)> visitor) override { return RC::SUCCESS; }
+  RC sync() override;
+  Index *find_index(const char *index_name) const override;
+  Index *find_index_by_field(const char *field_name) const override;
   RC     open() override;
-  RC     init() override { return RC::UNIMPLEMENTED; }
+  RC     init() override { return RC::SUCCESS; }
+
+private:
+  RC write_record(Record &record, ObLsmTransaction *trx);
+  RC erase_record(const Record &record, ObLsmTransaction *trx);
+  RC insert_entry_of_indexes(const char *record, uint64_t rid);
+  RC delete_entry_of_indexes(const char *record, uint64_t rid, bool error_on_not_exists);
+  RC open_indexes();
 
 private:
   Db              *db_;
   Table           *table_;
   ObLsm           *lsm_;
   atomic<uint64_t> inc_id_{0};
+  vector<Index *>  indexes_;
 };

@@ -19,11 +19,28 @@ RC LsmRecordScanner::open_scan()
     delete lsm_iter_;
     lsm_iter_ = nullptr;
   }
+  if (trx_ == nullptr) {
+    LOG_WARN("record scanner requires a transaction");
+    return RC::INVALID_ARGUMENT;
+  }
+
   if (trx_->type() == TrxKit::Type::VACUOUS) {
     lsm_iter_ = oblsm_->new_iterator(ObLsmReadOptions());
   } else if (trx_->type() == TrxKit::Type::LSM) {
-    auto lsm_trx = dynamic_cast<LsmMvccTrx *>(trx_);
-    lsm_iter_ = lsm_trx->get_trx()->new_iterator(ObLsmReadOptions());
+    LsmMvccTrx       *lsm_trx = dynamic_cast<LsmMvccTrx *>(trx_);
+    ObLsmTransaction *transaction = lsm_trx == nullptr ? nullptr : lsm_trx->get_trx();
+    if (transaction == nullptr) {
+      LOG_WARN("lsm transaction has not been started");
+      return RC::UNSUPPORTED;
+    }
+    lsm_iter_ = transaction->new_iterator(ObLsmReadOptions());
+  } else {
+    return RC::UNSUPPORTED;
+  }
+
+  if (lsm_iter_ == nullptr) {
+    LOG_WARN("failed to create lsm iterator");
+    return RC::UNSUPPORTED;
   }
   bytes encoded_key;
   rc = Codec::encode_without_rid(table_->table_id(), encoded_key);

@@ -306,8 +306,22 @@ template <typename Key, class ObComparator>
 typename ObSkipList<Key, ObComparator>::Node *ObSkipList<Key, ObComparator>::find_greater_or_equal(
     const Key &key, Node **prev) const
 {
-  // your code here
-  return nullptr;
+  Node *x     = head_;
+  int   level = get_max_height() - 1;
+  while (true) {
+    Node *next = x->next(level);
+    if (next != nullptr && compare_(next->key, key) < 0) {
+      x = next;
+    } else {
+      if (prev != nullptr) {
+        prev[level] = x;
+      }
+      if (level == 0) {
+        return next;
+      }
+      level--;
+    }
+  }
 }
 
 template <typename Key, class ObComparator>
@@ -376,12 +390,34 @@ ObSkipList<Key, ObComparator>::~ObSkipList()
 
 template <typename Key, class ObComparator>
 void ObSkipList<Key, ObComparator>::insert(const Key &key)
-{}
+{
+  Node *prev[kMaxHeight];
+  Node *next = find_greater_or_equal(key, prev);
+  ASSERT(next == nullptr || !equal(key, next->key), "inserted key must not exist");
+
+  const int height = random_height();
+  if (height > get_max_height()) {
+    for (int i = get_max_height(); i < height; i++) {
+      prev[i] = head_;
+    }
+    max_height_.store(height, std::memory_order_relaxed);
+  }
+
+  Node *x = new_node(key, height);
+  for (int i = 0; i < height; i++) {
+    x->nobarrier_set_next(i, prev[i]->nobarrier_next(i));
+  }
+  // 先完整初始化新节点，再逐层链接，保证并发读者看到一致状态
+  for (int i = 0; i < height; i++) {
+    prev[i]->set_next(i, x);
+  }
+}
 
 template <typename Key, class ObComparator>
 void ObSkipList<Key, ObComparator>::insert_concurrently(const Key &key)
 {
-  // your code here
+  // 写入由上层互斥保护；链接顺序与 insert 相同，可供并发读者使用
+  insert(key);
 }
 
 template <typename Key, class ObComparator>

@@ -461,6 +461,28 @@ public:
     return rc;
   }
 
+  static RC decode(bytes &encoded_key, int64_t &table_id, uint64_t &rid)
+  {
+    RC           rc = RC::SUCCESS;
+    span<byte_t> sp(encoded_key);
+    string       table_prefix_str;
+    string       rowkey_prefix_str;
+    if (OB_FAIL(OrderedCode::parse(sp, OrderedCode::increasing, table_prefix_str))) {
+      LOG_WARN("parse table prefix failed");
+      return rc;
+    } else if (OB_FAIL(OrderedCode::parse(sp, OrderedCode::increasing, table_id))) {
+      LOG_WARN("parse table id failed");
+      return rc;
+    } else if (OB_FAIL(OrderedCode::parse(sp, OrderedCode::increasing, rowkey_prefix_str))) {
+      LOG_WARN("parse rowkey prefix failed");
+      return rc;
+    } else if (OB_FAIL(OrderedCode::parse(sp, OrderedCode::increasing, rid))) {
+      LOG_WARN("parse rid failed");
+      return rc;
+    }
+    return rc;
+  }
+
   static constexpr const char *table_prefix  = "t";
   static constexpr const char *rowkey_prefix = "r";
 };
