@@ -209,6 +209,63 @@ RC MvccTrx::delete_record(Table *table, Record &record)
   return RC::SUCCESS;
 }
 
+RC MvccTrx::update_record(Table *table, Record &old_record, Record &new_record)
+{
+  if (table->table_meta().storage_engine() == StorageEngine::BTREE) {
+    LOG_WARN("btree storage engine only supports vacuous trx. table=%s", table->name());
+    return RC::UNSUPPORTED;
+  }
+
+  Field begin_field;
+  Field end_field;
+  trx_fields(table, begin_field, end_field);
+
+  // 老版本标记为删除（未提交），旧索引项保留给老快照
+  RC update_result = RC::SUCCESS;
+  RC rc = table->visit_record(old_record.rid(), [this, table, &update_result, &end_field](Record &inplace_record) -> bool {
+    RC rc = this->visit_record(table, inplace_record, ReadWriteMode::READ_WRITE);
+    if (OB_FAIL(rc)) {
+      update_result = rc;
+      return false;
+    }
+    end_field.set_int64(inplace_record, -trx_id_);
+    return true;
+  });
+  if (OB_FAIL(rc)) {
+    return rc;
+  }
+  if (OB_FAIL(update_result)) {
+    return update_result;
+  }
+  rc = log_handler_.delete_record(trx_id_, table, old_record.rid());
+  ASSERT(rc == RC::SUCCESS, "failed to append delete record log for update. table id=%d, rid=%s",
+      table->table_id(), old_record.rid().to_string().c_str());
+  operations_.push_back(Operation(Operation::Type::DELETE, table, old_record.rid()));
+
+  // 新版本：复制新行数据，写入隐藏字段后走普通插入，索引由引擎维护
+  Record insert_record = new_record;
+  insert_record.set_rid(RID{0, 0});
+  insert_record.set_key("");
+  begin_field.set_int64(insert_record, -trx_id_);
+  end_field.set_int64(insert_record, trx_kit_.max_trx_id());
+
+  rc = table->insert_record(insert_record);
+  if (OB_FAIL(rc)) {
+    // 恢复旧版本，避免半更新
+    table->visit_record(old_record.rid(), [this, &end_field](Record &inplace_record) -> bool {
+      end_field.set_int64(inplace_record, trx_kit_.max_trx_id());
+      return true;
+    });
+    return rc;
+  }
+  rc = log_handler_.insert_record(trx_id_, table, insert_record.rid());
+  ASSERT(rc == RC::SUCCESS, "failed to append insert record log for update. table id=%d, rid=%s",
+      table->table_id(), insert_record.rid().to_string().c_str());
+  operations_.push_back(Operation(Operation::Type::INSERT, table, insert_record.rid()));
+
+  return RC::SUCCESS;
+}
+
 RC MvccTrx::visit_record(Table *table, Record &record, ReadWriteMode mode)
 {
   Field begin_field;
@@ -429,25 +486,32 @@ RC MvccTrx::rollback()
         Table *table = operation.table();
         // 这里也可以不删除，仅仅给数据加个标识位，等垃圾回收器来收割也行
         Record record;
-        record.set_rid(rid);
+        rc = table->get_record(rid, record);
+        if (RC::RECORD_NOT_EXIST == rc) {
+          continue;
+        }
+        if (OB_FAIL(rc)) {
+          LOG_WARN("failed to get record while rollback. table=%s, rid=%s, rc=%s",
+              table->name(), rid.to_string().c_str(), strrc(rc));
+          return rc;
+        }
         if (recovering_) {
           // 恢复的时候，需要额外判断下当前记录是否还是当前事务拥有。是的话才能删除记录
-          rc = table->get_record(rid, record);
-          if (OB_SUCC(rc)) {
-            Field begin_xid_field, end_xid_field;
-            trx_fields(table, begin_xid_field, end_xid_field);
-            if (begin_xid_field.get_int64(record) != -trx_id_) {
-              continue;
-            }
-          } else if (RC::RECORD_NOT_EXIST == rc) {
+          Field begin_xid_field, end_xid_field;
+          trx_fields(table, begin_xid_field, end_xid_field);
+          if (begin_xid_field.get_int64(record) != -trx_id_) {
             continue;
-          } else {
-            LOG_WARN("failed to get record while rollback. table=%s, rid=%s, rc=%s", 
-                     table->name(), rid.to_string().c_str(), strrc(rc));
-            return rc;
           }
         }
-        rc = table->delete_record(record);
+        // get_record 返回页面内指针，删除前必须复制为自持内存
+        Record owned;
+        rc = owned.copy_data(record.data(), record.len());
+        if (OB_FAIL(rc)) {
+          return rc;
+        }
+        owned.set_rid(rid);
+        owned.set_key(record.key());
+        rc = table->delete_record(owned);
         ASSERT(rc == RC::SUCCESS, "failed to delete record while rollback. rid=%s, rc=%s",
                rid.to_string().c_str(), strrc(rc));
       } break;
