@@ -16,6 +16,7 @@ See the Mulan PSL v2 for more details. */
 
 #include "common/lang/vector.h"
 #include "storage/trx/trx.h"
+#include "storage/trx/trx_status.h"
 #include "storage/trx/mvcc_trx_log.h"
 
 class CLogManager;
@@ -32,7 +33,7 @@ public:
   const vector<FieldMeta> *trx_fields() const override;
 
   Trx *create_trx(LogHandler &log_handler) override;
-  Trx *create_trx(LogHandler &log_handler, int32_t trx_id) override;
+  Trx *create_trx(LogHandler &log_handler, int64_t trx_id) override;
   void destroy_trx(Trx *trx) override;
 
   void all_trxes(vector<Trx *> &trxes) override;
@@ -41,6 +42,12 @@ public:
 
 public:
   int64_t next_trx_id();
+
+  int64_t next_commit_seq();
+  int64_t current_commit_seq() const { return commit_seq_.load(std::memory_order_acquire); }
+  void    advance_commit_seq(int64_t commit_seq);
+
+  TxnStatusTable &status_table() { return status_; }
 
 public:
   int64_t max_trx_id() const override;
@@ -51,6 +58,8 @@ private:
   vector<FieldMeta> fields_;  // 存储事务数据需要用到的字段元数据，所有表结构都需要带的
 
   atomic<int64_t> current_trx_id_{0};
+  atomic<int64_t> commit_seq_{0};
+  TxnStatusTable  status_;
 
   common::Mutex lock_;
   vector<Trx *> trxes_;
@@ -97,8 +106,10 @@ public:
 
   int32_t id() const override { return static_cast<int32_t>(trx_id_); }
 
+  int64_t snapshot_seq() const { return snapshot_seq_; }
+
 private:
-  RC   commit_with_trx_id(int32_t commit_id);
+  RC   commit_with_trx_id(int64_t commit_id);
   void trx_fields(Table *table, Field &begin_xid_field, Field &end_xid_field) const;
 
 private:
@@ -111,6 +122,7 @@ private:
   MvccTrxKit       &trx_kit_;
   MvccTrxLogHandler log_handler_;
   int64_t           trx_id_     = -1;
+  int64_t           snapshot_seq_ = 0;
   bool              started_    = false;
   bool              recovering_ = false;
   OperationSet      operations_;

@@ -124,7 +124,7 @@ public:
   /**
    * @brief 创建一个事务，日志回放时使用
    */
-  virtual Trx *create_trx(LogHandler &log_handler, int32_t trx_id) = 0;
+  virtual Trx *create_trx(LogHandler &log_handler, int64_t trx_id) = 0;
   virtual void all_trxes(vector<Trx *> &trxes)                     = 0;
 
   virtual void destroy_trx(Trx *trx) = 0;

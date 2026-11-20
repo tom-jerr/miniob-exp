@@ -29,7 +29,7 @@ public:
   const vector<FieldMeta> *trx_fields() const override;
 
   Trx *create_trx(LogHandler &log_handler) override;
-  Trx *create_trx(LogHandler &log_handler, int32_t trx_id) override;
+  Trx *create_trx(LogHandler &log_handler, int64_t trx_id) override;
   void all_trxes(vector<Trx *> &trxes) override;
 
   void destroy_trx(Trx *trx) override;

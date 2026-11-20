@@ -16,7 +16,7 @@ const vector<FieldMeta> *LsmMvccTrxKit::trx_fields() const { return nullptr; }
 
 Trx *LsmMvccTrxKit::create_trx(LogHandler &) { return new LsmMvccTrx(lsm_); }
 
-Trx *LsmMvccTrxKit::create_trx(LogHandler &, int32_t /*trx_id*/) { return nullptr; }
+Trx *LsmMvccTrxKit::create_trx(LogHandler &, int64_t /*trx_id*/) { return nullptr; }
 
 void LsmMvccTrxKit::destroy_trx(Trx *trx) { delete trx; }
 

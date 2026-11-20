@@ -20,7 +20,7 @@ const vector<FieldMeta> *VacuousTrxKit::trx_fields() const { return nullptr; }
 
 Trx *VacuousTrxKit::create_trx(LogHandler &) { return new VacuousTrx; }
 
-Trx *VacuousTrxKit::create_trx(LogHandler &, int32_t /*trx_id*/) { return nullptr; }
+Trx *VacuousTrxKit::create_trx(LogHandler &, int64_t /*trx_id*/) { return nullptr; }
 
 void VacuousTrxKit::destroy_trx(Trx *trx) { delete trx; }
 

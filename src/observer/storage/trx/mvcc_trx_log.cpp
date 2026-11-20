@@ -68,7 +68,7 @@ MvccTrxLogHandler::MvccTrxLogHandler(LogHandler &log_handler) : log_handler_(log
 
 MvccTrxLogHandler::~MvccTrxLogHandler() {}
 
-RC MvccTrxLogHandler::insert_record(int32_t trx_id, Table *table, const RID &rid)
+RC MvccTrxLogHandler::insert_record(int64_t trx_id, Table *table, const RID &rid)
 {
   ASSERT(trx_id > 0, "invalid trx_id:%d", trx_id);
 
@@ -83,7 +83,7 @@ RC MvccTrxLogHandler::insert_record(int32_t trx_id, Table *table, const RID &rid
       lsn, LogModule::Id::TRANSACTION, span<const char>(reinterpret_cast<const char *>(&log_entry), sizeof(log_entry)));
 }
 
-RC MvccTrxLogHandler::delete_record(int32_t trx_id, Table *table, const RID &rid)
+RC MvccTrxLogHandler::delete_record(int64_t trx_id, Table *table, const RID &rid)
 {
   ASSERT(trx_id > 0, "invalid trx_id:%d", trx_id);
 
@@ -98,9 +98,9 @@ RC MvccTrxLogHandler::delete_record(int32_t trx_id, Table *table, const RID &rid
       lsn, LogModule::Id::TRANSACTION, span<const char>(reinterpret_cast<const char *>(&log_entry), sizeof(log_entry)));
 }
 
-RC MvccTrxLogHandler::commit(int32_t trx_id, int32_t commit_trx_id)
+RC MvccTrxLogHandler::commit(int64_t trx_id, int64_t commit_trx_id)
 {
-  ASSERT(trx_id > 0 && commit_trx_id > trx_id, "invalid trx_id:%d, commit_trx_id:%d", trx_id, commit_trx_id);
+  ASSERT(trx_id > 0 && commit_trx_id > 0, "invalid trx_id:%ld, commit_id:%ld", trx_id, commit_trx_id);
 
   MvccTrxCommitLogEntry log_entry;
   log_entry.header.operation_type = MvccTrxLogOperation(MvccTrxLogOperation::Type::COMMIT).index();
@@ -119,7 +119,7 @@ RC MvccTrxLogHandler::commit(int32_t trx_id, int32_t commit_trx_id)
   return log_handler_.wait_lsn(lsn);
 }
 
-RC MvccTrxLogHandler::rollback(int32_t trx_id)
+RC MvccTrxLogHandler::rollback(int64_t trx_id)
 {
   ASSERT(trx_id > 0, "invalid trx_id:%d", trx_id);
 
@@ -164,8 +164,17 @@ RC MvccTrxLogReplayer::replay(const LogEntry &entry)
   rc = trx->redo(&db_, entry);
 
   /// 如果事务结束了，需要从内存中把它删除
-  if (MvccTrxLogOperation(header->operation_type).type() == MvccTrxLogOperation::Type::ROLLBACK ||
-      MvccTrxLogOperation(header->operation_type).type() == MvccTrxLogOperation::Type::COMMIT) {
+  MvccTrxLogOperation::Type operation_type = MvccTrxLogOperation(header->operation_type).type();
+  if (operation_type == MvccTrxLogOperation::Type::COMMIT) {
+    auto *commit_entry = reinterpret_cast<const MvccTrxCommitLogEntry *>(entry.data());
+    trx_kit_.advance_commit_seq(commit_entry->commit_trx_id);
+    trx_kit_.status_table().commit_trx(commit_entry->header.trx_id, commit_entry->commit_trx_id);
+  } else if (operation_type == MvccTrxLogOperation::Type::ROLLBACK) {
+    trx_kit_.status_table().abort_trx(header->trx_id);
+  }
+
+  if (operation_type == MvccTrxLogOperation::Type::ROLLBACK ||
+      operation_type == MvccTrxLogOperation::Type::COMMIT) {
     Trx *trx = trx_map_[header->trx_id];
     trx_kit_.destroy_trx(trx);
     trx_map_.erase(header->trx_id);

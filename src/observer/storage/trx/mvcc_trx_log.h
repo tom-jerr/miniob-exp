@@ -64,7 +64,7 @@ private:
 struct MvccTrxLogHeader
 {
   int32_t operation_type;  ///< 操作类型
-  int32_t trx_id;          ///< 事务ID
+  int64_t trx_id;          ///< 事务ID
 
   static const int32_t SIZE;  ///< 头部大小
 
@@ -95,7 +95,7 @@ struct MvccTrxRecordLogEntry
 struct MvccTrxCommitLogEntry
 {
   MvccTrxLogHeader header;         ///< 日志头部
-  int32_t          commit_trx_id;  ///< 提交的事务ID
+  int64_t          commit_trx_id;  ///< 提交序号（全局单调递增）
 
   static const int32_t SIZE;
 
@@ -115,24 +115,24 @@ public:
   /**
    * @brief 记录插入一条记录的日志
    */
-  RC insert_record(int32_t trx_id, Table *table, const RID &rid);
+  RC insert_record(int64_t trx_id, Table *table, const RID &rid);
 
   /**
    * @brief 记录删除一条记录的日志
    */
-  RC delete_record(int32_t trx_id, Table *table, const RID &rid);
+  RC delete_record(int64_t trx_id, Table *table, const RID &rid);
 
   /**
    * @brief 记录提交事务的日志
    * @details 会等待日志落地
    */
-  RC commit(int32_t trx_id, int32_t commit_trx_id);
+  RC commit(int64_t trx_id, int64_t commit_trx_id);
 
   /**
    * @brief 记录回滚事务的日志
    * @details 不会等待日志落地
    */
-  RC rollback(int32_t trx_id);
+  RC rollback(int64_t trx_id);
 
 private:
   LogHandler &log_handler_;
@@ -160,5 +160,5 @@ private:
   LogHandler &log_handler_;  ///< 日志处理器
 
   ///< 事务ID到事务的映射。在重做结束后，如果还有未提交的事务，需要回滚。
-  unordered_map<int32_t, MvccTrx *> trx_map_;
+  unordered_map<int64_t, MvccTrx *> trx_map_;
 };
