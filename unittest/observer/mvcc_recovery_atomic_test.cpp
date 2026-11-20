@@ -62,6 +62,27 @@ int scan_count(Table *table, Trx *trx, vector<Record> *records = nullptr)
   return count;
 }
 
+Record scan_first(Table *table, Trx *trx, int id)
+{
+  RecordScanner *scanner = nullptr;
+  EXPECT_EQ(RC::SUCCESS, table->get_record_scanner(scanner, trx, ReadWriteMode::READ_ONLY));
+  Record record;
+  while (RC::SUCCESS == scanner->next(record)) {
+    if (field_int(table, record, "id") == id) {
+      Record copy;
+      EXPECT_EQ(RC::SUCCESS, copy.copy_data(record.data(), record.len()));
+      copy.set_rid(record.rid());
+      copy.set_key(record.key());
+      scanner->close_scan();
+      delete scanner;
+      return copy;
+    }
+  }
+  scanner->close_scan();
+  delete scanner;
+  return Record();
+}
+
 RC append_commit_log(Db *db, Trx *trx, int64_t commit_seq)
 {
   MvccTrxCommitLogEntry entry{};
@@ -138,7 +159,24 @@ TEST(MvccRecoveryAtomic, commit_log_without_flush_publishes_all_rows)
   ASSERT_EQ(RC::SUCCESS, trx2->start_if_need());
   ASSERT_EQ(3, scan_count(table2, trx2));
   ASSERT_EQ(RC::SUCCESS, trx2->rollback());
+  kit2.destroy_trx(trx2);
+
+  // A clean sync checkpoints past the commit log. Reopen must still see the
+  // committed rows (commit_seq is restored, not reset to zero).
+  ASSERT_EQ(RC::SUCCESS, db2->sync());
   db2.reset();
+
+  auto db3 = make_unique<Db>();
+  ASSERT_EQ(RC::SUCCESS, db3->init("rec_db", db_path2.c_str(), "mvcc", "disk"));
+  Table *table3 = db3->find_table("t_rec");
+  ASSERT_NE(nullptr, table3);
+  MvccTrxKit &kit3 = static_cast<MvccTrxKit &>(db3->trx_kit());
+  Trx        *trx3 = kit3.create_trx(db3->log_handler());
+  ASSERT_EQ(RC::SUCCESS, trx3->start_if_need());
+  ASSERT_EQ(3, scan_count(table3, trx3));
+  ASSERT_EQ(RC::SUCCESS, trx3->rollback());
+  kit3.destroy_trx(trx3);
+  db3.reset();
   filesystem::remove_all(root);
 }
 
@@ -272,6 +310,22 @@ TEST(MvccRecoveryAtomic, update_commit_log_publishes_new_version_only)
   ASSERT_TRUE(found_new);
   ASSERT_FALSE(found_old);
   ASSERT_EQ(RC::SUCCESS, trx2->rollback());
+  kit2.destroy_trx(trx2);
+
+  ASSERT_EQ(RC::SUCCESS, db2->sync());
   db2.reset();
+
+  auto db3 = make_unique<Db>();
+  ASSERT_EQ(RC::SUCCESS, db3->init("rec_db", db_path2.c_str(), "mvcc", "disk"));
+  Table *table3 = db3->find_table("t_rec");
+  ASSERT_NE(nullptr, table3);
+  MvccTrxKit &kit3 = static_cast<MvccTrxKit &>(db3->trx_kit());
+  Trx        *trx3 = kit3.create_trx(db3->log_handler());
+  ASSERT_EQ(RC::SUCCESS, trx3->start_if_need());
+  ASSERT_EQ(2, scan_count(table3, trx3));
+  ASSERT_EQ(99, field_int(table3, scan_first(table3, trx3, 2), "v"));
+  ASSERT_EQ(RC::SUCCESS, trx3->rollback());
+  kit3.destroy_trx(trx3);
+  db3.reset();
   filesystem::remove_all(root);
 }

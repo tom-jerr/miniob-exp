@@ -331,6 +331,19 @@ RC Db::recover()
     return rc;
   }
 
+  // 重启后恢复持久化的 commit_seq，并修复/回收未回填的 -T 行；
+  // GC 也会从数据中的正 xid 自愈旧 meta 缺少的序号。
+  if (dynamic_cast<MvccTrxKit *>(trx_kit_.get()) != nullptr) {
+    auto *mvcc_kit = static_cast<MvccTrxKit *>(trx_kit_.get());
+    mvcc_kit->advance_commit_seq(std::max<int64_t>(mvcc_kit->current_commit_seq(), persisted_commit_seq_));
+    MvccGc gc;
+    rc = gc.collect(*this);
+    if (OB_FAIL(rc)) {
+      LOG_WARN("failed to repair mvcc rows after recovery. db=%s, rc=%s", name_.c_str(), strrc(rc));
+      return rc;
+    }
+  }
+
   LOG_INFO("Successfully recover db. db=%s checkpoint_lsn=%d", name_.c_str(), check_point_lsn_);
   return rc;
 }
@@ -365,8 +378,12 @@ RC Db::init_meta()
       return RC::IOERR_TOO_LONG;
     }
 
-    buffer[n]        = '\0';
-    check_point_lsn_ = atoll(buffer);  // 当前元数据就这一个数字
+    buffer[n] = '\0';
+    // 旧格式只有 check_point_lsn；新格式追加已持久化的 MVCC commit_seq。
+    if (sscanf(buffer, "%ld %ld", &check_point_lsn_, &persisted_commit_seq_) != 2) {
+      check_point_lsn_      = atoll(buffer);
+      persisted_commit_seq_ = 0;
+    }
     LOG_INFO("Successfully read db meta file. db=%s, file=%s, check_point_lsn=%ld", 
              name_.c_str(), db_meta_file_path.c_str(), check_point_lsn_);
   }
@@ -394,6 +411,10 @@ RC Db::flush_meta()
   }
 
   string buffer = to_string(check_point_lsn_);
+  if (dynamic_cast<MvccTrxKit *>(trx_kit_.get()) != nullptr) {
+    auto *mvcc_kit = static_cast<MvccTrxKit *>(trx_kit_.get());
+    buffer += " " + to_string(mvcc_kit->current_commit_seq());
+  }
   int    n      = write(fd, buffer.c_str(), buffer.size());
   if (n < 0) {
     LOG_ERROR("Failed to write db meta file. db=%s, file=%s, errno=%s", 

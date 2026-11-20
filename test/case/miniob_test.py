@@ -98,7 +98,8 @@ class MiniObServer:
   用来控制miniob的服务器程序。负责程序的启停和环境的初始化和清理工作
   '''
 
-  def __init__(self, base_dir: str, data_dir: str, config_file: str, server_port: int, server_socket: str, clean_data_dir: bool):
+  def __init__(self, base_dir: str, data_dir: str, config_file: str, server_port: int, server_socket: str, clean_data_dir: bool,
+      server_args: str = ''):
     self.__check_base_dir(base_dir)
     self.__check_data_dir(data_dir, clean_data_dir)
 
@@ -111,6 +112,7 @@ class MiniObServer:
     self.__config = config_file
     self.__server_port = server_port
     self.__server_socket = server_socket.strip()
+    self.__server_args   = server_args.split()
 
     self.__process = None
 
@@ -179,6 +181,7 @@ class MiniObServer:
     else:
       observer_command.append('-p')
       observer_command.append(str(self.__server_port))
+    observer_command.extend(self.__server_args)
 
     process = subprocess.Popen(observer_command, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, cwd=self.__data_dir)
     return_code = process.poll()
@@ -402,7 +405,7 @@ class CommandRunner:
     切换当前连接
     '''
 
-    client = self.__clients[name]
+    client = self.__clients.get(name)
     if client == None:
       _logger.error("No such client named %s", name)
       return False
@@ -419,7 +422,7 @@ class CommandRunner:
       _logger.error("Found empty client name")
       return False
 
-    client = self.__clients[name]
+    client = self.__clients.get(name)
     if client != None:
       _logger.error("Client with name %s already exists", name)
       return False
@@ -655,6 +658,7 @@ class TestSuite:
     self.__db_server_base_dir = None
     self.__db_data_dir = None
     self.__db_config = None
+    self.__server_args = ''
     self.__server_port = 0
     self.__use_unix_socket = False # 如果指定unix socket，那么就不再使用TCP连接
     self.__need_start_server = True
@@ -687,6 +691,9 @@ class TestSuite:
 
   def set_server_port(self, server_port):
     self.__server_port = server_port
+
+  def set_server_args(self, server_args):
+    self.__server_args = server_args
 
   def set_use_unix_socket(self, use_unix_socket: bool):
     self.__use_unix_socket = use_unix_socket
@@ -844,7 +851,7 @@ class TestSuite:
         unix_socket = self.__get_unix_socket_address()
 
       miniob_server = MiniObServer(self.__db_server_base_dir, self.__db_data_dir, 
-          self.__db_config, self.__server_port, unix_socket, clean_data_dir)
+          self.__db_config, self.__server_port, unix_socket, clean_data_dir, self.__server_args)
       miniob_server.init_server()
       result = miniob_server.start_server()
       if result is False:
@@ -883,6 +890,8 @@ def __init_options():
   # 服务程序端口号，客户端也使用这个端口连接服务器。目前还不具备通过配置文件解析端口配置的能力
   options_parser.add_argument('--server-port', action='store', type=int, dest='server_port', default=6789,
                             help='the server port. should be the same with the value in the config')
+  options_parser.add_argument('--server-args', action='store', dest='server_args', default='',
+                            help='extra command line arguments passed to the observer process')
   options_parser.add_argument('--not-use-unix-socket', action='store_true', dest='not_use_unix_socket', default=False,
                             help='If false, server-port will be ignored and will use a random address socket.')
   
@@ -946,6 +955,7 @@ def __init_test_suite(options) -> TestSuite:
   test_suite.set_test_result_tmp_dir(os.path.abspath(options.work_dir + '/result_output'))
 
   test_suite.set_server_port(options.server_port)
+  test_suite.set_server_args(options.server_args)
   test_suite.set_use_unix_socket(not options.not_use_unix_socket)
   test_suite.set_db_server_base_dir(__get_build_path(options.work_dir))
   test_suite.set_db_data_dir(options.work_dir + '/data')
@@ -1098,7 +1108,11 @@ def run(options) -> Tuple[bool, str]:
   return result, eval_result.to_json_string()
 
 if __name__ == '__main__':
-  os.setpgrp()
+  try:
+    os.setpgrp()
+  except PermissionError:
+    # 已处于进程组首位时无法再次 setpgrp；不影响测试
+    pass
   options = __init_options()
 
   result, evaluation = run(options)

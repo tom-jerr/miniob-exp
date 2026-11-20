@@ -54,6 +54,10 @@ RC DeletePhysicalOperator::open(Trx *trx)
   }
 
   child->close();
+  if (rc != RC::RECORD_EOF) {
+    LOG_WARN("failed to scan records. rc=%s", strrc(rc));
+    return rc;
+  }
 
   // 先收集记录再删除
   // 记录的有效性由事务来保证，如果事务不保证删除的有效性，那说明此事务类型不支持并发控制，比如VacuousTrx

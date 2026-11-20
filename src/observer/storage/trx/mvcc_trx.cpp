@@ -324,7 +324,15 @@ RC MvccTrx::visit_record(Table *table, Record &record, ReadWriteMode mode)
 
   switch (end.kind) {
     case XidKind::SELF: return RC::RECORD_INVISIBLE;
-    case XidKind::SEQ: return end.seq > snapshot_seq_ ? RC::SUCCESS : RC::RECORD_INVISIBLE;
+    case XidKind::SEQ:
+      if (end_raw == trx_kit_.max_trx_id()) {
+        return RC::SUCCESS;
+      }
+      if (end.seq > snapshot_seq_) {
+        // 该版本在快照中可见，但已被其它事务提交删除；写访问必须冲突
+        return mode == ReadWriteMode::READ_WRITE ? RC::LOCKED_CONCURRENCY_CONFLICT : RC::SUCCESS;
+      }
+      return RC::RECORD_INVISIBLE;
     case XidKind::ABORTED: return RC::SUCCESS;
     case XidKind::ACTIVE: {
       if (mode == ReadWriteMode::READ_WRITE) {

@@ -1,0 +1,50 @@
+-- echo mvcc update: uncommitted writes are visible only to their transaction
+create table m_up(id int, v int);
+insert into m_up values(1,10);
+insert into m_up values(2,20);
+insert into m_up values(3,30);
+create index i_v on m_up(v);
+-- connect c2
+-- connection c2
+begin;
+update m_up set v=99 where id=2;
+-- sort select * from m_up;
+-- sort select * from m_up where v=99;
+-- sort select * from m_up where v=20;
+-- connection default
+-- sort select * from m_up;
+-- sort select * from m_up where v=99;
+-- connection c2
+rollback;
+-- sort select * from m_up;
+-- sort select * from m_up where v=99;
+
+-- echo mvcc update: commit publishes the new version
+-- connection c2
+begin;
+update m_up set v=77 where id=1;
+commit;
+-- connection default
+-- sort select * from m_up;
+-- sort select * from m_up where v=77;
+-- sort select * from m_up where v=10;
+
+-- echo mvcc update: failed statement aborts the transaction
+begin;
+update m_up set missing_column=1;
+commit;
+-- sort select * from m_up;
+
+-- echo mvcc update: concurrent write conflict fails the statement
+-- connect c3
+-- connection c3
+begin;
+update m_up set v=55 where id=3;
+-- connection default
+update m_up set v=11 where id=1;
+update m_up set v=66 where id=3;
+-- connection c3
+rollback;
+-- connection default
+-- sort select * from m_up where id=1;
+-- sort select * from m_up where id=3;

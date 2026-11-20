@@ -49,6 +49,10 @@ RC UpdatePhysicalOperator::open(Trx *trx)
     records_.emplace_back(std::move(owned));
   }
   child->close();
+  if (rc != RC::RECORD_EOF) {
+    LOG_WARN("failed to scan records. rc=%s", strrc(rc));
+    return rc;
+  }
 
   for (Record &old_record : records_) {
     Record new_record = old_record;

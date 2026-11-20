@@ -150,5 +150,6 @@ private:
   int32_t next_table_id_ = 0;
 
   LSN    check_point_lsn_ = 0;  ///< 当前数据库的检查点LSN。会记录到磁盘中。
+  int64_t persisted_commit_seq_ = 0;  ///< 已持久化的 MVCC 提交序号
   string storage_engine_;
 };

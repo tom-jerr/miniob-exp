@@ -5,6 +5,7 @@
 
 #include "common/log/log.h"
 #include "storage/db/db.h"
+#include "storage/field/field.h"
 #include "storage/record/record_scanner.h"
 #include "storage/table/table.h"
 #include "storage/table/table_meta.h"
@@ -80,11 +81,22 @@ RC MvccGc::collect(Db &db)
     if (trx_fields.size() < 2) {
       continue;
     }
-    const FieldMeta &begin_field = trx_fields[0];
-    const FieldMeta &end_field   = trx_fields[1];
+    const FieldMeta &begin_meta = trx_fields[0];
+    const FieldMeta &end_meta   = trx_fields[1];
+    Field            begin_field;
+    Field            end_field;
+    begin_field.set_field(&begin_meta);
+    end_field.set_field(&end_meta);
 
     // 先收集 RID，避免边扫描页面边删除槽位。
-    vector<RID> dead_rids;
+    struct Repair
+    {
+      RID     rid;
+      int64_t begin_seq;
+      int64_t end_seq;
+    };
+    vector<Repair> repairs;
+    vector<RID>    dead_rids;
     RecordScanner *scanner = nullptr;
     RC rc = table->get_record_scanner(scanner, nullptr, ReadWriteMode::READ_ONLY);
     if (OB_FAIL(rc)) {
@@ -95,14 +107,58 @@ RC MvccGc::collect(Db &db)
     while (RC::SUCCESS == scanner->next(record)) {
       int64_t begin_raw = 0;
       int64_t end_raw   = 0;
-      memcpy(&begin_raw, record.data() + begin_field.offset(), sizeof(begin_raw));
-      memcpy(&end_raw, record.data() + end_field.offset(), sizeof(end_raw));
+      memcpy(&begin_raw, record.data() + begin_meta.offset(), sizeof(begin_raw));
+      memcpy(&end_raw, record.data() + end_meta.offset(), sizeof(end_raw));
+      // 老 meta 可能没有持久化 commit_seq；从数据里的正 xid 自愈。
+      if (begin_raw > 0) {
+        kit.advance_commit_seq(begin_raw);
+      }
+      if (end_raw > 0 && end_raw != kit.max_trx_id()) {
+        kit.advance_commit_seq(end_raw);
+      }
       if (is_dead_version(kit.status_table(), begin_raw, end_raw, watermark)) {
         dead_rids.push_back(record.rid());
+        continue;
+      }
+      // 已提交但尚未回填的 -T：在 checkpoint 前改写成提交序号，
+      // 否则重启后状态表不再包含该事务，行会变成不可见。
+      Repair repair{record.rid(), -1, -1};
+      if (begin_raw < 0) {
+        TxnStatusTable::Status status = kit.status_table().get(-begin_raw);
+        if (status.state == TxnStatusTable::State::COMMITTED) {
+          repair.begin_seq = status.commit_seq;
+        }
+      }
+      if (end_raw < 0) {
+        TxnStatusTable::Status status = kit.status_table().get(-end_raw);
+        if (status.state == TxnStatusTable::State::COMMITTED) {
+          repair.end_seq = status.commit_seq;
+        } else if (status.state == TxnStatusTable::State::ABORTED) {
+          repair.end_seq = kit.max_trx_id();
+        }
+      }
+      if (repair.begin_seq >= 0 || repair.end_seq >= 0) {
+        repairs.push_back(repair);
       }
     }
     scanner->close_scan();
     delete scanner;
+
+    for (const Repair &repair : repairs) {
+      rc = table->visit_record(repair.rid, [&repair, &begin_field, &end_field](Record &record) -> bool {
+        if (repair.begin_seq >= 0) {
+          begin_field.set_int64(record, repair.begin_seq);
+        }
+        if (repair.end_seq >= 0) {
+          end_field.set_int64(record, repair.end_seq);
+        }
+        return true;
+      });
+      if (OB_FAIL(rc)) {
+        LOG_WARN("failed to repair committed record. table=%s, rid=%s, rc=%s",
+            table->name(), repair.rid.to_string().c_str(), strrc(rc));
+      }
+    }
 
     for (const RID &rid : dead_rids) {
       Record dead;

@@ -1,0 +1,29 @@
+-- echo update index: update an indexed column
+create table t_ix(id int, v int);
+insert into t_ix values(1,10);
+insert into t_ix values(2,20);
+insert into t_ix values(3,30);
+create index i_v on t_ix(v);
+update t_ix set v=99 where id=2;
+-- sort select * from t_ix;
+-- sort select * from t_ix where v=99;
+-- sort select * from t_ix where v=20;
+
+-- echo update index: duplicate index keys
+update t_ix set v=99 where id=3;
+-- sort select * from t_ix where v=99;
+
+-- echo update index: update the indexed column again
+update t_ix set v=77 where id=2;
+-- sort select * from t_ix;
+-- sort select * from t_ix where v=99;
+-- sort select * from t_ix where v=77;
+
+-- echo update index: update the id column
+update t_ix set id=10 where id=1;
+-- sort select * from t_ix;
+-- sort select * from t_ix where id=10;
+
+-- echo update index: failed update keeps data
+update t_ix set v='not_an_int' where id=10;
+-- sort select * from t_ix;
