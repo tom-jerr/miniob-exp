@@ -1,0 +1,14 @@
+-- echo lsm engine: insert and scan
+create table l_t(id int, v int) engine=lsm;
+insert into l_t values(1,10);
+insert into l_t values(2,20);
+insert into l_t values(3,30);
+select * from l_t;
+-- echo lsm engine: secondary index
+create index l_v on l_t(v);
+-- sort select * from l_t where v=20;
+-- echo lsm engine: delete and index maintenance
+delete from l_t where v=30;
+select * from l_t;
+-- sort select * from l_t where v=20;
+-- sort select * from l_t where v=30;

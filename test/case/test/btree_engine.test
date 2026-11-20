@@ -1,0 +1,27 @@
+-- echo btree engine: clustered primary key
+create table b_pk(id int, age int, name char(10), primary key(id)) engine=btree;
+insert into b_pk values(2,20,'b');
+insert into b_pk values(1,10,'a');
+insert into b_pk values(3,20,'c');
+select id, age from b_pk;
+-- echo btree engine: duplicate primary key must fail
+insert into b_pk values(1,99,'dup');
+-- echo btree engine: secondary index
+create index b_age on b_pk(age);
+-- sort select id from b_pk where age=20;
+delete from b_pk where id=2;
+-- sort select id from b_pk where age=20;
+select id from b_pk;
+
+-- echo btree engine: hidden rowid
+create table b_rowid(a int, v int) engine=btree;
+insert into b_rowid values(20,1);
+insert into b_rowid values(10,2);
+select * from b_rowid;
+
+-- echo btree engine: composite primary key
+create table b_comp(a int, b int, v int, primary key(a,b)) engine=btree;
+insert into b_comp values(2,1,21);
+insert into b_comp values(1,2,12);
+insert into b_comp values(1,1,11);
+select * from b_comp;

@@ -196,6 +196,19 @@ Key:   t{TableID}r{AutoIncID}
 Value: [col1, col2, col3, col4]
 ```
 
+### 当前实现状态
+
+表引擎侧已补齐到与 heap 相同的 DML 能力（仍以自增列作 Key）：
+
+- 支持 insert/delete、全表扫描和二级索引（`create index`）。二级索引的叶子 value 保存自增 rid，回表时用 `Codec::encode` 重新构造 Key 并读取整行。
+- `record.key()` 保存完整的 LSM Key；删除依赖它定位数据，索引扫描依赖它回表。
+- 重启时从 manifest 找到当前 memtable 的 WAL 并回放；WAL 格式为 `seq/key_len/key/value_len/value`，写入后 flush。
+- 删除由空 value 墓碑表示，UserIterator 已按墓碑过滤。
+
+尚未完成（ObLsm 课程实验的剩余部分）：SSTable/Block 读写、compaction、`ObLsmTransaction`。
+因此 memtable 超过 `memtable_size`（默认 8KB）触发冻结、以及 `-t lsm` 事务路径仍会返回 `UNIMPLEMENTED`；
+vacuous 事务下的小数据量 DML、索引与重启回放已通过测试。
+
 ## 参考资料
 
 1. [OceanBase](https://www.oceanbase.com/docs/oceanbase-database-cn)
