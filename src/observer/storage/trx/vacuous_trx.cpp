@@ -36,6 +36,11 @@ RC VacuousTrx::delete_record(Table *table, Record &record) { return table->delet
 
 RC VacuousTrx::visit_record(Table *table, Record &record, ReadWriteMode) { return RC::SUCCESS; }
 
+RC VacuousTrx::update_record(Table *table, Record &old_record, Record &new_record)
+{
+  return table->update_record_with_trx(old_record, new_record, this);
+}
+
 RC VacuousTrx::start_if_need() { return RC::SUCCESS; }
 
 RC VacuousTrx::commit() { return RC::SUCCESS; }

@@ -8,19 +8,67 @@ EITHER EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO NON-INFRINGEMENT,
 MERCHANTABILITY OR FIT FOR A PARTICULAR PURPOSE.
 See the Mulan PSL v2 for more details. */
 
-//
-// Created by Wangyunlai on 2022/5/22.
-//
-
 #include "sql/stmt/update_stmt.h"
+#include "common/lang/unordered_map.h"
+#include "common/log/log.h"
+#include "sql/stmt/filter_stmt.h"
+#include "storage/db/db.h"
+#include "storage/table/table.h"
 
-UpdateStmt::UpdateStmt(Table *table, Value *values, int value_amount)
-    : table_(table), values_(values), value_amount_(value_amount)
+UpdateStmt::UpdateStmt(Table *table, const FieldMeta *field, const Value &value, FilterStmt *filter_stmt)
+    : table_(table), field_(field), value_(value), filter_stmt_(filter_stmt)
 {}
+
+UpdateStmt::~UpdateStmt()
+{
+  if (filter_stmt_ != nullptr) {
+    delete filter_stmt_;
+    filter_stmt_ = nullptr;
+  }
+}
 
 RC UpdateStmt::create(Db *db, const UpdateSqlNode &update, Stmt *&stmt)
 {
-  // TODO
-  stmt = nullptr;
-  return RC::INTERNAL;
+  if (db == nullptr || update.relation_name.empty() || update.attribute_name.empty()) {
+    LOG_WARN("invalid argument for update statement");
+    return RC::INVALID_ARGUMENT;
+  }
+
+  Table *table = db->find_table(update.relation_name.c_str());
+  if (table == nullptr) {
+    LOG_WARN("no such table. db=%s, table=%s", db->name(), update.relation_name.c_str());
+    return RC::SCHEMA_TABLE_NOT_EXIST;
+  }
+
+  const FieldMeta *field = table->table_meta().field(update.attribute_name.c_str());
+  if (field == nullptr) {
+    LOG_WARN("no such field. table=%s, field=%s", table->name(), update.attribute_name.c_str());
+    return RC::SCHEMA_FIELD_NOT_EXIST;
+  }
+
+  Value value;
+  RC    rc = RC::SUCCESS;
+  if (update.value.attr_type() != field->type()) {
+    rc = Value::cast_to(update.value, field->type(), value);
+    if (OB_FAIL(rc)) {
+      LOG_WARN("failed to cast update value. field=%s, rc=%s", field->name(), strrc(rc));
+      return RC::SCHEMA_FIELD_TYPE_MISMATCH;
+    }
+  } else {
+    value = update.value;
+  }
+
+  unordered_map<string, Table *> table_map;
+  table_map.insert(pair<string, Table *>(update.relation_name, table));
+
+  FilterStmt *filter_stmt = nullptr;
+  rc = FilterStmt::create(db, table, &table_map, update.conditions.data(),
+      static_cast<int>(update.conditions.size()), filter_stmt);
+  if (OB_FAIL(rc)) {
+    LOG_WARN("failed to create filter statement. rc=%s", strrc(rc));
+    return rc;
+  }
+
+  stmt = new UpdateStmt(table, field, value, filter_stmt);
+  return RC::SUCCESS;
 }

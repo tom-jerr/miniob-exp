@@ -1,0 +1,25 @@
+-- echo update heap: update an indexed column
+create table t_up(id int, v int);
+insert into t_up values(1,10);
+insert into t_up values(2,20);
+insert into t_up values(3,30);
+create index i_v on t_up(v);
+update t_up set v=99 where id=2;
+-- sort select * from t_up;
+-- sort select * from t_up where v=99;
+-- sort select * from t_up where v=20;
+
+-- echo update heap: update the id column
+update t_up set id=10 where id=3;
+-- sort select * from t_up;
+
+-- echo update heap: update without where
+update t_up set v=0;
+-- sort select * from t_up;
+-- sort select * from t_up where v=0;
+
+-- echo update heap: invalid statements
+update t_up_missing set v=1;
+update t_up set missing_column=1;
+update t_up set v='not_an_int' where id=1;
+-- sort select * from t_up;

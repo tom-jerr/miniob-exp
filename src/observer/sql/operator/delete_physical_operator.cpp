@@ -42,7 +42,15 @@ RC DeletePhysicalOperator::open(Trx *trx)
 
     RowTuple *row_tuple = static_cast<RowTuple *>(tuple);
     Record   &record    = row_tuple->record();
-    records_.emplace_back(std::move(record));
+    // 堆扫描返回记录指向页面；关闭扫描器前复制成自持内存
+    Record owned;
+    rc = owned.copy_data(record.data(), record.len());
+    if (OB_FAIL(rc)) {
+      return rc;
+    }
+    owned.set_rid(record.rid());
+    owned.set_key(record.key());
+    records_.emplace_back(std::move(owned));
   }
 
   child->close();

@@ -90,6 +90,51 @@ RC HeapTableEngine::delete_record(const Record &record)
   return rc;
 }
 
+RC HeapTableEngine::update_record_with_trx(const Record &old_record, const Record &new_record, Trx *trx)
+{
+  const int record_size = table_meta_->record_size();
+  if (old_record.data() == nullptr || new_record.data() == nullptr || new_record.len() != record_size ||
+      old_record.rid() != new_record.rid()) {
+    return RC::INVALID_ARGUMENT;
+  }
+
+  Record old_copy = old_record;
+
+  auto write_record_data = [&](const char *data) -> RC {
+    return record_handler_->visit_record(old_record.rid(), [data, record_size](Record &inplace) -> bool {
+      memcpy(inplace.data(), data, record_size);
+      return true;
+    });
+  };
+
+  RC rc = write_record_data(new_record.data());
+  if (OB_FAIL(rc)) {
+    LOG_WARN("failed to update heap record. table=%s, rc=%s", table_meta_->name(), strrc(rc));
+    return rc;
+  }
+
+  rc = delete_entry_of_indexes(old_copy.data(), old_copy.rid(), false);
+  if (OB_FAIL(rc)) {
+    write_record_data(old_copy.data());
+    return rc;
+  }
+
+  rc = insert_entry_of_indexes(new_record.data(), new_record.rid());
+  if (OB_FAIL(rc)) {
+    delete_entry_of_indexes(new_record.data(), new_record.rid(), false);
+    RC rc2 = write_record_data(old_copy.data());
+    if (OB_FAIL(rc2)) {
+      LOG_PANIC("failed to restore heap record after index failure. table=%s, rc=%s", table_meta_->name(), strrc(rc2));
+    }
+    rc2 = insert_entry_of_indexes(old_copy.data(), old_copy.rid());
+    if (OB_FAIL(rc2)) {
+      LOG_PANIC("failed to restore heap indexes after index failure. table=%s, rc=%s", table_meta_->name(), strrc(rc2));
+    }
+    return rc;
+  }
+  return RC::SUCCESS;
+}
+
 RC HeapTableEngine::get_record_scanner(RecordScanner *&scanner, Trx *trx, ReadWriteMode mode)
 {
   scanner = new HeapRecordScanner(table_, *data_buffer_pool_, trx, db_->log_handler(), mode, nullptr);
