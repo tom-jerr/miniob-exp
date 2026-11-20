@@ -35,10 +35,17 @@ public:
     SessionEvent *session_event = sql_event->session_event();
 
     Session *session = session_event->session();
-    Trx     *trx     = session->current_trx();
+    if (session->is_trx_multi_operation_mode()) {
+      return RC::INVALID_ARGUMENT;
+    }
 
+    Trx *trx = session->current_trx();
     session->set_trx_multi_operation_mode(true);
-
-    return trx->start_if_need();
+    RC rc = trx->start_if_need();
+    if (rc != RC::SUCCESS) {
+      session->set_trx_multi_operation_mode(false);
+      session->destroy_trx();
+    }
+    return rc;
   }
 };

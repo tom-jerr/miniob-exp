@@ -62,6 +62,7 @@ See the Mulan PSL v2 for more details. */
   DEFINE_RC(LOCKED_UNLOCK)               \
   DEFINE_RC(LOCKED_NEED_WAIT)            \
   DEFINE_RC(LOCKED_CONCURRENCY_CONFLICT) \
+  DEFINE_RC(TRX_ABORTED)                 \
   DEFINE_RC(FILE_EXIST)                  \
   DEFINE_RC(FILE_NOT_EXIST)              \
   DEFINE_RC(FILE_NAME)                   \

@@ -1,0 +1,21 @@
+-- echo transaction: failed statement aborts the transaction
+create table ts(id int);
+insert into ts values(1);
+begin;
+select * from missing_table;
+select * from ts;
+commit;
+select * from ts;
+
+-- echo transaction: nested begin is rejected
+begin;
+begin;
+rollback;
+
+-- echo transaction: end without begin is rejected
+commit;
+rollback;
+
+-- echo transaction: autocommit still works
+insert into ts values(2);
+select * from ts;

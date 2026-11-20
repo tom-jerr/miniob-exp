@@ -61,6 +61,10 @@ public:
    */
   bool is_trx_multi_operation_mode() const;
 
+  bool trx_failed() const { return trx_failed_; }
+  void mark_trx_failed() { trx_failed_ = true; }
+  void clear_trx_failed() { trx_failed_ = false; }
+
   /**
    * @brief 当前会话关联的事务
    *
@@ -113,6 +117,7 @@ private:
   SessionEvent *current_request_ = nullptr;  ///< 当前正在处理的请求
 
   bool trx_multi_operation_mode_ = false;  ///< 当前事务的模式，是否多语句模式. 单语句模式自动提交
+  bool trx_failed_               = false;  ///< 事务内语句失败，COMMIT 时只允许回滚
 
   bool sql_debug_   = false;  ///< 是否输出SQL调试信息
   bool hash_join_   = false;  ///< 是否使用hash join

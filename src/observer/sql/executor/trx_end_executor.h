@@ -38,11 +38,22 @@ public:
     SessionEvent *session_event = sql_event->session_event();
 
     Session *session = session_event->session();
+    if (!session->is_trx_multi_operation_mode()) {
+      return RC::INVALID_ARGUMENT;
+    }
+
+    const bool failed = session->trx_failed();
     session->set_trx_multi_operation_mode(false);
+    session->clear_trx_failed();
     Trx *trx = session->current_trx();
 
     if (stmt->type() == StmtType::COMMIT) {
-      rc = trx->commit();
+      if (failed) {
+        trx->rollback();
+        rc = RC::TRX_ABORTED;
+      } else {
+        rc = trx->commit();
+      }
     } else {
       rc = trx->rollback();
     }

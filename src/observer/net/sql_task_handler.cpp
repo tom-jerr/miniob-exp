@@ -17,6 +17,7 @@ See the Mulan PSL v2 for more details. */
 #include "event/session_event.h"
 #include "event/sql_event.h"
 #include "session/session.h"
+#include "sql/stmt/stmt.h"
 
 RC SqlTaskHandler::handle_event(Communicator *communicator)
 {
@@ -37,6 +38,14 @@ RC SqlTaskHandler::handle_event(Communicator *communicator)
   rc = handle_sql(&sql_event);
   if (OB_FAIL(rc)) {
     LOG_TRACE("failed to handle sql. rc=%s", strrc(rc));
+    Session *session = event->session();
+    Stmt    *stmt    = sql_event.stmt();
+    const bool ending = stmt != nullptr &&
+                        (stmt->type() == StmtType::BEGIN || stmt->type() == StmtType::COMMIT ||
+                            stmt->type() == StmtType::ROLLBACK);
+    if (!ending && session->is_trx_multi_operation_mode()) {
+      session->mark_trx_failed();
+    }
     event->sql_result()->set_return_code(rc);
   }
 
@@ -73,6 +82,13 @@ RC SqlTaskHandler::handle_sql(SQLStageEvent *sql_event)
   if (OB_FAIL(rc)) {
     LOG_TRACE("failed to do resolve. rc=%s", strrc(rc));
     return rc;
+  }
+
+  Session *session = sql_event->session_event()->session();
+  Stmt    *stmt    = sql_event->stmt();
+  if (stmt != nullptr && session->is_trx_multi_operation_mode() && session->trx_failed() &&
+      stmt->type() != StmtType::COMMIT && stmt->type() != StmtType::ROLLBACK) {
+    return RC::TRX_ABORTED;
   }
 
   rc = optimize_stage_.handle_request(sql_event);
