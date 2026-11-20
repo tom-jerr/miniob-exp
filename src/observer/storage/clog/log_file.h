@@ -137,6 +137,10 @@ public:
    */
   RC next_file(LogFileWriter &file_writer);
 
+  // 注意：本类故意没有 remove/truncate 接口。当前 checkpoint 只记录恢复起点，
+  // 不删除任何 WAL 文件；在冻结写入、数据页/meta fsync 与截断测试完成之前，
+  // 保留 LSN < checkpoint_lsn 的日志是恢复正确的必要条件。
+
 private:
   /**
    * @brief 从文件名称中获取LSN

@@ -255,6 +255,7 @@ public:
    * 刷新所有页面到double write buffer，即使pin count不是0
    */
   RC flush_all_pages();
+  RC fsync_file();
 
   /**
    * 回放日志时处理page0中已被认定为不存在的page
@@ -326,6 +327,7 @@ public:
   ~BufferPoolManager();
 
   RC init(unique_ptr<DoubleWriteBuffer> dblwr_buffer);
+  RC fsync_all();
 
   RC create_file(const char *file_name);
   RC open_file(LogHandler &log_handler, const char *file_name, DiskBufferPool *&bp);

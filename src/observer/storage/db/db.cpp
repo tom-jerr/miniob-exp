@@ -258,8 +258,14 @@ RC Db::sync()
 {
   std::lock_guard<std::mutex> sync_guard(sync_lock_);
   RC rc = RC::SUCCESS;
-  // 显式 sync 时做一次 MVCC 死版本回收；没有后台线程，也不在提交路径上扫描。
-  if (dynamic_cast<MvccTrxKit *>(trx_kit_.get()) != nullptr) {
+
+  MvccTrxKit *mvcc_kit = dynamic_cast<MvccTrxKit *>(trx_kit_.get());
+  std::unique_lock<std::shared_mutex> checkpoint_guard;
+  if (mvcc_kit != nullptr) {
+    checkpoint_guard = std::unique_lock<std::shared_mutex>(mvcc_kit->checkpoint_gate());
+  }
+
+  if (mvcc_kit != nullptr) {
     MvccGc gc;
     rc = gc.collect(*this);
     if (rc != RC::SUCCESS) {
@@ -267,7 +273,24 @@ RC Db::sync()
       return rc;
     }
   }
-  // 调用所有表的sync函数刷新数据到磁盘
+
+  // 先采样目标 LSN，再刷页；刷页期间提交的日志 LSN > target，恢复时必须重放。
+  const LSN target_lsn = log_handler_->current_lsn();
+
+  bool can_advance_checkpoint = true;
+  if (mvcc_kit != nullptr) {
+    vector<Trx *> trxes;
+    mvcc_kit->all_trxes(trxes);
+    for (Trx *trx : trxes) {
+      MvccTrx *mvcc_trx = dynamic_cast<MvccTrx *>(trx);
+      if (mvcc_trx != nullptr && mvcc_trx->started()) {
+        can_advance_checkpoint = false;
+        LOG_INFO("skip checkpoint: active transaction. trx=%d", trx->id());
+        break;
+      }
+    }
+  }
+
   for (const auto &table_pair : opened_tables_) {
     Table *table = table_pair.second;
     rc           = table->sync();
@@ -280,27 +303,45 @@ RC Db::sync()
 
   auto dblwr_buffer = static_cast<DiskDoubleWriteBuffer *>(buffer_pool_manager_->get_dblwr_buffer());
   rc                = dblwr_buffer->flush_page();
-  LOG_INFO("double write buffer flush pages ret=%s", strrc(rc));
-
-  /*
-  在sync期间，不允许有未完成的事务，也不允许开启新的事物。
-  这个约束不是从程序层面处理的，而是认为的约束。
-  */
-  LSN current_lsn = log_handler_->current_lsn();
-  rc              = log_handler_->wait_lsn(current_lsn);
   if (OB_FAIL(rc)) {
-    LOG_ERROR("Failed to wait lsn. lsn=%ld, rc=%d:%s", current_lsn, rc, strrc(rc));
+    LOG_ERROR("Failed to flush double write buffer. db=%s, rc=%s", name_.c_str(), strrc(rc));
     return rc;
   }
 
-  check_point_lsn_ = current_lsn;
+  // 数据/索引页写入后 fsync，再 fsync dblwr 的 invalid 标记。
+  rc = buffer_pool_manager_->fsync_all();
+  if (OB_FAIL(rc)) {
+    LOG_ERROR("Failed to fsync data files. db=%s, rc=%s", name_.c_str(), strrc(rc));
+    return rc;
+  }
+  rc = dblwr_buffer->flush_page();
+  if (OB_FAIL(rc)) {
+    LOG_ERROR("Failed to fsync double write buffer metadata. db=%s, rc=%s", name_.c_str(), strrc(rc));
+    return rc;
+  }
+
+  rc = log_handler_->wait_lsn(target_lsn);
+  if (OB_FAIL(rc)) {
+    LOG_ERROR("Failed to wait lsn. lsn=%ld, rc=%d:%s", target_lsn, rc, strrc(rc));
+    return rc;
+  }
+
+  if (!can_advance_checkpoint) {
+    LOG_INFO("sync flushed pages but did not advance checkpoint. db=%s target_lsn=%ld", name_.c_str(), target_lsn);
+    return RC::SUCCESS;
+  }
+
+  check_point_lsn_ = target_lsn;
   rc               = flush_meta();
   if (OB_FAIL(rc)) {
     LOG_ERROR("Failed to flush meta. db=%s, rc=%d:%s", name_.c_str(), rc, strrc(rc));
     return rc;
   }
-  LOG_INFO("Successfully sync db. db=%s", name_.c_str());
-  return rc;
+
+  // 注意：不删除 LSN < checkpoint 的 WAL。冻结/截断协议未实现前，
+  // 保留全部 WAL 是恢复正确的必要条件。
+  LOG_INFO("Successfully sync db. db=%s checkpoint_lsn=%ld", name_.c_str(), check_point_lsn_);
+  return RC::SUCCESS;
 }
 
 RC Db::recover()
@@ -376,6 +417,7 @@ RC Db::init_meta()
     if (n >= static_cast<int>(sizeof(buffer))) {
       LOG_WARN("Db meta file is too large. db=%s, file=%s, buffer size=%ld", 
                name_.c_str(), db_meta_file_path.c_str(), sizeof(buffer));
+      close(fd);
       return RC::IOERR_TOO_LONG;
     }
 
@@ -420,12 +462,21 @@ RC Db::flush_meta()
   if (n < 0) {
     LOG_ERROR("Failed to write db meta file. db=%s, file=%s, errno=%s", 
               name_.c_str(), temp_meta_file_path.c_str(), strerror(errno));
+    ::close(fd);
     rc = RC::IOERR_WRITE;
   } else if (n != static_cast<int>(buffer.size())) {
     LOG_ERROR("Failed to write db meta file. db=%s, file=%s, buffer size=%ld, write size=%d", 
               name_.c_str(), temp_meta_file_path.c_str(), buffer.size(), n);
+    ::close(fd);
     rc = RC::IOERR_WRITE;
   } else {
+    if (::fsync(fd) != 0) {
+      LOG_ERROR("Failed to fsync db meta file. db=%s, file=%s, errno=%s",
+          name_.c_str(), temp_meta_file_path.c_str(), strerror(errno));
+      ::close(fd);
+      return RC::IOERR_WRITE;
+    }
+    ::close(fd);
     error_code ec;
     filesystem::rename(temp_meta_file_path, meta_file_path, ec);
     if (ec) {
@@ -433,7 +484,12 @@ RC Db::flush_meta()
                 name_.c_str(), temp_meta_file_path.c_str(), ec.message().c_str());
       rc = RC::IOERR_WRITE;
     } else {
-
+      // rename 的目录项也必须落盘，否则崩溃后可能看不到新控制文件。
+      int dir_fd = ::open(path_.c_str(), O_RDONLY | O_DIRECTORY);
+      if (dir_fd >= 0) {
+        ::fsync(dir_fd);
+        ::close(dir_fd);
+      }
       LOG_INFO("Successfully write db meta file. db=%s, file=%s, check_point_lsn=%ld", 
                name_.c_str(), temp_meta_file_path.c_str(), check_point_lsn_);
     }

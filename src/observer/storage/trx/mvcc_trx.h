@@ -15,6 +15,7 @@ See the Mulan PSL v2 for more details. */
 #pragma once
 
 #include <mutex>
+#include <shared_mutex>
 
 #include "common/lang/vector.h"
 #include "storage/trx/trx.h"
@@ -50,6 +51,7 @@ public:
   void    publish_commit_seq(int64_t commit_seq);
   void    advance_commit_seq(int64_t commit_seq);
   std::mutex &commit_lock() { return commit_lock_; }
+  std::shared_mutex &checkpoint_gate() { return checkpoint_gate_; }
 
   TxnStatusTable &status_table() { return status_; }
 
@@ -65,6 +67,7 @@ private:
   atomic<int64_t> commit_seq_{0};           // 已分配的最大提交序号
   atomic<int64_t> published_commit_seq_{0}; // 已发布、可被快照看到的最大提交序号
   std::mutex      commit_lock_;
+  std::shared_mutex checkpoint_gate_;  // sync 检查点阻塞新事务 start
   TxnStatusTable  status_;
 
   common::Mutex lock_;

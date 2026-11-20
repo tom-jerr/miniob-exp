@@ -13,6 +13,7 @@ See the Mulan PSL v2 for more details. */
 // without a COMMIT log is rolled back on reopen.
 
 #include <cstring>
+#include <fstream>
 #include <filesystem>
 #include <memory>
 
@@ -327,5 +328,122 @@ TEST(MvccRecoveryAtomic, update_commit_log_publishes_new_version_only)
   ASSERT_EQ(RC::SUCCESS, trx3->rollback());
   kit3.destroy_trx(trx3);
   db3.reset();
+  filesystem::remove_all(root);
+}
+
+
+TEST(MvccRecoveryAtomic, checkpoint_survives_without_wal_files)
+{
+  filesystem::path root = "mvcc_checkpoint_test";
+  filesystem::remove_all(root);
+  filesystem::create_directories(root);
+  filesystem::path db_path  = root / "db1";
+  filesystem::path db_path2 = root / "db2";
+  filesystem::create_directories(db_path);
+  filesystem::create_directories(db_path2);
+
+  auto db = make_unique<Db>();
+  ASSERT_EQ(RC::SUCCESS, db->init("ckpt_db", db_path.c_str(), "mvcc", "disk"));
+  vector<AttrInfoSqlNode> attrs(2);
+  attrs[0].name = "id"; attrs[0].type = AttrType::INTS; attrs[0].length = sizeof(int);
+  attrs[1].name = "v";  attrs[1].type = AttrType::INTS; attrs[1].length = sizeof(int);
+  ASSERT_EQ(RC::SUCCESS, db->create_table("t_ckpt", attrs, {}));
+  Table *table = db->find_table("t_ckpt");
+  ASSERT_NE(nullptr, table);
+
+  auto *kit = static_cast<MvccTrxKit *>(&db->trx_kit());
+  Trx  *seed = kit->create_trx(db->log_handler());
+  ASSERT_EQ(RC::SUCCESS, seed->start_if_need());
+  vector<Value> values(2);
+  values[0].set_int(1); values[1].set_int(10);
+  Record record;
+  ASSERT_EQ(RC::SUCCESS, table->make_record(values.size(), values.data(), record));
+  ASSERT_EQ(RC::SUCCESS, seed->insert_record(table, record));
+  ASSERT_EQ(RC::SUCCESS, seed->commit());
+  kit->destroy_trx(seed);
+
+  vector<string> wal_before;
+  for (const auto &entry : filesystem::directory_iterator(db_path / "clog")) {
+    if (entry.is_regular_file()) {
+      wal_before.push_back(entry.path().filename().string());
+    }
+  }
+  ASSERT_EQ(RC::SUCCESS, db->sync());
+  vector<string> wal_after;
+  for (const auto &entry : filesystem::directory_iterator(db_path / "clog")) {
+    if (entry.is_regular_file()) {
+      wal_after.push_back(entry.path().filename().string());
+    }
+  }
+  ASSERT_EQ(wal_before.size(), wal_after.size());  // sync 不截断 WAL
+
+  copy_db(db_path, db_path2);
+  db.reset();
+  filesystem::remove_all(db_path2 / "clog");
+  filesystem::create_directories(db_path2 / "clog");
+
+  auto db2 = make_unique<Db>();
+  ASSERT_EQ(RC::SUCCESS, db2->init("ckpt_db", db_path2.c_str(), "mvcc", "disk"));
+  Table *table2 = db2->find_table("t_ckpt");
+  ASSERT_NE(nullptr, table2);
+  auto *kit2 = static_cast<MvccTrxKit *>(&db2->trx_kit());
+  Trx  *trx2 = kit2->create_trx(db2->log_handler());
+  ASSERT_EQ(RC::SUCCESS, trx2->start_if_need());
+  ASSERT_EQ(1, scan_count(table2, trx2));
+  ASSERT_EQ(1, field_int(table2, scan_first(table2, trx2, 1), "id"));
+  ASSERT_EQ(RC::SUCCESS, trx2->rollback());
+  kit2->destroy_trx(trx2);
+  db2.reset();
+  filesystem::remove_all(root);
+}
+
+
+TEST(MvccRecoveryAtomic, active_transaction_blocks_checkpoint_advance)
+{
+  filesystem::path root = "mvcc_checkpoint_active_test";
+  filesystem::remove_all(root);
+  filesystem::create_directories(root);
+  filesystem::path db_path = root / "db";
+  filesystem::create_directories(db_path);
+
+  auto db = make_unique<Db>();
+  ASSERT_EQ(RC::SUCCESS, db->init("ckpt_active", db_path.c_str(), "mvcc", "disk"));
+  vector<AttrInfoSqlNode> attrs(1);
+  attrs[0].name = "id"; attrs[0].type = AttrType::INTS; attrs[0].length = sizeof(int);
+  ASSERT_EQ(RC::SUCCESS, db->create_table("t_ckpt_active", attrs, {}));
+  Table *table = db->find_table("t_ckpt_active");
+  ASSERT_NE(nullptr, table);
+
+  auto *kit = static_cast<MvccTrxKit *>(&db->trx_kit());
+  Trx  *seed = kit->create_trx(db->log_handler());
+  ASSERT_EQ(RC::SUCCESS, seed->start_if_need());
+  vector<Value> values(1);
+  values[0].set_int(1);
+  Record record;
+  ASSERT_EQ(RC::SUCCESS, table->make_record(values.size(), values.data(), record));
+  ASSERT_EQ(RC::SUCCESS, seed->insert_record(table, record));
+  ASSERT_EQ(RC::SUCCESS, seed->commit());
+  kit->destroy_trx(seed);
+  ASSERT_EQ(RC::SUCCESS, db->sync());
+
+  auto read_checkpoint = [&]() -> int64_t {
+    std::ifstream meta((db_path / "ckpt_active.db").c_str());
+    int64_t checkpoint = -1;
+    meta >> checkpoint;
+    return checkpoint;
+  };
+  const int64_t before = read_checkpoint();
+  ASSERT_GE(before, 0);
+
+  Trx *active = kit->create_trx(db->log_handler());
+  ASSERT_EQ(RC::SUCCESS, active->start_if_need());
+  ASSERT_EQ(RC::SUCCESS, db->sync());
+  ASSERT_EQ(before, read_checkpoint());  // 活跃事务时只刷页，不推进检查点
+  ASSERT_EQ(RC::SUCCESS, active->rollback());
+  kit->destroy_trx(active);
+
+  ASSERT_EQ(RC::SUCCESS, db->sync());
+  ASSERT_GE(read_checkpoint(), before);
+  db.reset();
   filesystem::remove_all(root);
 }

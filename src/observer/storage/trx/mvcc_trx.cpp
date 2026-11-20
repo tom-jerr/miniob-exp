@@ -374,6 +374,7 @@ void MvccTrx::trx_fields(Table *table, Field &begin_xid_field, Field &end_xid_fi
 
 RC MvccTrx::start_if_need()
 {
+  std::shared_lock<std::shared_mutex> checkpoint_guard(trx_kit_.checkpoint_gate());
   if (!started_) {
     ASSERT(operations_.empty(), "try to start a new trx while operations is not empty");
     trx_id_       = trx_kit_.next_trx_id();

@@ -566,6 +566,18 @@ RC DiskBufferPool::flush_page_internal(Frame &frame)
   return RC::SUCCESS;
 }
 
+RC DiskBufferPool::fsync_file()
+{
+  if (file_desc_ < 0) {
+    return RC::FILE_NOT_OPENED;
+  }
+  if (::fsync(file_desc_) != 0) {
+    LOG_ERROR("failed to fsync buffer pool file. errno=%d:%s", errno, strerror(errno));
+    return RC::IOERR_WRITE;
+  }
+  return RC::SUCCESS;
+}
+
 RC DiskBufferPool::flush_all_pages()
 {
   list<Frame *> used = frame_manager_.find_list(id());
@@ -789,6 +801,22 @@ BufferPoolManager::~BufferPoolManager()
 RC BufferPoolManager::init(unique_ptr<DoubleWriteBuffer> dblwr_buffer)
 {
   dblwr_buffer_ = std::move(dblwr_buffer);
+  return RC::SUCCESS;
+}
+
+RC BufferPoolManager::fsync_all()
+{
+  unordered_set<DiskBufferPool *> seen;
+  for (const auto &pair : buffer_pools_) {
+    DiskBufferPool *bp = pair.second;
+    if (bp == nullptr || !seen.insert(bp).second) {
+      continue;
+    }
+    RC rc = bp->fsync_file();
+    if (OB_FAIL(rc)) {
+      return rc;
+    }
+  }
   return RC::SUCCESS;
 }
 

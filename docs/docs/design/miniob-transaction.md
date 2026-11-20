@@ -146,7 +146,8 @@ MVCC很好的处理了只读事务与写事务的并发，只读事务可以在�
 - **崩溃恢复**：逻辑 INSERT/DELETE/COMMIT/ROLLBACK 日志 + 状态表；有 COMMIT
   日志的事务重启后全部可见，无 COMMIT 的事务在恢复结束时回滚。`commit_seq`
   持久化在 `sys.db`；回放结束后启动 GC 修复未回填的 `-T`，因此 clean
-  checkpoint 之后已提交行仍然可见。
+  checkpoint 之后已提交行仍然可见。检查点与 WAL 保留策略见
+  [`miniob-checkpoint-wal.md`](miniob-checkpoint-wal.md)。
 - **标准事务语义**：多语句事务内语句失败标记 failed，后续语句与 COMMIT 被拒绝；
   `ROLLBACK` 恢复；`BEGIN` 嵌套报错。
 
