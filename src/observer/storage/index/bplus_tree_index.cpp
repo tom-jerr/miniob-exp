@@ -80,14 +80,26 @@ RC BplusTreeIndex::close()
   return RC::SUCCESS;
 }
 
-RC BplusTreeIndex::insert_entry(const char *record, const RID *rid)
+RC BplusTreeIndex::insert_entry(const char *record, const char *value, int value_len)
 {
-  return index_handler_.insert_entry(record + field_meta_.offset(), (const char *)rid, sizeof(*rid));
+  return index_handler_.insert_entry(record + field_meta_.offset(), value, value_len);
 }
 
-RC BplusTreeIndex::delete_entry(const char *record, const RID *rid)
+RC BplusTreeIndex::delete_entry(const char *record, const char *value, int value_len)
 {
-  return index_handler_.delete_entry(record + field_meta_.offset(), (const char *)rid, sizeof(*rid));
+  return index_handler_.delete_entry(record + field_meta_.offset(), value, value_len);
+}
+
+RC BplusTreeIndex::get_record(Table *table, const char *value, int value_len, Record &record)
+{
+  if (value == nullptr || value_len != static_cast<int>(sizeof(RID))) {
+    LOG_WARN("heap index value must be a RID. value length=%d", value_len);
+    return RC::INVALID_ARGUMENT;
+  }
+
+  RID rid;
+  memcpy(&rid, value, sizeof(rid));
+  return table->get_record(rid, record);
 }
 
 IndexScanner *BplusTreeIndex::create_scanner(
@@ -116,7 +128,11 @@ RC BplusTreeIndexScanner::open(
   return tree_scanner_.open(left_key, left_len, left_inclusive, right_key, right_len, right_inclusive);
 }
 
-RC BplusTreeIndexScanner::next_entry(RID *rid) { return tree_scanner_.next_entry(*rid); }
+RC BplusTreeIndexScanner::next_entry(const char *&value, int &value_len)
+{
+  const char *key = nullptr;
+  return tree_scanner_.next_entry(value, value_len, key);
+}
 
 RC BplusTreeIndexScanner::destroy()
 {

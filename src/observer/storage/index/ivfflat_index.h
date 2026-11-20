@@ -36,8 +36,19 @@ public:
 
   RC close() { return RC::UNIMPLEMENTED; }
 
-  RC insert_entry(const char *record, const RID *rid) override { return RC::UNIMPLEMENTED; };
-  RC delete_entry(const char *record, const RID *rid) override { return RC::UNIMPLEMENTED; };
+  RC insert_entry(const char * /*record*/, const char * /*value*/, int /*value_len*/) override
+  {
+    return RC::UNIMPLEMENTED;
+  };
+  RC delete_entry(const char * /*record*/, const char * /*value*/, int /*value_len*/) override
+  {
+    return RC::UNIMPLEMENTED;
+  };
+  IndexScanner *create_scanner(const char * /*left_key*/, int /*left_len*/, bool /*left_inclusive*/,
+      const char * /*right_key*/, int /*right_len*/, bool /*right_inclusive*/) override
+  {
+    return nullptr;
+  }
 
   RC sync() override { return RC::UNIMPLEMENTED; };
 

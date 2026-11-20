@@ -81,7 +81,7 @@ RC HeapTableEngine::delete_record(const Record &record)
 {
   RC rc = RC::SUCCESS;
   for (Index *index : indexes_) {
-    rc = index->delete_entry(record.data(), &record.rid());
+    rc = index->delete_entry(record.data(), (const char *)&record.rid(), sizeof(RID));
     ASSERT(RC::SUCCESS == rc, 
            "failed to delete entry from index. table name=%s, index name=%s, rid=%s, rc=%s",
            table_meta_->name(), index->index_meta().name(), record.rid().to_string().c_str(), strrc(rc));
@@ -147,7 +147,7 @@ RC HeapTableEngine::create_index(Trx *trx, const FieldMeta *field_meta, const ch
 
   Record record;
   while (OB_SUCC(rc = scanner->next(record))) {
-    rc = index->insert_entry(record.data(), &record.rid());
+    rc = index->insert_entry(record.data(), (const char *)&record.rid(), sizeof(RID));
     if (rc != RC::SUCCESS) {
       LOG_WARN("failed to insert record into index while creating index. table=%s, index=%s, rc=%s",
                table_meta_->name(), index_name, strrc(rc));
@@ -212,7 +212,7 @@ RC HeapTableEngine::insert_entry_of_indexes(const char *record, const RID &rid)
 {
   RC rc = RC::SUCCESS;
   for (Index *index : indexes_) {
-    rc = index->insert_entry(record, &rid);
+    rc = index->insert_entry(record, (const char *)&rid, sizeof(RID));
     if (rc != RC::SUCCESS) {
       break;
     }
@@ -224,7 +224,7 @@ RC HeapTableEngine::delete_entry_of_indexes(const char *record, const RID &rid, 
 {
   RC rc = RC::SUCCESS;
   for (Index *index : indexes_) {
-    rc = index->delete_entry(record, &rid);
+    rc = index->delete_entry(record, (const char *)&rid, sizeof(RID));
     if (rc != RC::SUCCESS) {
       if (rc != RC::RECORD_INVALID_KEY || !error_on_not_exists) {
         break;

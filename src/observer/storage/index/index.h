@@ -23,6 +23,7 @@ See the Mulan PSL v2 for more details. */
 #include "storage/record/record_manager.h"
 
 class IndexScanner;
+class Table;
 
 /**
  * @brief 索引
@@ -54,20 +55,32 @@ public:
   const IndexMeta &index_meta() const { return index_meta_; }
 
   /**
-   * @brief 插入一条数据
+   * @brief 插入一条索引项
    *
    * @param record 插入的记录，当前假设记录是定长的
-   * @param[out] rid    插入的记录的位置
+   * @param value 索引叶子节点保存的值，语义由索引实现决定
+   * @param value_len value 的字节数
    */
-  virtual RC insert_entry(const char *record, const RID *rid) = 0;
+  virtual RC insert_entry(const char *record, const char *value, int value_len) = 0;
 
   /**
-   * @brief 删除一条数据
+   * @brief 删除一条索引项
    *
    * @param record 删除的记录，当前假设记录是定长的
-   * @param[in] rid   删除的记录的位置
+   * @param value 索引叶子节点保存的值，语义由索引实现决定
+   * @param value_len value 的字节数
    */
-  virtual RC delete_entry(const char *record, const RID *rid) = 0;
+  virtual RC delete_entry(const char *record, const char *value, int value_len) = 0;
+
+  /**
+   * @brief 根据索引项的值取出对应的记录
+   * @details 默认实现不支持。value 的语义由索引实现决定，
+   * 例如 B+树二级索引保存 RID，聚簇索引保存主键编码。
+   */
+  virtual RC get_record(Table *table, const char *value, int value_len, Record &record)
+  {
+    return RC::UNSUPPORTED;
+  }
 
   /**
    * @brief 创建一个索引数据的扫描器
@@ -107,9 +120,11 @@ public:
   virtual ~IndexScanner() = default;
 
   /**
-   * 遍历元素数据
+   * @brief 遍历索引项的值
+   * @param[out] value 当前索引项保存的值，仅在下次推进前有效
+   * @param[out] value_len value 的字节数
    * 如果没有更多的元素，返回RECORD_EOF
    */
-  virtual RC next_entry(RID *rid) = 0;
-  virtual RC destroy()            = 0;
+  virtual RC next_entry(const char *&value, int &value_len) = 0;
+  virtual RC destroy()                              = 0;
 };

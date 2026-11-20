@@ -31,8 +31,9 @@ public:
   RC open(Table *table, const char *file_name, const IndexMeta &index_meta, const FieldMeta &field_meta) override;
   RC close();
 
-  RC insert_entry(const char *record, const RID *rid) override;
-  RC delete_entry(const char *record, const RID *rid) override;
+  RC insert_entry(const char *record, const char *value, int value_len) override;
+  RC delete_entry(const char *record, const char *value, int value_len) override;
+  RC get_record(Table *table, const char *value, int value_len, Record &record) override;
 
   /**
    * 扫描指定范围的数据
@@ -58,7 +59,7 @@ public:
   BplusTreeIndexScanner(BplusTreeHandler &tree_handle);
   ~BplusTreeIndexScanner() noexcept override;
 
-  RC next_entry(RID *rid) override;
+  RC next_entry(const char *&value, int &value_len) override;
   RC destroy() override;
 
   RC open(const char *left_key, int left_len, bool left_inclusive, const char *right_key, int right_len,
