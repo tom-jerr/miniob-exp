@@ -178,3 +178,124 @@ TEST(LsmTableEngine, crud_index_and_reopen)
   db.reset();
   filesystem::remove_all(dir);
 }
+
+TEST(LsmTableEngine, update_rewrites_value_and_indexes_and_survives_reopen)
+{
+  filesystem::path dir = "lsm_table_engine_test";
+  filesystem::remove_all(dir);
+  filesystem::create_directories(dir);
+
+  const char *dbname = "lsm_update_db";
+  auto        db     = make_unique<Db>();
+  ASSERT_EQ(RC::SUCCESS, db->init(dbname, dir.c_str(), "vacuous", "vacuous"));
+
+  vector<AttrInfoSqlNode> attrs = int_attrs();
+  ASSERT_EQ(RC::SUCCESS, db->create_table("t_up", attrs, {}, StorageFormat::ROW_FORMAT, StorageEngine::LSM));
+  Table *table = db->find_table("t_up");
+  ASSERT_NE(nullptr, table);
+
+  Trx *trx = db->trx_kit().create_trx(db->log_handler());
+  ASSERT_NE(nullptr, trx);
+  ASSERT_EQ(RC::SUCCESS, trx->start_if_need());
+
+  for (int i = 1; i <= 3; i++) {
+    Record record = make_int_record(table, i, i * 10);
+    ASSERT_EQ(RC::SUCCESS, table->insert_record(record));
+  }
+
+  ASSERT_EQ(RC::SUCCESS, table->create_index(trx, table->table_meta().field("v"), "i_v"));
+  const FieldMeta *id_field = table->table_meta().field("id");
+  const FieldMeta *v_field  = table->table_meta().field("v");
+  ASSERT_NE(nullptr, id_field);
+  ASSERT_NE(nullptr, v_field);
+  Index *v_index = table->find_index("i_v");
+  ASSERT_NE(nullptr, v_index);
+
+  vector<Record> records = scan_all(table, trx);
+  ASSERT_EQ(3, static_cast<int>(records.size()));
+  Record old_record = records[1];
+  ASSERT_EQ(2, record_int(old_record, 0));
+
+  Value  value;
+  Record new_record = old_record;
+  value.set_int(99);
+  ASSERT_EQ(RC::SUCCESS, new_record.reset_filed(v_field->offset(), v_field->len()));
+  ASSERT_EQ(RC::SUCCESS, table->set_value_to_record(new_record.data(), value, v_field));
+  ASSERT_EQ(RC::SUCCESS, table->update_record_with_trx(old_record, new_record, trx));
+
+  records = scan_all(table, trx);
+  ASSERT_EQ(3, static_cast<int>(records.size()));
+  for (const Record &record : records) {
+    if (record_int(record, 0) == 2) {
+      ASSERT_EQ(99, record_int(record, 1));
+    }
+  }
+
+  int           probe     = 99;
+  const char   *idx_value = nullptr;
+  int           idx_len   = 0;
+  IndexScanner *scanner   = v_index->create_scanner(reinterpret_cast<const char *>(&probe), sizeof(probe), true,
+      reinterpret_cast<const char *>(&probe), sizeof(probe), true);
+  ASSERT_NE(nullptr, scanner);
+  ASSERT_EQ(RC::SUCCESS, scanner->next_entry(idx_value, idx_len));
+  Record fetched;
+  ASSERT_EQ(RC::SUCCESS, v_index->get_record(table, idx_value, idx_len, fetched));
+  ASSERT_EQ(2, record_int(fetched, 0));
+  ASSERT_EQ(RC::RECORD_EOF, scanner->next_entry(idx_value, idx_len));
+  scanner->destroy();
+
+  // id is a normal column for the LSM engine; change it and re-check.
+  Record id_changed = new_record;
+  value.set_int(5);
+  ASSERT_EQ(RC::SUCCESS, id_changed.reset_filed(id_field->offset(), id_field->len()));
+  ASSERT_EQ(RC::SUCCESS, table->set_value_to_record(id_changed.data(), value, id_field));
+  ASSERT_EQ(RC::SUCCESS, table->update_record_with_trx(new_record, id_changed, trx));
+  records = scan_all(table, trx);
+  bool found_new_id = false;
+  for (const Record &record : records) {
+    if (record_int(record, 0) == 5) {
+      found_new_id = true;
+      ASSERT_EQ(99, record_int(record, 1));
+    }
+  }
+  ASSERT_TRUE(found_new_id);
+
+  ASSERT_EQ(RC::SUCCESS, trx->commit());
+  db->trx_kit().destroy_trx(trx);
+  trx = nullptr;
+  ASSERT_EQ(RC::SUCCESS, db->sync());
+  db.reset();
+
+  db = make_unique<Db>();
+  ASSERT_EQ(RC::SUCCESS, db->init(dbname, dir.c_str(), "vacuous", "vacuous"));
+  table = db->find_table("t_up");
+  ASSERT_NE(nullptr, table);
+  trx = db->trx_kit().create_trx(db->log_handler());
+  ASSERT_EQ(RC::SUCCESS, trx->start_if_need());
+  records = scan_all(table, trx);
+  ASSERT_EQ(3, static_cast<int>(records.size()));
+  bool found_persisted = false;
+  for (const Record &record : records) {
+    if (record_int(record, 0) == 5) {
+      found_persisted = true;
+      ASSERT_EQ(99, record_int(record, 1));
+    }
+  }
+  ASSERT_TRUE(found_persisted);
+
+  v_index = table->find_index("i_v");
+  ASSERT_NE(nullptr, v_index);
+  probe = 99;
+  scanner = v_index->create_scanner(reinterpret_cast<const char *>(&probe), sizeof(probe), true,
+      reinterpret_cast<const char *>(&probe), sizeof(probe), true);
+  ASSERT_NE(nullptr, scanner);
+  ASSERT_EQ(RC::SUCCESS, scanner->next_entry(idx_value, idx_len));
+  ASSERT_EQ(RC::SUCCESS, v_index->get_record(table, idx_value, idx_len, fetched));
+  ASSERT_EQ(5, record_int(fetched, 0));
+  scanner->destroy();
+
+  ASSERT_EQ(RC::SUCCESS, trx->commit());
+  db->trx_kit().destroy_trx(trx);
+  db.reset();
+  filesystem::remove_all(dir);
+}

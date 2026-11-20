@@ -1,0 +1,18 @@
+-- echo update lsm: update an indexed column
+create table l_up(id int, v int) engine=lsm;
+insert into l_up values(1,10);
+insert into l_up values(2,20);
+insert into l_up values(3,30);
+create index i_v on l_up(v);
+update l_up set v=99 where id=2;
+-- sort select * from l_up;
+-- sort select * from l_up where v=99;
+-- sort select * from l_up where v=20;
+
+-- echo update lsm: update the id column
+update l_up set id=5 where id=3;
+-- sort select * from l_up;
+
+-- echo update lsm: update without where
+update l_up set v=0;
+-- sort select * from l_up where v=0;

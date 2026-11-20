@@ -101,6 +101,58 @@ RC LsmTableEngine::delete_record_with_trx(const Record &record, Trx *trx)
   return erase_record(record, lsm_trx);
 }
 
+RC LsmTableEngine::update_record_with_trx(const Record &old_record, const Record &new_record, Trx *trx)
+{
+  if (trx != nullptr && trx->type() != TrxKit::Type::VACUOUS) {
+    return RC::UNSUPPORTED;
+  }
+  if (old_record.key().empty() || new_record.data() == nullptr ||
+      new_record.len() != table_meta_->record_size()) {
+    return RC::INVALID_ARGUMENT;
+  }
+
+  bytes   lsm_key(old_record.key().begin(), old_record.key().end());
+  int64_t table_id = 0;
+  uint64_t rid     = 0;
+  RC rc = Codec::decode(lsm_key, table_id, rid);
+  if (OB_FAIL(rc)) {
+    return rc;
+  }
+  if (table_id != table_->table_id()) {
+    return RC::INVALID_ARGUMENT;
+  }
+
+  const string_view key_view(reinterpret_cast<char *>(lsm_key.data()), lsm_key.size());
+  string            old_value;
+  rc = lsm_->get(key_view, &old_value);
+  if (OB_FAIL(rc)) {
+    return rc;
+  }
+
+  rc = lsm_->put(key_view, string_view(new_record.data(), new_record.len()));
+  if (OB_FAIL(rc)) {
+    return rc;
+  }
+
+  rc = delete_entry_of_indexes(old_record.data(), rid, false);
+  if (OB_FAIL(rc)) {
+    lsm_->put(key_view, old_value);
+    return rc;
+  }
+
+  rc = insert_entry_of_indexes(new_record.data(), rid);
+  if (OB_FAIL(rc)) {
+    delete_entry_of_indexes(new_record.data(), rid, false);
+    RC rc2 = insert_entry_of_indexes(old_record.data(), rid);
+    if (OB_FAIL(rc2)) {
+      LOG_PANIC("failed to restore lsm secondary indexes. table=%s, rc=%s", table_->name(), strrc(rc2));
+    }
+    lsm_->put(key_view, old_value);
+    return rc;
+  }
+  return RC::SUCCESS;
+}
+
 RC LsmTableEngine::erase_record(const Record &record, ObLsmTransaction *trx)
 {
   if (record.key().empty()) {
