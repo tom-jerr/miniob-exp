@@ -16,6 +16,7 @@ See the Mulan PSL v2 for more details. */
 #include "storage/index/btree_pk_index.h"
 #include "storage/record/btree_record_scanner.h"
 #include "storage/table/table.h"
+#include "storage/trx/trx.h"
 
 #include <errno.h>
 #include <fstream>
@@ -331,6 +332,115 @@ RC BtreeTableEngine::delete_record(const Record &record)
   }
 
   return tree_.delete_entry(key.data(), record.data(), table_meta_->record_size());
+}
+
+RC BtreeTableEngine::update_record_with_trx(const Record &old_record, const Record &new_record, Trx *trx)
+{
+  if (trx != nullptr && trx->type() != TrxKit::Type::VACUOUS) {
+    return RC::UNSUPPORTED;
+  }
+
+  const int record_size = table_meta_->record_size();
+  if (old_record.data() == nullptr || new_record.data() == nullptr || new_record.len() != record_size) {
+    return RC::INVALID_ARGUMENT;
+  }
+
+  string old_key;
+  string new_key;
+  RC     rc = build_key_from_record(old_record, old_key);
+  if (OB_FAIL(rc)) {
+    return rc;
+  }
+  // new_record 的 key() 是复制自旧行的缓存，主键可能已改，必须从数据重建
+  rc = build_key_from_data(new_record.data(), new_key);
+  if (OB_FAIL(rc)) {
+    return rc;
+  }
+  if (old_key.size() != new_key.size()) {
+    return RC::INVALID_ARGUMENT;
+  }
+
+  const bool key_changed = old_key != new_key;
+
+  auto insert_indexes = [this](const char *data, const string &key) -> RC {
+    for (Index *index : indexes_) {
+      RC rc = index->insert_entry(data, key.data(), key.size());
+      if (OB_FAIL(rc)) {
+        return rc;
+      }
+    }
+    return RC::SUCCESS;
+  };
+  auto delete_indexes = [this](const char *data, const string &key, bool tolerate_missing) -> RC {
+    for (Index *index : indexes_) {
+      RC rc = index->delete_entry(data, key.data(), key.size());
+      if (OB_FAIL(rc) && !tolerate_missing) {
+        return rc;
+      }
+    }
+    return RC::SUCCESS;
+  };
+  auto restore_tree = [this, &old_record, &new_record, &old_key, &new_key, key_changed, record_size]() {
+    RC rc = RC::SUCCESS;
+    if (key_changed) {
+      rc = tree_.insert_entry(old_key.data(), old_record.data(), record_size);
+      if (OB_FAIL(rc)) {
+        LOG_PANIC("failed to restore old tree key. table=%s, rc=%s", table_meta_->name(), strrc(rc));
+        return;
+      }
+      rc = tree_.delete_entry(new_key.data(), new_record.data(), record_size);
+    } else {
+      rc = tree_.delete_entry(new_key.data(), new_record.data(), record_size);
+      if (OB_FAIL(rc)) {
+        LOG_PANIC("failed to remove new tree value. table=%s, rc=%s", table_meta_->name(), strrc(rc));
+        return;
+      }
+      rc = tree_.insert_entry(old_key.data(), old_record.data(), record_size);
+    }
+    if (OB_FAIL(rc)) {
+      LOG_PANIC("failed to restore tree after index failure. table=%s, rc=%s", table_meta_->name(), strrc(rc));
+    }
+  };
+
+  if (key_changed) {
+    rc = tree_.insert_entry(new_key.data(), new_record.data(), record_size);
+    if (OB_FAIL(rc)) {
+      return rc;
+    }
+    rc = tree_.delete_entry(old_key.data(), old_record.data(), record_size);
+    if (OB_FAIL(rc)) {
+      tree_.delete_entry(new_key.data(), new_record.data(), record_size);
+      return rc;
+    }
+  } else {
+    rc = tree_.delete_entry(old_key.data(), old_record.data(), record_size);
+    if (OB_FAIL(rc)) {
+      return rc;
+    }
+    rc = tree_.insert_entry(new_key.data(), new_record.data(), record_size);
+    if (OB_FAIL(rc)) {
+      tree_.insert_entry(old_key.data(), old_record.data(), record_size);
+      return rc;
+    }
+  }
+
+  rc = delete_indexes(old_record.data(), old_key, false);
+  if (OB_FAIL(rc)) {
+    restore_tree();
+    return rc;
+  }
+
+  rc = insert_indexes(new_record.data(), new_key);
+  if (OB_FAIL(rc)) {
+    delete_indexes(new_record.data(), new_key, true);
+    RC rc2 = insert_indexes(old_record.data(), old_key);
+    if (OB_FAIL(rc2)) {
+      LOG_PANIC("failed to restore secondary indexes. table=%s, rc=%s", table_meta_->name(), strrc(rc2));
+    }
+    restore_tree();
+    return rc;
+  }
+  return RC::SUCCESS;
 }
 
 RC BtreeTableEngine::get_record_by_key(const char *key, int key_len, Record &record)

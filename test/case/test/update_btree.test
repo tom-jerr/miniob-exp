@@ -1,0 +1,25 @@
+-- echo update btree: update an indexed column
+create table b_up(id int, v int, primary key(id)) engine=btree;
+insert into b_up values(1,10);
+insert into b_up values(2,20);
+insert into b_up values(3,30);
+create index i_v on b_up(v);
+update b_up set v=99 where id=2;
+-- sort select * from b_up;
+-- sort select * from b_up where v=99;
+-- sort select * from b_up where v=20;
+
+-- echo update btree: change the primary key
+update b_up set id=10 where id=3;
+-- sort select * from b_up;
+-- sort select * from b_up where id=10;
+-- sort select * from b_up where id=3;
+
+-- echo update btree: duplicate primary key must fail and keep the old row
+update b_up set id=1 where id=2;
+-- sort select * from b_up;
+-- sort select * from b_up where id=2;
+
+-- echo update btree: update without where
+update b_up set v=0;
+-- sort select * from b_up where v=0;

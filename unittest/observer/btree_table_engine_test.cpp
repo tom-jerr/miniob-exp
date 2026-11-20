@@ -383,3 +383,82 @@ TEST_F(BtreeTableEngineTest, char_primary_key_with_secondary_index)
   ASSERT_EQ(2, value);
   scanner->destroy();
 }
+
+TEST_F(BtreeTableEngineTest, update_clustered_rows_and_secondary_index)
+{
+  init_db();
+  Table *table = create_table("t_update", {"id", "v"}, {"id"});
+  ASSERT_NE(nullptr, table);
+
+  for (int i = 1; i <= 3; i++) {
+    Record record = make_int_record(table, {i, i * 10});
+    ASSERT_EQ(RC::SUCCESS, table->insert_record(record));
+  }
+
+  ASSERT_EQ(RC::SUCCESS, table->create_index(nullptr, table->table_meta().field("v"), "i_v"));
+  const FieldMeta *id_field = table->table_meta().field("id");
+  const FieldMeta *v_field  = table->table_meta().field("v");
+  ASSERT_NE(nullptr, id_field);
+  ASSERT_NE(nullptr, v_field);
+  Index *v_index = table->find_index("i_v");
+  ASSERT_NE(nullptr, v_index);
+
+  vector<Record> records = scan_all(table);
+  ASSERT_EQ(3, static_cast<int>(records.size()));
+  Record old_record = records[1];
+  ASSERT_EQ(2, record_int(old_record, 0));
+
+  Value  new_value;
+  Record new_record = old_record;
+  new_value.set_int(99);
+  ASSERT_EQ(RC::SUCCESS, new_record.reset_filed(v_field->offset(), v_field->len()));
+  ASSERT_EQ(RC::SUCCESS, table->set_value_to_record(new_record.data(), new_value, v_field));
+  ASSERT_EQ(RC::SUCCESS, table->update_record_with_trx(old_record, new_record, nullptr));
+
+  int    key = 2;
+  Record fetched;
+  ASSERT_EQ(RC::SUCCESS, table->get_record_by_key(reinterpret_cast<const char *>(&key), sizeof(key), fetched));
+  ASSERT_EQ(99, record_int(fetched, 1));
+
+  int           probe     = 99;
+  const char   *idx_value = nullptr;
+  int           idx_len   = 0;
+  IndexScanner *scanner   = v_index->create_scanner(reinterpret_cast<const char *>(&probe), sizeof(probe), true,
+      reinterpret_cast<const char *>(&probe), sizeof(probe), true);
+  ASSERT_NE(nullptr, scanner);
+  ASSERT_EQ(RC::SUCCESS, scanner->next_entry(idx_value, idx_len));
+  ASSERT_EQ(RC::SUCCESS, v_index->get_record(table, idx_value, idx_len, fetched));
+  ASSERT_EQ(2, record_int(fetched, 0));
+  ASSERT_EQ(RC::RECORD_EOF, scanner->next_entry(idx_value, idx_len));
+  scanner->destroy();
+
+  probe = 20;
+  scanner = v_index->create_scanner(reinterpret_cast<const char *>(&probe), sizeof(probe), true,
+      reinterpret_cast<const char *>(&probe), sizeof(probe), true);
+  ASSERT_NE(nullptr, scanner);
+  ASSERT_EQ(RC::RECORD_EOF, scanner->next_entry(idx_value, idx_len));
+  scanner->destroy();
+
+  // Change the primary key.
+  key = 2;
+  ASSERT_EQ(RC::SUCCESS, table->get_record_by_key(reinterpret_cast<const char *>(&key), sizeof(key), fetched));
+  Record pk_changed = fetched;
+  new_value.set_int(5);
+  ASSERT_EQ(RC::SUCCESS, pk_changed.reset_filed(id_field->offset(), id_field->len()));
+  ASSERT_EQ(RC::SUCCESS, table->set_value_to_record(pk_changed.data(), new_value, id_field));
+  ASSERT_EQ(RC::SUCCESS, table->update_record_with_trx(fetched, pk_changed, nullptr));
+  ASSERT_EQ(RC::RECORD_NOT_EXIST, table->get_record_by_key(reinterpret_cast<const char *>(&key), sizeof(key), fetched));
+
+  key = 5;
+  ASSERT_EQ(RC::SUCCESS, table->get_record_by_key(reinterpret_cast<const char *>(&key), sizeof(key), fetched));
+  ASSERT_EQ(99, record_int(fetched, 1));
+
+  // Changing to an existing primary key must fail without losing the old row.
+  Record duplicate = fetched;
+  new_value.set_int(3);
+  ASSERT_EQ(RC::SUCCESS, duplicate.reset_filed(id_field->offset(), id_field->len()));
+  ASSERT_EQ(RC::SUCCESS, table->set_value_to_record(duplicate.data(), new_value, id_field));
+  ASSERT_EQ(RC::RECORD_DUPLICATE_KEY, table->update_record_with_trx(fetched, duplicate, nullptr));
+  ASSERT_EQ(RC::SUCCESS, table->get_record_by_key(reinterpret_cast<const char *>(&key), sizeof(key), fetched));
+  ASSERT_EQ(99, record_int(fetched, 1));
+}

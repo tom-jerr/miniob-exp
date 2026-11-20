@@ -38,10 +38,7 @@ public:
   RC delete_record(const Record &record) override;
   RC insert_record_with_trx(Record &record, Trx *trx) override { return RC::UNSUPPORTED; }
   RC delete_record_with_trx(const Record &record, Trx *trx) override { return RC::UNSUPPORTED; }
-  RC update_record_with_trx(const Record &old_record, const Record &new_record, Trx *trx) override
-  {
-    return RC::UNSUPPORTED;
-  }
+  RC update_record_with_trx(const Record &old_record, const Record &new_record, Trx *trx) override;
   RC get_record(const RID &rid, Record &record) override { return RC::UNSUPPORTED; }
   RC get_record_by_key(const char *key, int key_len, Record &record) override;
 
