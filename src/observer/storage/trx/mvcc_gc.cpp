@@ -52,8 +52,10 @@ bool is_dead_version(TxnStatusTable &status_table, int64_t begin_raw, int64_t en
     return true;
   }
   if (end_raw < 0) {
+    // ABORTED 的删除标记表示旧版本仍存活（repair 会把 end 恢复为 INF）；
+    // 只有已提交删除且不晚于水位才是死版本。
     int64_t xid = -end_raw;
-    return xid_is_aborted(status_table, xid) || xid_is_committed_below(status_table, xid, watermark);
+    return xid_is_committed_below(status_table, xid, watermark);
   }
   return end_raw > 0 && end_raw <= watermark;
 }

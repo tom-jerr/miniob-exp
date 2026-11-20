@@ -4,6 +4,7 @@ insert into m_up values(1,10);
 insert into m_up values(2,20);
 insert into m_up values(3,30);
 create index i_v on m_up(v);
+-- sort select * from m_up where v=10;
 -- connect c2
 -- connection c2
 begin;
@@ -48,3 +49,8 @@ rollback;
 -- connection default
 -- sort select * from m_up where id=1;
 -- sort select * from m_up where id=3;
+
+-- echo mvcc update: sync reclaims old versions without changing visibility
+sync;
+-- sort select * from m_up where v=10;
+-- sort select * from m_up where v=11;

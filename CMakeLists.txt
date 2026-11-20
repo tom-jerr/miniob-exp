@@ -109,9 +109,7 @@ IF (ENABLE_TSAN)
     # https://github.com/google/sanitizers/wiki/ThreadSanitizerFlags
     MESSAGE(STATUS "Instrumenting with Thread Sanitizer")
     SET(TSAN_FLAGS "-fno-omit-frame-pointer -fsanitize=thread")
-    SET(TSAN_CCFLAGS "${TSAN_CCFLAGS} -mllvm -tsan-instrument-memory-accesses=0")
-    SET(TSAN_CCFLAGS "${TSAN_CCFLAGS} -mllvm -tsan-instrument-atomics=0")
-    SET(TSAN_CCFLAGS "${TSAN_CCFLAGS} -mllvm -tsan-instrument-func-entry-exit=1")
+    # 这些 -mllvm 选项只适用于旧版 clang，现代 clang/GCC 会把它当成未使用参数。
     SET(CMAKE_COMMON_FLAGS "${CMAKE_COMMON_FLAGS} ${TSAN_FLAGS} ${TSAN_CCFLAGS}")
     # -Qunused-arguments 有些编译器不支持，所以先删掉
     IF ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU" AND ${STATIC_STDLIB})

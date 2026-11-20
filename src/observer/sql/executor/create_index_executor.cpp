@@ -19,6 +19,7 @@ See the Mulan PSL v2 for more details. */
 #include "session/session.h"
 #include "sql/stmt/create_index_stmt.h"
 #include "storage/table/table.h"
+#include "storage/trx/trx.h"
 
 RC CreateIndexExecutor::execute(SQLStageEvent *sql_event)
 {
@@ -32,5 +33,12 @@ RC CreateIndexExecutor::execute(SQLStageEvent *sql_event)
 
   Trx   *trx   = session->current_trx();
   Table *table = create_index_stmt->table();
+  // MVCC 下 current_trx() 可能尚未启动，snapshot=0 会让建索引扫描看不到已提交行。
+  if (trx != nullptr) {
+    RC rc = trx->start_if_need();
+    if (OB_FAIL(rc)) {
+      return rc;
+    }
+  }
   return table->create_index(trx, create_index_stmt->field_meta(), create_index_stmt->index_name().c_str());
 }

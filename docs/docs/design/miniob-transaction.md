@@ -131,14 +131,15 @@ MVCC很好的处理了只读事务与写事务的并发，只读事务可以在�
 
 - **8 字节 xid**：`begin_xid/end_xid` 通过隐藏字段 len=8 + `Field` 64 位访问，
   未新增 SQL `BIGINT` 类型；旧的 4 字节 MVCC 表打开时明确报错，需重建。
-- **TxnStatusTable 原子提交**：提交点是一次原子状态发布；`-T` 由状态表解析，
-  不再依赖逐行回填完成。COMMIT 日志落盘是持久化提交点，恢复时由日志重建状态。
+- **TxnStatusTable 原子提交**：提交序号分配、COMMIT 日志、状态发布、快照可见的
+  `published_commit_seq` 在同一把提交锁内串行化；`-T` 由状态表解析，不再依赖
+  逐行回填完成。COMMIT 日志落盘是持久化提交点，恢复时由日志重建状态。
 - **UPDATE 版本语义**：`UPDATE` = 旧版本 `end=-T` + 插入新版本 `begin=-T`；
   旧索引项保留给老快照，新版本写新索引项。回滚删除新版本并恢复旧版本。
   `visit_record(READ_WRITE)` 对“快照可见但已被其它事务提交删除”的行返回
   `LOCKED_CONCURRENCY_CONFLICT`，实现 first-updater-wins。
 - **GC**：`MvccGc::collect` 以最老活跃快照为水位，删除所有快照都不可见的版本
-  及其索引项。没有后台线程，在显式 `Db::sync` 时执行。
+  及其索引项。没有后台线程，在显式 SQL `sync;` / `Db::sync` 时执行。
 - **OCC**：新增 `-t occ`。`OccTrx` 记录读集，提交时校验版本是否被快照之后的
   提交替换；冲突返回 `LOCKED_CONCURRENCY_CONFLICT` 并回滚。隔离级别为
   Snapshot Isolation，不承诺可串行化。

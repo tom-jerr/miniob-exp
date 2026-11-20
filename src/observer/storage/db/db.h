@@ -14,6 +14,8 @@ See the Mulan PSL v2 for more details. */
 
 #pragma once
 
+#include <mutex>
+
 #include "common/sys/rc.h"
 #include "common/lang/vector.h"
 #include "common/lang/string.h"
@@ -151,5 +153,6 @@ private:
 
   LSN    check_point_lsn_ = 0;  ///< 当前数据库的检查点LSN。会记录到磁盘中。
   int64_t persisted_commit_seq_ = 0;  ///< 已持久化的 MVCC 提交序号
+  std::mutex sync_lock_;              ///< 串行化 sync/GC，避免两个会话同时回收
   string storage_engine_;
 };

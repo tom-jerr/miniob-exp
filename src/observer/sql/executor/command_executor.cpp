@@ -79,6 +79,10 @@ RC CommandExecutor::execute(SQLStageEvent *sql_event)
       rc = executor.execute(sql_event);
     } break;
 
+    case StmtType::SYNC: {
+      rc = sql_event->session_event()->session()->get_current_db()->sync();
+    } break;
+
     case StmtType::LOAD_DATA: {
       LoadDataExecutor executor;
       rc = executor.execute(sql_event);

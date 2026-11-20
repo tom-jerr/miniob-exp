@@ -14,6 +14,8 @@ See the Mulan PSL v2 for more details. */
 
 #pragma once
 
+#include <mutex>
+
 #include "common/lang/vector.h"
 #include "storage/trx/trx.h"
 #include "storage/trx/trx_status.h"
@@ -44,8 +46,10 @@ public:
   int64_t next_trx_id();
 
   int64_t next_commit_seq();
-  int64_t current_commit_seq() const { return commit_seq_.load(std::memory_order_acquire); }
+  int64_t current_commit_seq() const { return published_commit_seq_.load(std::memory_order_acquire); }
+  void    publish_commit_seq(int64_t commit_seq);
   void    advance_commit_seq(int64_t commit_seq);
+  std::mutex &commit_lock() { return commit_lock_; }
 
   TxnStatusTable &status_table() { return status_; }
 
@@ -58,7 +62,9 @@ private:
   vector<FieldMeta> fields_;  // 存储事务数据需要用到的字段元数据，所有表结构都需要带的
 
   atomic<int64_t> current_trx_id_{0};
-  atomic<int64_t> commit_seq_{0};
+  atomic<int64_t> commit_seq_{0};           // 已分配的最大提交序号
+  atomic<int64_t> published_commit_seq_{0}; // 已发布、可被快照看到的最大提交序号
+  std::mutex      commit_lock_;
   TxnStatusTable  status_;
 
   common::Mutex lock_;
@@ -107,7 +113,7 @@ public:
   int32_t id() const override { return static_cast<int32_t>(trx_id_); }
 
   int64_t snapshot_seq() const { return snapshot_seq_; }
-  bool    started() const { return started_; }
+  bool    started() const { return started_.load(std::memory_order_acquire); }
 
 protected:
   MvccTrxKit &trx_kit() { return trx_kit_; }
@@ -127,7 +133,7 @@ private:
   MvccTrxLogHandler log_handler_;
   int64_t           trx_id_     = -1;
   int64_t           snapshot_seq_ = 0;
-  bool              started_    = false;
+  std::atomic<bool> started_{false};
   bool              recovering_ = false;
   OperationSet      operations_;
 };

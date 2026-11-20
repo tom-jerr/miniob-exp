@@ -38,6 +38,26 @@ int field_int(Table *table, const Record &record, const char *field_name)
   return value;
 }
 
+Record find_by_id(Table *table, Trx *trx, int id)
+{
+  RecordScanner *scanner = nullptr;
+  EXPECT_EQ(RC::SUCCESS, table->get_record_scanner(scanner, trx, ReadWriteMode::READ_ONLY));
+  Record record;
+  while (RC::SUCCESS == scanner->next(record)) {
+    if (field_int(table, record, "id") == id) {
+      Record copy;
+      EXPECT_EQ(RC::SUCCESS, copy.copy_data(record.data(), record.len()));
+      copy.set_rid(record.rid());
+      scanner->close_scan();
+      delete scanner;
+      return copy;
+    }
+  }
+  scanner->close_scan();
+  delete scanner;
+  return Record();
+}
+
 int scan_count(Table *table, Trx *trx)
 {
   RecordScanner *scanner = nullptr;
@@ -192,4 +212,52 @@ TEST(MvccGc, collects_dead_versions_and_index_entries)
 
   db.reset();
   filesystem::remove_all("mvcc_gc_test");
+}
+
+
+TEST(MvccGc, aborted_delete_mark_does_not_delete_live_row)
+{
+  filesystem::path db_path = "mvcc_gc_abort_test/db";
+  filesystem::remove_all("mvcc_gc_abort_test");
+  filesystem::create_directories(db_path);
+
+  auto db = make_unique<Db>();
+  ASSERT_EQ(RC::SUCCESS, db->init("gc_abort_db", db_path.c_str(), "mvcc", "disk"));
+  vector<AttrInfoSqlNode> attrs(2);
+  attrs[0].name = "id"; attrs[0].type = AttrType::INTS; attrs[0].length = sizeof(int);
+  attrs[1].name = "v";  attrs[1].type = AttrType::INTS; attrs[1].length = sizeof(int);
+  ASSERT_EQ(RC::SUCCESS, db->create_table("t_gc_abort", attrs, {}));
+  Table *table = db->find_table("t_gc_abort");
+  ASSERT_NE(nullptr, table);
+
+  auto *kit = static_cast<MvccTrxKit *>(&db->trx_kit());
+  Trx  *seed = kit->create_trx(db->log_handler());
+  ASSERT_EQ(RC::SUCCESS, seed->start_if_need());
+  vector<Value> values(2);
+  values[0].set_int(1); values[1].set_int(10);
+  Record record;
+  ASSERT_EQ(RC::SUCCESS, table->make_record(values.size(), values.data(), record));
+  ASSERT_EQ(RC::SUCCESS, seed->insert_record(table, record));
+  ASSERT_EQ(RC::SUCCESS, seed->commit());
+  kit->destroy_trx(seed);
+
+  // Simulate a crash between status=ABORTED and rollback restoring end_xid.
+  Trx *deleter = kit->create_trx(db->log_handler());
+  ASSERT_EQ(RC::SUCCESS, deleter->start_if_need());
+  Record row = find_by_id(table, deleter, 1);
+  ASSERT_EQ(RC::SUCCESS, deleter->delete_record(table, row));
+  ASSERT_EQ(RC::SUCCESS, kit->status_table().abort_trx(deleter->id()));
+
+  MvccGc gc;
+  ASSERT_EQ(RC::SUCCESS, gc.collect(*db));
+  Trx *check = kit->create_trx(db->log_handler());
+  ASSERT_EQ(RC::SUCCESS, check->start_if_need());
+  ASSERT_EQ(1, scan_count(table, check));
+  ASSERT_EQ(1, field_int(table, find_by_id(table, check, 1), "id"));
+  ASSERT_EQ(RC::SUCCESS, check->rollback());
+  kit->destroy_trx(check);
+  // 崩溃语义：GC 已修复后不会再跑该事务的 rollback。
+  kit->destroy_trx(deleter);
+  db.reset();
+  filesystem::remove_all("mvcc_gc_abort_test");
 }

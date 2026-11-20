@@ -171,6 +171,13 @@ Resolve(xid, self):
 - 候选行扫描使用 `READ_ONLY`：扫描只判断可见性，真正的 first-updater-wins
   在 `update_record/delete_record` 的原地 `READ_WRITE` 访问中检查。否则一个
   与 WHERE 无关、刚好被其它事务提交删除的行会让整条语句误报冲突。
+- `CREATE INDEX`：执行器先 `start_if_need()` 再扫描。MVCC 会话的
+  `current_trx()` 可能尚未启动，snapshot=0 会导致建索引时看不到已提交行，
+  得到空索引；随后 UPDATE 只写入新版本索引项，GC 删除旧版本时便找不到旧项。
+- 索引项删除是幂等的：GC/回滚删除旧版本时若索引项已不存在，记录警告并继续
+  释放槽位，不再触发断言崩溃。
+- 并发 rollback 只恢复仍属于本事务的删除标记；RID 被 GC/槽位复用后跳过错配，
+  不再断言崩溃。该场景由并发压测发现（rollback 的旧 RID 已不属于本事务）。
 - 执行算子必须把扫描的终止错误（如 `LOCKED_CONCURRENCY_CONFLICT`）向上
   返回，不能把“扫描失败、收集到 0 行”当成成功的 0 行更新。
 
@@ -179,8 +186,10 @@ Resolve(xid, self):
 1. `commit_seq = fetch_add(1)+1`。
 2. 追加并等待 `COMMIT(trx_id, commit_seq)` 日志落盘（复用
    `MvccTrxLogHandler::commit` 的 `wait_lsn`）。
-3. **提交点**：`TxnStatusTable.commit(trx_id, commit_seq)` 一次原子发布。
-   其它事务此后通过 Resolve 看到该事务所有行，不会看到一半。
+3. **提交点**：`TxnStatusTable.commit(trx_id, commit_seq)` 一次原子发布，
+   随后才发布 `published_commit_seq`。分配序号、写 COMMIT 日志、状态发布、
+   序号发布在同一把提交锁内串行化；否则新快照可能拿到“已分配但尚未提交”的
+   C，先看到旧版本、提交后又看到新版本，造成同一行两个版本同时可见。
 4. 逐行回填：把 `-T` 改写为 `commit_seq`（可同步或惰性；正确性不依赖回填）。
    回填失败不回滚已发布的提交：记录错误、保留状态表项，后续重试或重启时
    `recover` 再次回填；提交点在步骤 3 已经确立。
@@ -210,7 +219,8 @@ Resolve(xid, self):
 ### 6.5 GC
 
 - 低水位 `watermark = min(已启动事务的 snapshot_seq)`；没有活跃事务时为当前
-  `commit_seq`。未启动的会话事务不参与水位。
+  `commit_seq`。未启动的会话事务不参与水位；`started_` 是 acquire/release
+  原子量，保证 GC 读到 `started=true` 时 `snapshot_seq` 已初始化。
 - 可回收版本：`begin == 0`、`begin < 0` 且状态 ABORTED、`end` 为已提交序号且
   `end <= watermark`、或 `end < 0` 且状态 ABORTED。使用 `<=`：快照等于
   `end` 的事务已经看不到该旧版本。
@@ -220,8 +230,14 @@ Resolve(xid, self):
   `Table::delete_record`；该路径同时删除索引项并释放槽位。
 - 扫描到的正 begin/end 会推进 `commit_seq` 下界，兼容缺少持久化序号的旧
   元数据。
-- 没有后台线程；在显式 `Db::sync`（SQL `sync`）时执行一次 `MvccGc::collect`。
-  GC 与并发扫描互斥由调用方保证；水位只保证逻辑可见性，不保证页面并发安全。
+- 没有后台线程；SQL `sync;` 现在直接调用 `Db::sync`，执行一次
+  `MvccGc::collect`（此前 `SYNC` 只有语法、没有执行器）。`Db::sync` 内有
+  mutex，多个会话并发 sync 时不会同时跑 GC。
+- 并发正确性：水位只保证逻辑可见性；页面级安全依赖 heap scanner 的 page latch
+  与“先复制再删除”。真实 4 写 + 4 读 + 并发 `sync` 的压测在 ASan 与 TSan
+  下运行（`test/case/concurrency/mvcc_concurrency_test.py`）；TSan 报告的是
+  运行时调度暴露的行为，不是形式化证明。TSan 还报告了 clog/log buffer 等
+  既有数据竞争，本设计未声称修复那些基础组件。
 
 ## 7. OCC Trx Kit
 
@@ -319,6 +335,19 @@ Resolve(xid, self):
 - 手工 `-t mvcc -d disk` 提交后 kill + 重启：`select` 返回 `1 | 20`。
 - SQL 双会话：未提交写对另一会话不可见；无关行上的未提交写不阻塞本行更新；
   同一行写冲突返回 `FAILURE`。
+- `test/case/concurrency/mvcc_concurrency_test.py`：真实多连接 SQL 场景，
+  每步中间结果断言；覆盖 MVCC 脏读/不可重复读/phantom/丢失更新/写偏斜、
+  OCC 读集冲突与不相交提交、`sync` 前后索引可见性；最后 4 写 + 4 读 +
+  持续 `sync` 的 ASan 压测，检查中途不崩、行数/值/索引最终一致。
+- 压测还暴露并修复了：SQL `CREATE INDEX` 在 MVCC 下用未启动事务扫描导致
+  空索引；`SYNC` 只有语法没有执行器；提交序号已分配但状态未发布时新快照
+  可见性撕裂（提交锁 + `published_commit_seq`）；aborted delete mark 被 GC
+  误删；rollback 对已 GC/复用的 RID 断言；GC 读取 `started_` 的 data race。
+- 并发验证结果：ASan 全场景（MVCC/OCC + 4 写/4 读/sync）3×60 轮和 1×100 轮
+  通过；TSan 单行 3×100 轮、全场景 2×20 轮行为通过。TSan 仍报告 clog
+  log buffer、buffer pool `Frame::access` 等**既有基础组件**的数据竞争；
+  这些不是本设计修改的 GC 语义，未在本任务中修复。
+- 干净单实例 `mvcc_trx_log_test` 5/5 通过（约 600s）。
 
 已知限制（与设计一致）：
 

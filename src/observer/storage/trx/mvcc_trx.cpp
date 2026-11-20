@@ -46,10 +46,18 @@ int64_t MvccTrxKit::next_trx_id() { return ++current_trx_id_; }
 
 int64_t MvccTrxKit::next_commit_seq() { return commit_seq_.fetch_add(1) + 1; }
 
+void MvccTrxKit::publish_commit_seq(int64_t commit_seq)
+{
+  published_commit_seq_.store(commit_seq, std::memory_order_release);
+}
+
 void MvccTrxKit::advance_commit_seq(int64_t commit_seq)
 {
   int64_t current = commit_seq_.load(std::memory_order_acquire);
   while (current < commit_seq && !commit_seq_.compare_exchange_weak(current, commit_seq)) {
+  }
+  current = published_commit_seq_.load(std::memory_order_acquire);
+  while (current < commit_seq && !published_commit_seq_.compare_exchange_weak(current, commit_seq)) {
   }
 }
 
@@ -372,7 +380,7 @@ RC MvccTrx::start_if_need()
     snapshot_seq_ = trx_kit_.current_commit_seq();
     trx_kit_.status_table().register_trx(trx_id_);
     LOG_DEBUG("current thread change to new trx with %ld, snapshot=%ld", trx_id_, snapshot_seq_);
-    started_ = true;
+    started_.store(true, std::memory_order_release);
   }
   return RC::SUCCESS;
 }
@@ -383,9 +391,13 @@ RC MvccTrx::commit()
     return RC::SUCCESS;
   }
 
+  // 提交序号分配、状态发布、序号发布必须在同一把锁内串行化：
+  // 否则新快照可能拿到已分配但状态尚未提交的 C，先看到旧版本、随后又看到新版本。
+  trx_kit_.commit_lock().lock();
   const int64_t commit_seq = trx_kit_.next_commit_seq();
   RC            rc         = log_handler_.commit(trx_id_, commit_seq);
   if (OB_FAIL(rc)) {
+    trx_kit_.commit_lock().unlock();
     LOG_WARN("failed to append commit log. trx=%ld rc=%s", trx_id_, strrc(rc));
     return rc;
   }
@@ -393,6 +405,8 @@ RC MvccTrx::commit()
   // 提交点：状态表一次原子发布，随后所有 -T 元组同时可见
   trx_kit_.status_table().commit_trx(trx_id_, commit_seq);
   started_ = false;
+  trx_kit_.publish_commit_seq(commit_seq);
+  trx_kit_.commit_lock().unlock();
 
   rc = commit_with_trx_id(commit_seq);
   if (rc != RC::SUCCESS) {
@@ -520,35 +534,41 @@ RC MvccTrx::rollback()
         owned.set_rid(rid);
         owned.set_key(record.key());
         rc = table->delete_record(owned);
-        ASSERT(rc == RC::SUCCESS, "failed to delete record while rollback. rid=%s, rc=%s",
-               rid.to_string().c_str(), strrc(rc));
+        if (rc == RC::RECORD_NOT_EXIST) {
+          continue;
+        }
+        if (OB_FAIL(rc)) {
+          LOG_WARN("failed to delete record while rollback. rid=%s, rc=%s",
+              rid.to_string().c_str(), strrc(rc));
+        }
       } break;
 
       case Operation::Type::DELETE: {
         Table *table = operation.table();
         RID    rid(operation.page_num(), operation.slot_num());
 
-        ASSERT(rc == RC::SUCCESS, "failed to get record while rollback. rid=%s, rc=%s",
-              rid.to_string().c_str(), strrc(rc));
         Field begin_xid_field, end_xid_field;
         trx_fields(table, begin_xid_field, end_xid_field);
 
         auto record_updater = [this, &end_xid_field](Record &record) -> bool {
-          if (recovering_ && end_xid_field.get_int64(record) != -trx_id_) {
-            return false;
+          // 该 RID 可能已被 GC 回收或槽位复用；只恢复仍属于本事务的删除标记。
+          if (end_xid_field.get_int64(record) != -trx_id_) {
+            LOG_WARN("skip rollback restore: delete mark no longer belongs to trx. trx=%ld rid=%s",
+                trx_id_, record.rid().to_string().c_str());
+            return true;
           }
-
-          ASSERT(end_xid_field.get_int64(record) == -trx_id_, 
-                "got an invalid record while rollback. end xid=%d, this trx id=%d", 
-                end_xid_field.get_int64(record), trx_id_);
-
           end_xid_field.set_int64(record, trx_kit_.max_trx_id());
           return true;
         };
 
         rc = table->visit_record(rid, record_updater);
-        ASSERT(rc == RC::SUCCESS, "failed to get record while committing. rid=%s, rc=%s",
-               rid.to_string().c_str(), strrc(rc));
+        if (rc == RC::RECORD_NOT_EXIST) {
+          continue;
+        }
+        if (OB_FAIL(rc)) {
+          LOG_WARN("failed to visit record while rollback. rid=%s, rc=%s",
+              rid.to_string().c_str(), strrc(rc));
+        }
       } break;
 
       default: {

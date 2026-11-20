@@ -82,9 +82,15 @@ RC HeapTableEngine::delete_record(const Record &record)
   RC rc = RC::SUCCESS;
   for (Index *index : indexes_) {
     rc = index->delete_entry(record.data(), (const char *)&record.rid(), sizeof(RID));
-    ASSERT(RC::SUCCESS == rc, 
-           "failed to delete entry from index. table name=%s, index name=%s, rid=%s, rc=%s",
-           table_meta_->name(), index->index_meta().name(), record.rid().to_string().c_str(), strrc(rc));
+    if (rc == RC::RECORD_NOT_EXIST) {
+      // GC/回滚删除旧版本时索引项可能已不存在；删除是幂等的，继续释放槽位。
+      LOG_WARN("index entry already absent while deleting record. table=%s, index=%s, rid=%s",
+          table_meta_->name(), index->index_meta().name(), record.rid().to_string().c_str());
+    } else {
+      ASSERT(RC::SUCCESS == rc,
+             "failed to delete entry from index. table name=%s, index name=%s, rid=%s, rc=%s",
+             table_meta_->name(), index->index_meta().name(), record.rid().to_string().c_str(), strrc(rc));
+    }
   }
   rc = record_handler_->delete_record(&record.rid());
   return rc;

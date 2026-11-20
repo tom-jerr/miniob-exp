@@ -256,6 +256,7 @@ void Db::all_tables(vector<string> &table_names) const
 
 RC Db::sync()
 {
+  std::lock_guard<std::mutex> sync_guard(sync_lock_);
   RC rc = RC::SUCCESS;
   // 显式 sync 时做一次 MVCC 死版本回收；没有后台线程，也不在提交路径上扫描。
   if (dynamic_cast<MvccTrxKit *>(trx_kit_.get()) != nullptr) {
