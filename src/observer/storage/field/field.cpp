@@ -33,3 +33,22 @@ int Field::get_int(const Record &record)
 }
 
 const char *Field::get_data(const Record &record) { return record.data() + field_->offset(); }
+
+void Field::set_int64(Record &record, int64_t value)
+{
+  ASSERT(field_->type() == AttrType::INTS, "could not set int64 value to a non-int field");
+  ASSERT(field_->len() == static_cast<int>(sizeof(value)), "invalid field len");
+
+  char *field_data = record.data() + field_->offset();
+  memcpy(field_data, &value, sizeof(value));
+}
+
+int64_t Field::get_int64(const Record &record)
+{
+  ASSERT(field_->type() == AttrType::INTS, "could not get int64 value from a non-int field");
+  ASSERT(field_->len() == static_cast<int>(sizeof(int64_t)), "invalid field len");
+
+  int64_t value = 0;
+  memcpy(&value, record.data() + field_->offset(), sizeof(value));
+  return value;
+}

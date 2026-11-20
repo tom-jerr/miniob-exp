@@ -40,15 +40,17 @@ public:
   LogReplayer *create_log_replayer(Db &db, LogHandler &log_handler) override;
 
 public:
-  int32_t next_trx_id();
+  int64_t next_trx_id();
 
 public:
-  int32_t max_trx_id() const;
+  int64_t max_trx_id() const override;
+
+  RC validate_trx_fields(const TableMeta &table_meta) const override;
 
 private:
   vector<FieldMeta> fields_;  // 存储事务数据需要用到的字段元数据，所有表结构都需要带的
 
-  atomic<int32_t> current_trx_id_{0};
+  atomic<int64_t> current_trx_id_{0};
 
   common::Mutex lock_;
   vector<Trx *> trxes_;
@@ -68,7 +70,7 @@ public:
    * 创建事务时，TrxKit会有一些内部信息需要记录
    */
   MvccTrx(MvccTrxKit &trx_kit, LogHandler &log_handler);
-  MvccTrx(MvccTrxKit &trx_kit, LogHandler &log_handler, int32_t trx_id);  // used for recover
+  MvccTrx(MvccTrxKit &trx_kit, LogHandler &log_handler, int64_t trx_id);  // used for recover
   virtual ~MvccTrx();
 
   RC insert_record(Table *table, Record &record) override;
@@ -93,7 +95,7 @@ public:
 
   RC redo(Db *db, const LogEntry &log_entry) override;
 
-  int32_t id() const override { return trx_id_; }
+  int32_t id() const override { return static_cast<int32_t>(trx_id_); }
 
 private:
   RC   commit_with_trx_id(int32_t commit_id);
@@ -108,7 +110,7 @@ private:
 
   MvccTrxKit       &trx_kit_;
   MvccTrxLogHandler log_handler_;
-  int32_t           trx_id_     = -1;
+  int64_t           trx_id_     = -1;
   bool              started_    = false;
   bool              recovering_ = false;
   OperationSet      operations_;

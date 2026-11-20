@@ -116,6 +116,8 @@ public:
 
   virtual RC                       init()             = 0;
   virtual const vector<FieldMeta> *trx_fields() const = 0;
+  virtual int64_t                  max_trx_id() const { return INT64_MAX; }
+  virtual RC validate_trx_fields(const TableMeta &table_meta) const { return RC::SUCCESS; }
 
   virtual Trx *create_trx(LogHandler &log_handler) = 0;
 

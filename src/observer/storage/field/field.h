@@ -42,6 +42,9 @@ public:
   void set_int(Record &record, int value);
   int  get_int(const Record &record);
 
+  void    set_int64(Record &record, int64_t value);
+  int64_t get_int64(const Record &record);
+
   const char *get_data(const Record &record);
 
 private:

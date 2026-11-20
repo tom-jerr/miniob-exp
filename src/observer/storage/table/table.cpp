@@ -150,6 +150,12 @@ RC Table::open(Db *db, const char *meta_file, const char *base_dir)
 
   db_       = db;
 
+  RC guard_rc = db->trx_kit().validate_trx_fields(table_meta_);
+  if (guard_rc != RC::SUCCESS) {
+    LOG_ERROR("incompatible transaction fields for table %s", meta_file_path.c_str());
+    return guard_rc;
+  }
+
   // // 加载数据文件
   // RC rc = init_record_handler(base_dir);
   // if (rc != RC::SUCCESS) {

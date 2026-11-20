@@ -33,8 +33,8 @@ RC MvccTrxKit::init()
   // 事务使用一些特殊的字段，放到每行记录中，表示行记录的可见性。
   fields_ = vector<FieldMeta>{
       // field_id in trx fields is invisible.
-      FieldMeta("__trx_xid_begin", AttrType::INTS, 0 /*attr_offset*/, 4 /*attr_len*/, false /*visible*/, -1/*field_id*/),
-      FieldMeta("__trx_xid_end", AttrType::INTS, 0 /*attr_offset*/, 4 /*attr_len*/, false /*visible*/, -2/*field_id*/)};
+      FieldMeta("__trx_xid_begin", AttrType::INTS, 0 /*attr_offset*/, 8 /*attr_len*/, false /*visible*/, -1/*field_id*/),
+      FieldMeta("__trx_xid_end", AttrType::INTS, 0 /*attr_offset*/, 8 /*attr_len*/, false /*visible*/, -2/*field_id*/)};
 
   LOG_INFO("init mvcc trx kit done.");
   return RC::SUCCESS;
@@ -42,9 +42,27 @@ RC MvccTrxKit::init()
 
 const vector<FieldMeta> *MvccTrxKit::trx_fields() const { return &fields_; }
 
-int32_t MvccTrxKit::next_trx_id() { return ++current_trx_id_; }
+int64_t MvccTrxKit::next_trx_id() { return ++current_trx_id_; }
 
-int32_t MvccTrxKit::max_trx_id() const { return numeric_limits<int32_t>::max(); }
+int64_t MvccTrxKit::max_trx_id() const { return numeric_limits<int64_t>::max(); }
+
+RC MvccTrxKit::validate_trx_fields(const TableMeta &table_meta) const
+{
+  span<const FieldMeta> trx_fields = table_meta.trx_fields();
+  if (trx_fields.size() < 2) {
+    LOG_ERROR("table %s has no transaction fields", table_meta.name());
+    return RC::INVALID_ARGUMENT;
+  }
+
+  for (size_t i = 0; i < 2; i++) {
+    if (trx_fields[i].len() != static_cast<int>(sizeof(int64_t))) {
+      LOG_ERROR("table %s has incompatible transaction field %s length %d; expected 8 (old 4-byte-xid table?)",
+          table_meta.name(), trx_fields[i].name(), trx_fields[i].len());
+      return RC::INVALID_ARGUMENT;
+    }
+  }
+  return RC::SUCCESS;
+}
 
 Trx *MvccTrxKit::create_trx(LogHandler &log_handler)
 {
@@ -102,7 +120,7 @@ LogReplayer *MvccTrxKit::create_log_replayer(Db &db, LogHandler &log_handler)
 MvccTrx::MvccTrx(MvccTrxKit &kit, LogHandler &log_handler) : Trx(TrxKit::Type::MVCC), trx_kit_(kit), log_handler_(log_handler)
 {}
 
-MvccTrx::MvccTrx(MvccTrxKit &kit, LogHandler &log_handler, int32_t trx_id) 
+MvccTrx::MvccTrx(MvccTrxKit &kit, LogHandler &log_handler, int64_t trx_id) 
   : Trx(TrxKit::Type::MVCC), trx_kit_(kit), log_handler_(log_handler), trx_id_(trx_id)
 {
   started_    = true;
@@ -122,8 +140,8 @@ RC MvccTrx::insert_record(Table *table, Record &record)
   Field end_field;
   trx_fields(table, begin_field, end_field);
 
-  begin_field.set_int(record, -trx_id_);
-  end_field.set_int(record, trx_kit_.max_trx_id());
+  begin_field.set_int64(record, -trx_id_);
+  end_field.set_int64(record, trx_kit_.max_trx_id());
 
   RC rc = table->insert_record(record);
   if (rc != RC::SUCCESS) {
@@ -131,7 +149,7 @@ RC MvccTrx::insert_record(Table *table, Record &record)
     return rc;
   }
 
-  rc = log_handler_.insert_record(trx_id_, table, record.rid());
+  rc = log_handler_.insert_record(static_cast<int32_t>(trx_id_), table, record.rid());
   ASSERT(rc == RC::SUCCESS, "failed to append insert record log. trx id=%d, table id=%d, rid=%s, record len=%d, rc=%s",
          trx_id_, table->table_id(), record.rid().to_string().c_str(), record.len(), strrc(rc));
 
@@ -159,7 +177,7 @@ RC MvccTrx::delete_record(Table *table, Record &record)
       return false;
     }
 
-    end_field.set_int(inplace_record, -trx_id_);
+    end_field.set_int64(inplace_record, -trx_id_);
     return true;
   });
 
@@ -173,7 +191,7 @@ RC MvccTrx::delete_record(Table *table, Record &record)
     return delete_result;
   }
 
-  rc = log_handler_.delete_record(trx_id_, table, record.rid());
+  rc = log_handler_.delete_record(static_cast<int32_t>(trx_id_), table, record.rid());
   ASSERT(rc == RC::SUCCESS, "failed to append delete record log. trx id=%d, table id=%d, rid=%s, record len=%d, rc=%s",
       trx_id_, table->table_id(), record.rid().to_string().c_str(), record.len(), strrc(rc));
 
@@ -188,8 +206,8 @@ RC MvccTrx::visit_record(Table *table, Record &record, ReadWriteMode mode)
   Field end_field;
   trx_fields(table, begin_field, end_field);
 
-  int32_t begin_xid = begin_field.get_int(record);
-  int32_t end_xid   = end_field.get_int(record);
+  int64_t begin_xid = begin_field.get_int64(record);
+  int64_t end_xid   = end_field.get_int64(record);
 
   RC rc = RC::SUCCESS;
   if (begin_xid > 0 && end_xid > 0) {
@@ -289,12 +307,12 @@ RC MvccTrx::commit_with_trx_id(int32_t commit_xid)
 
         auto record_updater = [this, &begin_xid_field, commit_xid](Record &record) -> bool {
           LOG_DEBUG("before commit insert record. trx id=%d, begin xid=%d, commit xid=%d, lbt=%s",
-                    trx_id_, begin_xid_field.get_int(record), commit_xid, lbt());
-          ASSERT(begin_xid_field.get_int(record) == -this->trx_id_ && (!recovering_), 
+                    trx_id_, begin_xid_field.get_int64(record), commit_xid, lbt());
+          ASSERT(begin_xid_field.get_int64(record) == -this->trx_id_ && (!recovering_), 
                  "got an invalid record while committing. begin xid=%d, this trx id=%d", 
-                 begin_xid_field.get_int(record), trx_id_);
+                 begin_xid_field.get_int64(record), trx_id_);
 
-          begin_xid_field.set_int(record, commit_xid);
+          begin_xid_field.set_int64(record, commit_xid);
           return true;
         };
 
@@ -312,11 +330,11 @@ RC MvccTrx::commit_with_trx_id(int32_t commit_xid)
 
         auto record_updater = [this, &end_xid_field, commit_xid](Record &record) -> bool {
           (void)this;
-          ASSERT(end_xid_field.get_int(record) == -trx_id_, 
+          ASSERT(end_xid_field.get_int64(record) == -trx_id_, 
                  "got an invalid record while committing. end xid=%d, this trx id=%d", 
-                 end_xid_field.get_int(record), trx_id_);
+                 end_xid_field.get_int64(record), trx_id_);
 
-          end_xid_field.set_int(record, commit_xid);
+          end_xid_field.set_int64(record, commit_xid);
           return true;
         };
 
@@ -332,7 +350,7 @@ RC MvccTrx::commit_with_trx_id(int32_t commit_xid)
   }
 
   if (!recovering_) {
-    rc = log_handler_.commit(trx_id_, commit_xid);
+    rc = log_handler_.commit(static_cast<int32_t>(trx_id_), commit_xid);
   }
 
   operations_.clear();
@@ -361,7 +379,7 @@ RC MvccTrx::rollback()
           if (OB_SUCC(rc)) {
             Field begin_xid_field, end_xid_field;
             trx_fields(table, begin_xid_field, end_xid_field);
-            if (begin_xid_field.get_int(record) != -trx_id_) {
+            if (begin_xid_field.get_int64(record) != -trx_id_) {
               continue;
             }
           } else if (RC::RECORD_NOT_EXIST == rc) {
@@ -387,15 +405,15 @@ RC MvccTrx::rollback()
         trx_fields(table, begin_xid_field, end_xid_field);
 
         auto record_updater = [this, &end_xid_field](Record &record) -> bool {
-          if (recovering_ && end_xid_field.get_int(record) != -trx_id_) {
+          if (recovering_ && end_xid_field.get_int64(record) != -trx_id_) {
             return false;
           }
 
-          ASSERT(end_xid_field.get_int(record) == -trx_id_, 
+          ASSERT(end_xid_field.get_int64(record) == -trx_id_, 
                 "got an invalid record while rollback. end xid=%d, this trx id=%d", 
-                end_xid_field.get_int(record), trx_id_);
+                end_xid_field.get_int64(record), trx_id_);
 
-          end_xid_field.set_int(record, trx_kit_.max_trx_id());
+          end_xid_field.set_int64(record, trx_kit_.max_trx_id());
           return true;
         };
 
@@ -413,7 +431,7 @@ RC MvccTrx::rollback()
   operations_.clear();
 
   if (!recovering_) {
-    rc = log_handler_.rollback(trx_id_);
+    rc = log_handler_.rollback(static_cast<int32_t>(trx_id_));
   }
   LOG_TRACE("append trx rollback log. trx id=%d, rc=%s", trx_id_, strrc(rc));
   return rc;
