@@ -1,0 +1,327 @@
+<!doctype html>
+<html lang="zh-CN" id="top">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>SQL语句执行流程 · MiniOB 可视化文档</title>
+<link rel="stylesheet" href="../assets/style.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@highlightjs/cdn-assets@11/styles/atom-one-dark.min.css">
+<script src="../assets/theme.js"></script>
+
+</head>
+<body class="">
+<div class="reading-progress" id="readingProgress" aria-hidden="true"></div>
+<header class="topbar">
+  <button class="menu-btn" id="menuBtn" aria-label="切换侧栏" aria-expanded="false">☰</button>
+  <a class="brand" href="../index.html"><span class="brand-mark">M</span><span>MiniOB <em>可视化文档</em></span></a>
+  <div class="top-actions">
+    <a class="top-link" href="../flows.html">动态流程</a>
+    <button class="theme-btn" id="themeBtn" aria-label="切换明暗主题" title="切换明暗主题">◐</button>
+  </div>
+</header>
+<div class="layout has-toc">
+  <aside class="sidebar" id="sidebar"><nav class="site-nav" aria-label="文档目录"><a class="nav-home" href="../index.html"><span class="brand-mark">M</span><span>MiniOB 可视化文档</span></a><details class="nav-group"><summary>快速开始<span>2</span></summary><div class="nav-links"><a href="../how_to_build.html"><span class="nav-link-text">如何编译</span></a><a href="../how_to_run.html"><span class="nav-link-text">如何运行</span></a></div></details><details class="nav-group" open><summary>设计文档<span>21</span></summary><div class="nav-links"><a href="miniob-architecture.html"><span class="nav-link-text">MiniOB代码架构框架设计和说明</span><span class="nav-badge" title="含交互流程图或架构图">图</span></a><a href="miniob-buffer-pool.html"><span class="nav-link-text">MiniOB 存储实现</span><span class="nav-badge" title="含交互流程图或架构图">图</span></a><a href="miniob-double-write-buffer.html"><span class="nav-link-text">MiniOB Double Write Buffer 实现</span><span class="nav-badge" title="含交互流程图或架构图">图</span></a><a href="miniob-transaction.html"><span class="nav-link-text">事务模块</span><span class="nav-badge" title="含交互流程图或架构图">图</span></a><a href="miniob-durability.html"><span class="nav-link-text">持久化</span><span class="nav-badge" title="含交互流程图或架构图">图</span></a><a href="miniob-persistence-files.html"><span class="nav-link-text">持久化文件与恢复路径</span><span class="nav-badge" title="含交互流程图或架构图">图</span></a><a href="miniob-checkpoint-wal.html"><span class="nav-link-text">MiniOB 检查点与 WAL 截断</span><span class="nav-badge" title="含交互流程图或架构图">图</span></a><a href="miniob-sql-parser.html"><span class="nav-link-text">SQL 词法语法分析</span></a><a href="miniob-how-to-add-new-sql.html" class="active" aria-current="page"><span class="nav-link-text">SQL语句执行流程</span><span class="nav-badge" title="含交互流程图或架构图">图</span></a><a href="miniob-sql-expression.html"><span class="nav-link-text">SQL 表达式</span></a><a href="miniob-bplus-tree.html"><span class="nav-link-text">MiniOB B+Tree 实现</span><span class="nav-badge" title="含交互流程图或架构图">图</span></a><a href="miniob-bplus-tree-concurrency.html"><span class="nav-link-text">B+ 树并发操作</span><span class="nav-badge" title="含交互流程图或架构图">图</span></a><a href="miniob-thread-model.html"><span class="nav-link-text">线程模型</span><span class="nav-badge" title="含交互流程图或架构图">图</span></a><a href="miniob-mysql-protocol.html"><span class="nav-link-text">MySQL 通讯协议</span></a><a href="miniob-pax-storage.html"><span class="nav-link-text">MiniOB PAX 存储格式</span><span class="nav-badge" title="含交互流程图或架构图">图</span></a><a href="miniob-aggregation-and-group-by.html"><span class="nav-link-text">MiniOB 向量化执行 aggregation 和 group by 实现</span></a><a href="miniob-lsm-tree.html"><span class="nav-link-text">MiniOB LSM-Tree 存储引擎</span><span class="nav-badge" title="含交互流程图或架构图">图</span></a><a href="introduction.html"><span class="nav-link-text">功能模块设计说明</span></a><a href="miniob-btree-storage-engine.html"><span class="nav-link-text">MiniOB B+Tree 聚簇表存储引擎</span><span class="nav-badge" title="含交互流程图或架构图">图</span></a><a href="miniob-cascade.html"><span class="nav-link-text">Cascade Optimizer(查询优化器)</span><span class="nav-badge" title="含交互流程图或架构图">图</span></a><a href="miniob-update-mvcc-occ.html"><span class="nav-link-text">MiniOB UPDATE、MVCC 与 OCC 方案设计</span><span class="nav-badge" title="含交互流程图或架构图">图</span></a></div></details><details class="nav-group"><summary>课程实验<span>6</span></summary><div class="nav-links"><a href="../db_course_lab/overview.html"><span class="nav-link-text">数据库系统实现原理与实践课程实验</span></a><a href="../db_course_lab/lab0.html"><span class="nav-link-text">LAB#0 C++ 基础</span></a><a href="../db_course_lab/lab1.html"><span class="nav-link-text">LAB#1 LSM-Tree 存储引擎</span></a><a href="../db_course_lab/lab2.html"><span class="nav-link-text">LAB#2 查询引擎</span></a><a href="../db_course_lab/lab3.html"><span class="nav-link-text">LAB#3 事务引擎</span></a><a href="../db_course_lab/lab4.html"><span class="nav-link-text">LAB#4 性能测试</span></a></div></details><details class="nav-group"><summary>简明教程<span>9</span></summary><div class="nav-links"><a href="../lectures/copyright.html"><span class="nav-link-text">版权声明</span></a><a href="../lectures/lecture-1.html"><span class="nav-link-text">第1章 数据库管理系统概述</span></a><a href="../lectures/lecture-2.html"><span class="nav-link-text">第2章 数据库的存储结构</span></a><a href="../lectures/lecture-3.html"><span class="nav-link-text">第3章 索引结构</span></a><a href="../lectures/lecture-4.html"><span class="nav-link-text">第4章 查询处理</span></a><a href="../lectures/lecture-5.html"><span class="nav-link-text">第5章 查询优化</span></a><a href="../lectures/lecture-6.html"><span class="nav-link-text">第6章 事务处理</span></a><a href="../lectures/references.html"><span class="nav-link-text">参考资料</span></a><a href="../lectures/index.html"><span class="nav-link-text">数据库管理系统实现基础讲义</span></a></div></details><details class="nav-group"><summary>开发环境<span>14</span></summary><div class="nav-links"><a href="../dev-env/introduction.html"><span class="nav-link-text">搭建开发环境</span></a><a href="../dev-env/vscode_dev_with_local_virtual_env.html"><span class="nav-link-text">虚拟机+vscode remote开发</span></a><a href="../dev-env/dev_by_online.html"><span class="nav-link-text">使用在线开发环境开发 MiniOB</span></a><a href="../dev-env/how-to-dev-using-docker.html"><span class="nav-link-text">使用Docker开发MiniOB</span></a><a href="../dev-env/how_to_dev_in_docker_container_by_vscode.html"><span class="nav-link-text">使用 Docker 和 VSCode 远程开发 Miniob</span></a><a href="../dev-env/how_to_dev_in_docker_container_by_vscode_on_windows.html"><span class="nav-link-text">在windows上通过docker配置环境并利用vscode调试代码（手把手版）</span></a><a href="../dev-env/how_to_dev_miniob_by_docker_on_windows.html"><span class="nav-link-text">安装Docker</span></a><a href="../dev-env/how_to_dev_miniob_by_vscode.html"><span class="nav-link-text">环境准备</span></a><a href="../dev-env/miniob-how-to-debug.html"><span class="nav-link-text">miniob调试篇</span></a><a href="../dev-env/how_to_submit_for_testing.html"><span class="nav-link-text">训练营平台使用说明</span></a><a href="../dev-env/integration_test.html"><span class="nav-link-text">MiniOB 集成测试使用文档</span></a><a href="../dev-env/cloudlab_setup.html"><span class="nav-link-text">开源学堂在线编程环境开发 MiniOB</span></a><a href="../dev-env/how_to_dev_miniob_by_docker_on_windows_simplified.html"><span class="nav-link-text">在windows上通过docker配置环境并利用vscode编辑、开发、调试代码（简易版）</span></a><a href="../dev-env/how_to_dev_miniob_in_vscodeGUI_by_docker_on_windows.html"><span class="nav-link-text">基于Windows+docker容器在本地利用VSCode编辑、开发及调试miniob</span></a></div></details><details class="nav-group"><summary>大赛与训练<span>9</span></summary><div class="nav-links"><a href="../game/introduction.html"><span class="nav-link-text">OceanBase 数据库大赛</span></a><a href="../game/miniob-output-convention.html"><span class="nav-link-text">输出规范</span></a><a href="../game/debug-output.html"><span class="nav-link-text">输出调试信息</span></a><a href="../game/miniob-memtracer.html"><span class="nav-link-text">MemTracer</span></a><a href="../game/miniob_topics.html"><span class="nav-link-text">OceanBase 数据库大赛2021届题目</span></a><a href="../game/github-introduction.html"><span class="nav-link-text">MiniOB GitHub 在训练营中的使用说明</span></a><a href="../game/gitee-instructions.html"><span class="nav-link-text">MiniOB Gitee 在训练营中的使用说明</span></a><a href="../game/miniob-vectordb.html"><span class="nav-link-text">MiniOB 向量数据库</span></a><a href="../game/git-introduction.html"><span class="nav-link-text">Git 介绍</span></a></div></details><details class="nav-group"><summary>博客<span>2</span></summary><div class="nav-links"><a href="../blog/introduction.html"><span class="nav-link-text">介绍</span></a><a href="../blog/1.html"><span class="nav-link-text">High-Performance Concurrency Control Mechanisms for Main-Memory Databases</span></a></div></details><a class="nav-flows" href="../flows.html"><span class="dot"></span>动态流程<span class="count">13</span></a></nav></aside>
+  <main class="main">
+    
+<nav class="crumbs" aria-label="面包屑导航"><a href="../index.html">首页</a><span>/</span><span>设计文档</span><span>/</span><span aria-current="page">SQL语句执行流程</span></nav>
+<header class="doc-head">
+  <div class="doc-meta-bar">
+    <span class="eyebrow-pill">设计文档</span>
+    <span class="doc-meta-item">2 个章节</span>
+    <span class="doc-meta-sep">·</span>
+    <span class="doc-meta-item">约 5 分钟阅读</span>
+    <span class="doc-meta-sep">·</span>
+    <a class="doc-meta-source" href="../../docs/design/miniob-how-to-add-new-sql.md">Markdown 源文件 ↗</a>
+  </div>
+  <h1>SQL语句执行流程</h1>
+</header>
+<section class="panel map-panel" id="doc-outline-panel">
+  <div class="panel-head">
+    <div>
+      <h2>章节结构导览</h2>
+      <span>点击任意章节直达正文；支持结构卡片与交互思维导图切换</span>
+    </div>
+    <button type="button" class="map-toggle-btn" data-toggle-markmap aria-expanded="false">⊞ 切换思维导图</button>
+  </div>
+  <div class="tree-view"><div class="tree-grid"><div class="tree-branch"><div class="tree-top"><a class="tree-link" href="#新增一种类型的sql语句"><span class="tree-num">1</span><span>新增一种类型的SQL语句</span></a></div></div></div></div>
+  <div class="markmap-wrap" hidden>
+    <div class="markmap"><script type="text/template"># SQL语句执行流程
+  - [新增一种类型的SQL语句](#新增一种类型的sql语句)</script></div>
+  </div>
+</section>
+<div class="flows-inline">
+<section class="flow-player" id="flow-add-sql-statement" data-flow="add-sql-statement" tabindex="0" aria-label="新增一种SQL语句的改动路径 交互流程播放器">
+  <header class="flow-head">
+    <div>
+      <div class="flow-kicker-row">
+        <span class="flow-kicker">INTERACTIVE MECHANISM · 动态机制流程</span>
+        <span class="flow-step-total">共 7 步</span>
+      </div>
+      <h2>新增一种SQL语句的改动路径</h2>
+      <p class="flow-summary">从词法/语法规则到 Stmt、算子和结果集的完整改动路径。</p>
+    </div>
+    <div class="flow-head-actions">
+      <button type="button" class="arch-zoom-btn" data-zoom-diagram aria-label="放大流程图">⤢ 放大</button>
+      <a class="arch-svg-link" href="../assets/diagrams/flow-add-sql-statement.svg" target="_blank" rel="noopener" title="打开独立 SVG 矢量图">SVG ↗</a>
+      <a class="flow-source" href="miniob-how-to-add-new-sql.html#新增一种类型的sql语句">跳转原文 →</a>
+    </div>
+  </header>
+  <div class="flow-legend" aria-hidden="true">
+    <span><i class="leg-dot leg-active"></i>当前步骤节点与流转路径</span>
+    <span><i class="leg-dot leg-visited"></i>已执行路径</span>
+    <span><i class="leg-dot leg-idle"></i>待执行节点</span>
+    <span class="flow-legend-tip">💡 可直接点击图中节点、下方步骤条，或使用 ← / → 键切换步骤</span>
+  </div>
+  <div class="flow-canvas" role="img" aria-label="新增一种SQL语句的改动路径 流程图"><svg xmlns="http://www.w3.org/2000/svg" width="1060" height="320" viewBox="0 0 1060 320" role="img" aria-labelledby="flow-add-sql-statement-title flow-add-sql-statement-desc" class="toolkit-diagram" data-diagram-id="flow-add-sql-statement">
+  <title id="flow-add-sql-statement-title">新增一种SQL语句的改动路径 — 交互式机制流程图</title>
+  <desc id="flow-add-sql-statement-desc">从词法/语法规则到 Stmt、算子和结果集的完整改动路径。</desc>
+  <defs>
+    <marker id="flow-add-sql-statement-arrow-ink" viewBox="0 0 10 10" refX="8.6" refY="5" markerWidth="6.8" markerHeight="6.8" orient="auto">
+      <path d="M0 0.8 L9.5 5 L0 9.2 Z" fill="#334155" />
+    </marker>
+    <marker id="flow-add-sql-statement-arrow-blue" viewBox="0 0 10 10" refX="8.6" refY="5" markerWidth="6.8" markerHeight="6.8" orient="auto">
+      <path d="M0 0.8 L9.5 5 L0 9.2 Z" fill="#2554C7" />
+    </marker>
+    <marker id="flow-add-sql-statement-arrow-amber" viewBox="0 0 10 10" refX="8.6" refY="5" markerWidth="6.8" markerHeight="6.8" orient="auto">
+      <path d="M0 0.8 L9.5 5 L0 9.2 Z" fill="#B45309" />
+    </marker>
+    <marker id="flow-add-sql-statement-arrow-teal" viewBox="0 0 10 10" refX="8.6" refY="5" markerWidth="6.8" markerHeight="6.8" orient="auto">
+      <path d="M0 0.8 L9.5 5 L0 9.2 Z" fill="#0F766E" />
+    </marker>
+    <marker id="flow-add-sql-statement-arrow-purple" viewBox="0 0 10 10" refX="8.6" refY="5" markerWidth="6.8" markerHeight="6.8" orient="auto">
+      <path d="M0 0.8 L9.5 5 L0 9.2 Z" fill="#6D28D9" />
+    </marker>
+    <marker id="flow-add-sql-statement-arrow-rose" viewBox="0 0 10 10" refX="8.6" refY="5" markerWidth="6.8" markerHeight="6.8" orient="auto">
+      <path d="M0 0.8 L9.5 5 L0 9.2 Z" fill="#BE123C" />
+    </marker>
+    <marker id="flow-add-sql-statement-arrow-muted" viewBox="0 0 10 10" refX="8.6" refY="5" markerWidth="6.8" markerHeight="6.8" orient="auto">
+      <path d="M0 0.8 L9.5 5 L0 9.2 Z" fill="#64748B" />
+    </marker>
+  </defs>
+  <g class="diag-bg">
+    <rect x="0" y="0" width="1060" height="320" rx="12" fill="#FCFDFE" stroke="none" class="diag-canvas-bg" />
+  </g>
+  <g class="diag-lanes">
+    <g class="diag-lane">
+      <rect x="16" y="16" width="476" height="288" rx="10" fill="#F0F5FF" stroke="#2554C7" stroke-width="1.5" class="diag-lane-rect" />
+      <text x="30" y="38" font-family="&quot;Noto Sans SC&quot;, &quot;PingFang SC&quot;, &quot;Microsoft YaHei&quot;, &quot;Segoe UI&quot;, Arial, sans-serif" font-size="12.8" font-weight="700" fill="#1E40AF" class="diag-lane-title">1. 词法与语法前端 (Parser Stage)</text>
+      <text x="478" y="38" font-family="&quot;JetBrains Mono&quot;, &quot;SFMono-Regular&quot;, Consolas, &quot;Liberation Mono&quot;, monospace" font-size="11.2" font-weight="500" text-anchor="end" fill="#7B89A1" class="diag-lane-sub">src/observer/sql/parser</text>
+    </g>
+    <g class="diag-lane">
+      <rect x="504" y="16" width="178" height="288" rx="10" fill="#FFF9EB" stroke="#B45309" stroke-width="1.5" class="diag-lane-rect" />
+      <text x="518" y="38" font-family="&quot;Noto Sans SC&quot;, &quot;PingFang SC&quot;, &quot;Microsoft YaHei&quot;, &quot;Segoe UI&quot;, Arial, sans-serif" font-size="12.8" font-weight="700" fill="#92400E" class="diag-lane-title">2. 语义绑定 (Resolve)</text>
+      <text x="668" y="38" font-family="&quot;JetBrains Mono&quot;, &quot;SFMono-Regular&quot;, Consolas, &quot;Liberation Mono&quot;, monospace" font-size="11.2" font-weight="500" text-anchor="end" fill="#7B89A1" class="diag-lane-sub">sql/stmt</text>
+    </g>
+    <g class="diag-lane">
+      <rect x="694" y="16" width="350" height="288" rx="10" fill="#F0FDFA" stroke="#0F766E" stroke-width="1.5" class="diag-lane-rect" />
+      <text x="708" y="38" font-family="&quot;Noto Sans SC&quot;, &quot;PingFang SC&quot;, &quot;Microsoft YaHei&quot;, &quot;Segoe UI&quot;, Arial, sans-serif" font-size="12.8" font-weight="700" fill="#115E59" class="diag-lane-title">3. 计划算子 / 命令执行与结果集</text>
+      <text x="1030" y="38" font-family="&quot;JetBrains Mono&quot;, &quot;SFMono-Regular&quot;, Consolas, &quot;Liberation Mono&quot;, monospace" font-size="11.2" font-weight="500" text-anchor="end" fill="#7B89A1" class="diag-lane-sub">sql/optimizer &amp; executor</text>
+    </g>
+  </g>
+  <g class="diag-edges">
+    <g class="flow-edge" data-from="lex" data-to="yacc">
+      <path d="M 166.0 162.0 L 184.0 162.0" fill="none" stroke="#2554C7" stroke-width="1.9" stroke-linejoin="round" stroke-linecap="round" class="flow-edge-path" marker-end="url(#flow-add-sql-statement-arrow-blue)" />
+      <rect x="152.8" y="102.5" width="44.5" height="19.0" rx="5.5" fill="#FFFFFF" stroke="#CBD5E1" stroke-width="1.1" class="flow-edge-pill" />
+      <text x="175.0" y="115.8" font-family="&quot;Noto Sans SC&quot;, &quot;PingFang SC&quot;, &quot;Microsoft YaHei&quot;, &quot;Segoe UI&quot;, Arial, sans-serif" font-size="11.2" font-weight="600" text-anchor="middle" fill="#526077" class="flow-edge-label">token</text>
+    </g>
+    <g class="flow-edge" data-from="yacc" data-to="node">
+      <path d="M 320.0 162.0 L 338.0 162.0" fill="none" stroke="#2554C7" stroke-width="1.9" stroke-linejoin="round" stroke-linecap="round" class="flow-edge-path" marker-end="url(#flow-add-sql-statement-arrow-blue)" />
+      <rect x="280.8" y="102.5" width="96.4" height="19.0" rx="5.5" fill="#FFFFFF" stroke="#CBD5E1" stroke-width="1.1" class="flow-edge-pill" />
+      <text x="329.0" y="115.8" font-family="&quot;Noto Sans SC&quot;, &quot;PingFang SC&quot;, &quot;Microsoft YaHei&quot;, &quot;Segoe UI&quot;, Arial, sans-serif" font-size="11.2" font-weight="600" text-anchor="middle" fill="#526077" class="flow-edge-label">ParsedSqlNode</text>
+    </g>
+    <g class="flow-edge" data-from="node" data-to="stmt">
+      <path d="M 478.0 162.0 L 522.0 162.0" fill="none" stroke="#B45309" stroke-width="1.9" stroke-linejoin="round" stroke-linecap="round" class="flow-edge-path" marker-end="url(#flow-add-sql-statement-arrow-amber)" />
+      <rect x="468.0" y="102.5" width="64.0" height="19.0" rx="5.5" fill="#FFFFFF" stroke="#CBD5E1" stroke-width="1.1" class="flow-edge-pill" />
+      <text x="500.0" y="115.8" font-family="&quot;Noto Sans SC&quot;, &quot;PingFang SC&quot;, &quot;Microsoft YaHei&quot;, &quot;Segoe UI&quot;, Arial, sans-serif" font-size="11.2" font-weight="600" text-anchor="middle" fill="#526077" class="flow-edge-label">Resolver</text>
+    </g>
+    <g class="flow-edge" data-from="stmt" data-to="op">
+      <path d="M 593.0 126.0 L 593.0 98.0 L 714.0 98.0" fill="none" stroke="#0F766E" stroke-width="1.9" stroke-linejoin="round" stroke-linecap="round" class="flow-edge-path" marker-end="url(#flow-add-sql-statement-arrow-teal)" />
+      <rect x="601.8" y="72.5" width="75.4" height="19.0" rx="5.5" fill="#FFFFFF" stroke="#CBD5E1" stroke-width="1.1" class="flow-edge-pill" />
+      <text x="639.5" y="85.8" font-family="&quot;Noto Sans SC&quot;, &quot;PingFang SC&quot;, &quot;Microsoft YaHei&quot;, &quot;Segoe UI&quot;, Arial, sans-serif" font-size="11.2" font-weight="600" text-anchor="middle" fill="#526077" class="flow-edge-label">查询类型SQL</text>
+    </g>
+    <g class="flow-edge" data-from="stmt" data-to="cmd">
+      <path d="M 593.0 198.0 L 593.0 228.0 L 714.0 228.0" fill="none" stroke="#6D28D9" stroke-width="1.9" stroke-linejoin="round" stroke-linecap="round" class="flow-edge-path" marker-end="url(#flow-add-sql-statement-arrow-purple)" />
+      <rect x="601.8" y="234.5" width="75.4" height="19.0" rx="5.5" fill="#FFFFFF" stroke="#CBD5E1" stroke-width="1.1" class="flow-edge-pill" />
+      <text x="639.5" y="247.8" font-family="&quot;Noto Sans SC&quot;, &quot;PingFang SC&quot;, &quot;Microsoft YaHei&quot;, &quot;Segoe UI&quot;, Arial, sans-serif" font-size="11.2" font-weight="600" text-anchor="middle" fill="#526077" class="flow-edge-label">命令类型SQL</text>
+    </g>
+    <g class="flow-edge" data-from="op" data-to="result">
+      <path d="M 866.0 98.0 L 962.0 98.0 L 962.0 126.0" fill="none" stroke="#0F766E" stroke-width="1.9" stroke-linejoin="round" stroke-linecap="round" class="flow-edge-path" marker-end="url(#flow-add-sql-statement-arrow-teal)" />
+      <rect x="883.3" y="72.5" width="105.4" height="19.0" rx="5.5" fill="#FFFFFF" stroke="#CBD5E1" stroke-width="1.1" class="flow-edge-pill" />
+      <text x="936.0" y="85.8" font-family="&quot;Noto Sans SC&quot;, &quot;PingFang SC&quot;, &quot;Microsoft YaHei&quot;, &quot;Segoe UI&quot;, Arial, sans-serif" font-size="11.2" font-weight="600" text-anchor="middle" fill="#526077" class="flow-edge-label">设置TupleSchema</text>
+    </g>
+    <g class="flow-edge" data-from="cmd" data-to="result">
+      <path d="M 866.0 228.0 L 962.0 228.0 L 962.0 198.0" fill="none" stroke="#6D28D9" stroke-width="1.9" stroke-linejoin="round" stroke-linecap="round" class="flow-edge-path" marker-end="url(#flow-add-sql-statement-arrow-purple)" />
+      <rect x="897.1" y="234.5" width="77.9" height="19.0" rx="5.5" fill="#FFFFFF" stroke="#CBD5E1" stroke-width="1.1" class="flow-edge-pill" />
+      <text x="936.0" y="247.8" font-family="&quot;Noto Sans SC&quot;, &quot;PingFang SC&quot;, &quot;Microsoft YaHei&quot;, &quot;Segoe UI&quot;, Arial, sans-serif" font-size="11.2" font-weight="600" text-anchor="middle" fill="#526077" class="flow-edge-label">输出执行结果</text>
+    </g>
+  </g>
+  <g class="diag-nodes">
+    <g class="flow-node role-blue" data-node-id="lex" data-steps="0" tabindex="0" role="button" aria-label="词法规则 (lex_sql.l)">
+      <rect x="30" y="126" width="136" height="72" rx="9" fill="#E6EFFD" stroke="#2554C7" stroke-width="1.8" class="flow-node-rect" />
+      <rect x="38" y="132" width="22.0" height="16" rx="4.5" fill="#1E40AF" stroke="none" class="flow-node-badge-bg" />
+      <text x="49.0" y="143.5" font-family="&quot;JetBrains Mono&quot;, &quot;SFMono-Regular&quot;, Consolas, &quot;Liberation Mono&quot;, monospace" font-size="10.2" font-weight="700" text-anchor="middle" fill="#FFFFFF" class="flow-node-badge-text">S1</text>
+      <text x="98.0" y="164.0" font-family="&quot;Noto Sans SC&quot;, &quot;PingFang SC&quot;, &quot;Microsoft YaHei&quot;, &quot;Segoe UI&quot;, Arial, sans-serif" font-size="14.2" font-weight="700" text-anchor="middle" fill="#141E30" class="flow-node-title">词法规则</text>
+      <text x="98.0" y="180.5" font-family="&quot;JetBrains Mono&quot;, &quot;SFMono-Regular&quot;, Consolas, &quot;Liberation Mono&quot;, monospace" font-size="11" font-weight="500" text-anchor="middle" fill="#526077" class="flow-node-sub">lex_sql.l</text>
+    </g>
+    <g class="flow-node role-blue" data-node-id="yacc" data-steps="1" tabindex="0" role="button" aria-label="语法规则 (yacc_sql.y)">
+      <rect x="184" y="126" width="136" height="72" rx="9" fill="#E6EFFD" stroke="#2554C7" stroke-width="1.8" class="flow-node-rect" />
+      <rect x="192" y="132" width="22.0" height="16" rx="4.5" fill="#1E40AF" stroke="none" class="flow-node-badge-bg" />
+      <text x="203.0" y="143.5" font-family="&quot;JetBrains Mono&quot;, &quot;SFMono-Regular&quot;, Consolas, &quot;Liberation Mono&quot;, monospace" font-size="10.2" font-weight="700" text-anchor="middle" fill="#FFFFFF" class="flow-node-badge-text">S2</text>
+      <text x="252.0" y="164.0" font-family="&quot;Noto Sans SC&quot;, &quot;PingFang SC&quot;, &quot;Microsoft YaHei&quot;, &quot;Segoe UI&quot;, Arial, sans-serif" font-size="14.2" font-weight="700" text-anchor="middle" fill="#141E30" class="flow-node-title">语法规则</text>
+      <text x="252.0" y="180.5" font-family="&quot;JetBrains Mono&quot;, &quot;SFMono-Regular&quot;, Consolas, &quot;Liberation Mono&quot;, monospace" font-size="11" font-weight="500" text-anchor="middle" fill="#526077" class="flow-node-sub">yacc_sql.y</text>
+    </g>
+    <g class="flow-node role-blue" data-node-id="node" data-steps="2" tabindex="0" role="button" aria-label="语法树类型 (parse_defs.h)">
+      <rect x="338" y="126" width="140" height="72" rx="9" fill="#E6EFFD" stroke="#2554C7" stroke-width="1.8" class="flow-node-rect" />
+      <rect x="346" y="132" width="22.0" height="16" rx="4.5" fill="#1E40AF" stroke="none" class="flow-node-badge-bg" />
+      <text x="357.0" y="143.5" font-family="&quot;JetBrains Mono&quot;, &quot;SFMono-Regular&quot;, Consolas, &quot;Liberation Mono&quot;, monospace" font-size="10.2" font-weight="700" text-anchor="middle" fill="#FFFFFF" class="flow-node-badge-text">S3</text>
+      <text x="408.0" y="164.0" font-family="&quot;Noto Sans SC&quot;, &quot;PingFang SC&quot;, &quot;Microsoft YaHei&quot;, &quot;Segoe UI&quot;, Arial, sans-serif" font-size="14.2" font-weight="700" text-anchor="middle" fill="#141E30" class="flow-node-title">语法树类型</text>
+      <text x="408.0" y="180.5" font-family="&quot;JetBrains Mono&quot;, &quot;SFMono-Regular&quot;, Consolas, &quot;Liberation Mono&quot;, monospace" font-size="11" font-weight="500" text-anchor="middle" fill="#526077" class="flow-node-sub">parse_defs.h</text>
+    </g>
+    <g class="flow-node role-amber" data-node-id="stmt" data-steps="3" tabindex="0" role="button" aria-label="Stmt类型 (stmt.h / CalcStmt)">
+      <rect x="522" y="126" width="142" height="72" rx="9" fill="#FEF0C7" stroke="#B45309" stroke-width="1.8" class="flow-node-rect" />
+      <rect x="530" y="132" width="22.0" height="16" rx="4.5" fill="#92400E" stroke="none" class="flow-node-badge-bg" />
+      <text x="541.0" y="143.5" font-family="&quot;JetBrains Mono&quot;, &quot;SFMono-Regular&quot;, Consolas, &quot;Liberation Mono&quot;, monospace" font-size="10.2" font-weight="700" text-anchor="middle" fill="#FFFFFF" class="flow-node-badge-text">S4</text>
+      <text x="593.0" y="164.0" font-family="&quot;Noto Sans SC&quot;, &quot;PingFang SC&quot;, &quot;Microsoft YaHei&quot;, &quot;Segoe UI&quot;, Arial, sans-serif" font-size="14.2" font-weight="700" text-anchor="middle" fill="#141E30" class="flow-node-title">Stmt类型</text>
+      <text x="593.0" y="180.5" font-family="&quot;JetBrains Mono&quot;, &quot;SFMono-Regular&quot;, Consolas, &quot;Liberation Mono&quot;, monospace" font-size="11" font-weight="500" text-anchor="middle" fill="#526077" class="flow-node-sub">stmt.h / CalcStmt</text>
+    </g>
+    <g class="flow-node role-teal" data-node-id="op" data-steps="4" tabindex="0" role="button" aria-label="逻辑/物理算子 (Logical / PhysicalOp)">
+      <rect x="714" y="62" width="152" height="72" rx="9" fill="#CCFBF1" stroke="#0F766E" stroke-width="1.8" class="flow-node-rect" />
+      <rect x="722" y="68" width="22.0" height="16" rx="4.5" fill="#115E59" stroke="none" class="flow-node-badge-bg" />
+      <text x="733.0" y="79.5" font-family="&quot;JetBrains Mono&quot;, &quot;SFMono-Regular&quot;, Consolas, &quot;Liberation Mono&quot;, monospace" font-size="10.2" font-weight="700" text-anchor="middle" fill="#FFFFFF" class="flow-node-badge-text">S5</text>
+      <text x="790.0" y="100.0" font-family="&quot;Noto Sans SC&quot;, &quot;PingFang SC&quot;, &quot;Microsoft YaHei&quot;, &quot;Segoe UI&quot;, Arial, sans-serif" font-size="14.2" font-weight="700" text-anchor="middle" fill="#141E30" class="flow-node-title">逻辑/物理算子</text>
+      <text x="790.0" y="116.5" font-family="&quot;JetBrains Mono&quot;, &quot;SFMono-Regular&quot;, Consolas, &quot;Liberation Mono&quot;, monospace" font-size="11" font-weight="500" text-anchor="middle" fill="#526077" class="flow-node-sub">Logical / PhysicalOp</text>
+    </g>
+    <g class="flow-node role-purple" data-node-id="cmd" data-steps="5" tabindex="0" role="button" aria-label="命令执行器 (CommandExecutor)">
+      <rect x="714" y="192" width="152" height="72" rx="9" fill="#EDE9FE" stroke="#6D28D9" stroke-width="1.8" class="flow-node-rect" />
+      <rect x="722" y="198" width="22.0" height="16" rx="4.5" fill="#5B21B6" stroke="none" class="flow-node-badge-bg" />
+      <text x="733.0" y="209.5" font-family="&quot;JetBrains Mono&quot;, &quot;SFMono-Regular&quot;, Consolas, &quot;Liberation Mono&quot;, monospace" font-size="10.2" font-weight="700" text-anchor="middle" fill="#FFFFFF" class="flow-node-badge-text">S6</text>
+      <text x="790.0" y="230.0" font-family="&quot;Noto Sans SC&quot;, &quot;PingFang SC&quot;, &quot;Microsoft YaHei&quot;, &quot;Segoe UI&quot;, Arial, sans-serif" font-size="14.2" font-weight="700" text-anchor="middle" fill="#141E30" class="flow-node-title">命令执行器</text>
+      <text x="790.0" y="246.5" font-family="&quot;JetBrains Mono&quot;, &quot;SFMono-Regular&quot;, Consolas, &quot;Liberation Mono&quot;, monospace" font-size="11" font-weight="500" text-anchor="middle" fill="#526077" class="flow-node-sub">CommandExecutor</text>
+    </g>
+    <g class="flow-node role-teal" data-node-id="result" data-steps="6" tabindex="0" role="button" aria-label="SqlResult (TupleSchema)">
+      <rect x="894" y="126" width="136" height="72" rx="9" fill="#CCFBF1" stroke="#0F766E" stroke-width="1.8" class="flow-node-rect" />
+      <rect x="902" y="132" width="22.0" height="16" rx="4.5" fill="#115E59" stroke="none" class="flow-node-badge-bg" />
+      <text x="913.0" y="143.5" font-family="&quot;JetBrains Mono&quot;, &quot;SFMono-Regular&quot;, Consolas, &quot;Liberation Mono&quot;, monospace" font-size="10.2" font-weight="700" text-anchor="middle" fill="#FFFFFF" class="flow-node-badge-text">S7</text>
+      <text x="962.0" y="164.0" font-family="&quot;Noto Sans SC&quot;, &quot;PingFang SC&quot;, &quot;Microsoft YaHei&quot;, &quot;Segoe UI&quot;, Arial, sans-serif" font-size="14.2" font-weight="700" text-anchor="middle" fill="#141E30" class="flow-node-title">SqlResult</text>
+      <text x="962.0" y="180.5" font-family="&quot;JetBrains Mono&quot;, &quot;SFMono-Regular&quot;, Consolas, &quot;Liberation Mono&quot;, monospace" font-size="11" font-weight="500" text-anchor="middle" fill="#526077" class="flow-node-sub">TupleSchema</text>
+    </g>
+  </g>
+  <g class="diag-labels" />
+</svg></div>
+  <div class="flow-progress-track" aria-hidden="true"><div class="flow-progress-bar" style="width:14.3%"></div></div>
+  <div class="flow-controls-row">
+    <div class="flow-bar">
+      <button type="button" class="flow-btn" data-act="prev" aria-label="上一步" title="上一步 (←)">← 上一步</button>
+      <button type="button" class="flow-btn primary" data-act="play" aria-label="自动播放" title="播放 / 暂停 (Space)">▶ 自动播放</button>
+      <button type="button" class="flow-btn" data-act="next" aria-label="下一步" title="下一步 (→)">下一步 →</button>
+    </div>
+    <span class="flow-count">步骤 1 / 7</span>
+  </div>
+  <div class="flow-steps" role="tablist" aria-label="流程步骤列表"><button type="button" class="step-chip active" data-step="0" title="增加词法规则" aria-label="第 1 步：增加词法规则"><span class="step-chip-num">1</span><span class="step-chip-label">增加词法规则</span></button><button type="button" class="step-chip" data-step="1" title="增加语法规则" aria-label="第 2 步：增加语法规则"><span class="step-chip-num">2</span><span class="step-chip-label">增加语法规则</span></button><button type="button" class="step-chip" data-step="2" title="新增语法树类型" aria-label="第 3 步：新增语法树类型"><span class="step-chip-num">3</span><span class="step-chip-label">新增语法树类型</span></button><button type="button" class="step-chip" data-step="3" title="新增Stmt类型" aria-label="第 4 步：新增Stmt类型"><span class="step-chip-num">4</span><span class="step-chip-label">新增Stmt类型</span></button><button type="button" class="step-chip" data-step="4" title="新增算子" aria-label="第 5 步：新增算子"><span class="step-chip-num">5</span><span class="step-chip-label">新增算子</span></button><button type="button" class="step-chip" data-step="5" title="新增命令执行器" aria-label="第 6 步：新增命令执行器"><span class="step-chip-num">6</span><span class="step-chip-label">新增命令执行器</span></button><button type="button" class="step-chip" data-step="6" title="设置TupleSchema" aria-label="第 7 步：设置TupleSchema"><span class="step-chip-num">7</span><span class="step-chip-label">设置TupleSchema</span></button></div>
+  <div class="flow-desc" aria-live="polite">
+    <div class="flow-desc-head">
+      <span class="flow-desc-badge">STEP 1 / 7</span>
+      <strong class="flow-desc-title">增加词法规则</strong>
+      <div class="flow-desc-tags"><span class="flow-tag">词法规则</span></div>
+    </div>
+    <p class="flow-desc-text">在 lex_sql.l 中补充新语句需要的词法规则，例如 CALC 需要的数字、运算符和小括号。</p>
+  </div>
+  <details class="flow-notes"><summary><span>边界与文档未决点（2 项事实核对）</span></summary><ul><li>文档以 CALC 为例并说明其已实现；末尾 7 条是“需要修改的地方”的规范清单，不是实际提交顺序。</li><li>第 5 条只写 optimize_stage.cpp，未说明新增算子是否还需要在 cascade 的 RuleSet 中注册（cascade 文档另有注册步骤）。</li></ul></details>
+</section></div>
+<article class="content"><blockquote>
+<p>本文介绍如何新增一种类型的SQL语句。</p>
+</blockquote>
+<p>当前的SQL实现已经比较复杂，这里以新增一个简单的SQL语句为例，介绍如何新增一种类型的SQL语句。
+在介绍如何新增一种类型的SQL语句之前，先介绍一下MiniOB的SQL语句的执行流程。</p>
+<h1 id="sql语句执行流程">SQL语句执行流程</h1>
+<p>MiniOB的SQL语句执行流程如下图所示：</p>
+<blockquote>
+<p>左侧是执行流程节点，右侧是各个执行节点输出的数据结构。</p>
+</blockquote>
+<pre><code>┌──────────────────┐      ┌──────────────────┐
+│       SQL        │ ---&gt; │     String       │
+└────────┬─────────┘      └──────────────────┘
+         │
+┌────────▼─────────┐      ┌──────────────────┐
+│      Parser      │ ---&gt; │   ParsedSqlNode  |
+└────────┬─────────┘      └──────────────────┘
+         │
+         │
+┌────────▼─────────┐      ┌──────────────────┐
+│     Resolver     │ ---&gt; │     Statement    │
+└────────┬─────────┘      └──────────────────┘
+         │
+         │
+┌────────▼─────────┐      ┌──────────────────┐
+│   Transformer    │ ---&gt; │ LogicalOperator  |
+└────────┬─────────┘      │ PhysicalOperator │
+         │                │       or         │
+┌────────▼─────────┐      │ CommandExecutor  |
+│    Optimizer     │ ---&gt; │                  │
+└────────┬─────────┘      └──────────────────┘
+         │
+┌────────▼─────────┐      ┌──────────────────┐
+│     Executor     │ ---&gt; │    SqlResult     │
+└──────────────────┘      └──────────────────┘
+</code></pre>
+<ol>
+<li>我们收到了一个SQL请求，此请求以字符串形式存储;</li>
+<li>在Parser阶段将SQL字符串，通过词法解析(lex_sql.l)与语法解析(yacc_sql.y)解析成ParsedSqlNode(parse_defs.h);</li>
+<li>在Resolver阶段，将ParsedSqlNode转换成Stmt(全称 Statement， 参考 stmt.h);</li>
+<li>在Transformer和Optimizer阶段，将Stmt转换成LogicalOperator，优化后输出PhysicalOperator(参考 optimize_stage.cpp)。如果是命令执行类型的SQL请求，会创建对应的 CommandExecutor(参考 command_executor.cpp);</li>
+<li>最终执行阶段 Executor，工作量比较少，将PhysicalOperator(物理执行计划)转换为SqlResult(执行结果)，或者将CommandExecutor执行后通过SqlResult输出结果。</li>
+</ol>
+<h1 id="新增一种类型的sql语句">新增一种类型的SQL语句</h1>
+<p>这里将以CALC类型的SQL为例介绍。</p>
+<p>CALC 不是一个标准的SQL语句，它的功能是计算给定的一个四则表达式，比如：</p>
+<pre><code class="language-sql">CALC 1+2*3
+</code></pre>
+<p>CALC 在SQL的各个流程中，与SELECT语句非常类似，因此在增加CALC语句时，可以参考SELECT语句的实现。</p>
+<p>首先在Parser阶段，我们需要考虑词法分析和语法分析。CALC 中需要新增的词法不多，简单的四则运算中只需要考虑数字、运算符号和小括号即可。在增加CALC之前，只有运算符号没有全部增加，那我们加上即可。参考 <code>lex_sql.l</code>。</p>
+<pre><code class="language-c">&quot;+&quot; |
+&quot;-&quot; |
+&quot;*&quot; |
+&quot;/&quot;    { return yytext[0]; }
+</code></pre>
+<p>在语法分析阶段，我们参考SELECT相关的一些解析，在yacc_sql.y中增加CALC的一些解析规则，以及在parse_defs.h中SELECT解析后的数据类型，编写CALC解析出来的数据类型。
+当前CALC是已经实现的，可以直接在parse_defs.h中的类型定义。
+yacc_sql.y中需要增加calc_stmt，calc_stmt的类型，以及calc_stmt的解析规则。由于calc_stmt涉及到表达式运算，所以还需要增加表达式的解析规则。具体可以参考yacc_sql.y中关于calc的代码。</p>
+<p>在语法解析结束后，输出了<code>CalcSqlNode</code>，后面resolver阶段，将它转换为Stmt，这里就是新增<code>CalcStmt</code>。通常在resolver阶段会校验SQL语法树的合法性，比如查询的表是否存在，运算类型是否正确。在<code>CalcStmt</code>中，逻辑比较简单，没有做任何校验，只是将表达式记录下来，并且认为这里的表达式都是值类型的计算。</p>
+<p>在Transformer和Optmize阶段，对于查询类型的SQL会生成LogicalOperator和PhysicalOperator，而对于命令执行类型的SQL会生成CommandExecutor。CALC是查询类型的SQL，参考SELECT的实现，在SELECT中，有PROJECT、TABLE_SCAN等类型的算子，而CALC比较简单，我们新增<code>CalcLogicalOperator</code>和<code>CalcPhysicalOperator</code>。</p>
+<p>由于具有执行计划的SQL，在Executor阶段，我们仅需要给SqlResult设置对应的TupleSchema即可，可以参考<code>ExecuteStage::handle_request_with_physical_operator</code>。</p>
+<p>总结一下，新增一种类型的SQL，需要在以下几个地方做修改：</p>
+<ol>
+<li>词法解析，增加新的词法规则(lex_sql.l);</li>
+<li>语法解析，增加新的语法规则(yacc_sql.y);</li>
+<li>增加新的SQL语法树类型(parse_defs.h);</li>
+<li>增加新的Stmt类型(stmt.h);</li>
+<li>增加新的LogicalOperator和PhysicalOperator(logical_operator.h, physical_operator.h, optimize_stage.cpp，如果有需要);</li>
+<li>增加新的CommandExecutor(command_executor.cpp，如果有需要);</li>
+<li>设置SqlResult的TupleSchema(execute_stage.cpp，如果有需要)。</li>
+</ol>
+</article>
+<nav class="pager" aria-label="相邻文档导航"><a class="prev" href="miniob-sql-parser.html"><span>← 上一篇</span>SQL 词法语法分析</a><a class="next" href="miniob-sql-expression.html"><span>下一篇 →</span>SQL 表达式</a></nav>
+<p class="source-line">源文件：<a href="../../docs/design/miniob-how-to-add-new-sql.md">design/miniob-how-to-add-new-sql.md</a></p>
+
+    <footer class="page-footer">
+      <span>由 <code>docs/visual/build.py</code> &amp; <code>draw_diagrams.py</code> 从 <code>docs/docs</code> 生成</span>
+      <span>MiniOB · 可视化技术文档</span>
+    </footer>
+  </main>
+  <aside class="page-toc" aria-label="本页目录"><div class="toc-inner"><p class="toc-title">本页导览</p><ul class="toc-list"><li class="toc-item toc-flow"><a href="#flow-add-sql-statement">▶ 流程：新增一种SQL语句的改动路径</a></li><li class="toc-item toc-l1"><a href="#新增一种类型的sql语句">新增一种类型的SQL语句</a></li></ul><a class="toc-top" href="#top">↑ 回到顶部</a></div></aside>
+</div>
+<div class="nav-scrim" id="navScrim"></div>
+<div class="diagram-modal" id="diagramModal" hidden role="dialog" aria-modal="true" aria-label="图表放大检视">
+  <div class="diagram-modal-bar">
+    <span class="diagram-modal-title" id="diagramModalTitle">架构与流程图检视</span>
+    <button type="button" class="diagram-modal-close" id="diagramModalClose" aria-label="关闭">✕ 关闭 (Esc)</button>
+  </div>
+  <div class="diagram-modal-body" id="diagramModalBody"></div>
+</div>
+<script src="../assets/markmap-config.js"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/markmap-autoloader@0.18"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/@highlightjs/cdn-assets@11/highlight.min.js"></script>
+<script type="application/json" id="flow-data">[{"id": "add-sql-statement", "title": "新增一种SQL语句的改动路径", "source": "design/miniob-how-to-add-new-sql.md", "anchor": "新增一种类型的SQL语句", "nodes": [{"id": "lex", "label": "词法规则"}, {"id": "yacc", "label": "语法规则"}, {"id": "node", "label": "语法树类型"}, {"id": "stmt", "label": "Stmt类型"}, {"id": "op", "label": "逻辑/物理算子"}, {"id": "cmd", "label": "命令执行器"}, {"id": "result", "label": "SqlResult"}], "edges": [["lex", "yacc", "token"], ["yacc", "node", "ParsedSqlNode"], ["node", "stmt", "Resolver"], ["stmt", "op", "查询类型SQL"], ["stmt", "cmd", "命令类型SQL"], ["op", "result", "设置TupleSchema"], ["cmd", "result", "输出执行结果"]], "steps": [{"title": "增加词法规则", "desc": "在 lex_sql.l 中补充新语句需要的词法规则，例如 CALC 需要的数字、运算符和小括号。", "highlight": ["lex"]}, {"title": "增加语法规则", "desc": "在 yacc_sql.y 中增加语句的解析规则，并补齐其涉及的表达式解析规则。", "highlight": ["yacc"]}, {"title": "新增语法树类型", "desc": "在 parse_defs.h 中定义解析输出类型，CALC 对应的是 CalcSqlNode。", "highlight": ["node"]}, {"title": "新增Stmt类型", "desc": "在 stmt.h 中新增 CalcStmt，由 Resolver 把 ParsedSqlNode 转成 Stmt，通常在此校验表是否存在、运算类型是否正确。", "highlight": ["stmt"]}, {"title": "新增算子", "desc": "查询类型 SQL 参考 SELECT，新增 LogicalOperator 与 PhysicalOperator（logical_operator.h、physical_operator.h、optimize_stage.cpp）。", "highlight": ["op"]}, {"title": "新增命令执行器", "desc": "命令执行类型 SQL 在 command_executor.cpp 中新增对应的 CommandExecutor。", "highlight": ["cmd"]}, {"title": "设置TupleSchema", "desc": "有执行计划的 SQL 在 execute_stage.cpp 中为 SqlResult 设置 TupleSchema，参考 handle_request_with_physical_operator。", "highlight": ["result"]}], "uncertainties": ["文档以 CALC 为例并说明其已实现；末尾 7 条是“需要修改的地方”的规范清单，不是实际提交顺序。", "第 5 条只写 optimize_stage.cpp，未说明新增算子是否还需要在 cascade 的 RuleSet 中注册（cascade 文档另有注册步骤）。"], "summary": "从词法/语法规则到 Stmt、算子和结果集的完整改动路径。"}]</script>
+<script defer src="../assets/site.js"></script>
+</body>
+</html>

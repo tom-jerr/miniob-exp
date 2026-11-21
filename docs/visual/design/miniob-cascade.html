@@ -1,0 +1,356 @@
+<!doctype html>
+<html lang="zh-CN" id="top">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Cascade Optimizer(查询优化器) · MiniOB 可视化文档</title>
+<link rel="stylesheet" href="../assets/style.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@highlightjs/cdn-assets@11/styles/atom-one-dark.min.css">
+<script src="../assets/theme.js"></script>
+
+</head>
+<body class="">
+<div class="reading-progress" id="readingProgress" aria-hidden="true"></div>
+<header class="topbar">
+  <button class="menu-btn" id="menuBtn" aria-label="切换侧栏" aria-expanded="false">☰</button>
+  <a class="brand" href="../index.html"><span class="brand-mark">M</span><span>MiniOB <em>可视化文档</em></span></a>
+  <div class="top-actions">
+    <a class="top-link" href="../flows.html">动态流程</a>
+    <button class="theme-btn" id="themeBtn" aria-label="切换明暗主题" title="切换明暗主题">◐</button>
+  </div>
+</header>
+<div class="layout has-toc">
+  <aside class="sidebar" id="sidebar"><nav class="site-nav" aria-label="文档目录"><a class="nav-home" href="../index.html"><span class="brand-mark">M</span><span>MiniOB 可视化文档</span></a><details class="nav-group"><summary>快速开始<span>2</span></summary><div class="nav-links"><a href="../how_to_build.html"><span class="nav-link-text">如何编译</span></a><a href="../how_to_run.html"><span class="nav-link-text">如何运行</span></a></div></details><details class="nav-group" open><summary>设计文档<span>21</span></summary><div class="nav-links"><a href="miniob-architecture.html"><span class="nav-link-text">MiniOB代码架构框架设计和说明</span><span class="nav-badge" title="含交互流程图或架构图">图</span></a><a href="miniob-buffer-pool.html"><span class="nav-link-text">MiniOB 存储实现</span><span class="nav-badge" title="含交互流程图或架构图">图</span></a><a href="miniob-double-write-buffer.html"><span class="nav-link-text">MiniOB Double Write Buffer 实现</span><span class="nav-badge" title="含交互流程图或架构图">图</span></a><a href="miniob-transaction.html"><span class="nav-link-text">事务模块</span><span class="nav-badge" title="含交互流程图或架构图">图</span></a><a href="miniob-durability.html"><span class="nav-link-text">持久化</span><span class="nav-badge" title="含交互流程图或架构图">图</span></a><a href="miniob-persistence-files.html"><span class="nav-link-text">持久化文件与恢复路径</span><span class="nav-badge" title="含交互流程图或架构图">图</span></a><a href="miniob-checkpoint-wal.html"><span class="nav-link-text">MiniOB 检查点与 WAL 截断</span><span class="nav-badge" title="含交互流程图或架构图">图</span></a><a href="miniob-sql-parser.html"><span class="nav-link-text">SQL 词法语法分析</span></a><a href="miniob-how-to-add-new-sql.html"><span class="nav-link-text">SQL语句执行流程</span><span class="nav-badge" title="含交互流程图或架构图">图</span></a><a href="miniob-sql-expression.html"><span class="nav-link-text">SQL 表达式</span></a><a href="miniob-bplus-tree.html"><span class="nav-link-text">MiniOB B+Tree 实现</span><span class="nav-badge" title="含交互流程图或架构图">图</span></a><a href="miniob-bplus-tree-concurrency.html"><span class="nav-link-text">B+ 树并发操作</span><span class="nav-badge" title="含交互流程图或架构图">图</span></a><a href="miniob-thread-model.html"><span class="nav-link-text">线程模型</span><span class="nav-badge" title="含交互流程图或架构图">图</span></a><a href="miniob-mysql-protocol.html"><span class="nav-link-text">MySQL 通讯协议</span></a><a href="miniob-pax-storage.html"><span class="nav-link-text">MiniOB PAX 存储格式</span><span class="nav-badge" title="含交互流程图或架构图">图</span></a><a href="miniob-aggregation-and-group-by.html"><span class="nav-link-text">MiniOB 向量化执行 aggregation 和 group by 实现</span></a><a href="miniob-lsm-tree.html"><span class="nav-link-text">MiniOB LSM-Tree 存储引擎</span><span class="nav-badge" title="含交互流程图或架构图">图</span></a><a href="introduction.html"><span class="nav-link-text">功能模块设计说明</span></a><a href="miniob-btree-storage-engine.html"><span class="nav-link-text">MiniOB B+Tree 聚簇表存储引擎</span><span class="nav-badge" title="含交互流程图或架构图">图</span></a><a href="miniob-cascade.html" class="active" aria-current="page"><span class="nav-link-text">Cascade Optimizer(查询优化器)</span><span class="nav-badge" title="含交互流程图或架构图">图</span></a><a href="miniob-update-mvcc-occ.html"><span class="nav-link-text">MiniOB UPDATE、MVCC 与 OCC 方案设计</span><span class="nav-badge" title="含交互流程图或架构图">图</span></a></div></details><details class="nav-group"><summary>课程实验<span>6</span></summary><div class="nav-links"><a href="../db_course_lab/overview.html"><span class="nav-link-text">数据库系统实现原理与实践课程实验</span></a><a href="../db_course_lab/lab0.html"><span class="nav-link-text">LAB#0 C++ 基础</span></a><a href="../db_course_lab/lab1.html"><span class="nav-link-text">LAB#1 LSM-Tree 存储引擎</span></a><a href="../db_course_lab/lab2.html"><span class="nav-link-text">LAB#2 查询引擎</span></a><a href="../db_course_lab/lab3.html"><span class="nav-link-text">LAB#3 事务引擎</span></a><a href="../db_course_lab/lab4.html"><span class="nav-link-text">LAB#4 性能测试</span></a></div></details><details class="nav-group"><summary>简明教程<span>9</span></summary><div class="nav-links"><a href="../lectures/copyright.html"><span class="nav-link-text">版权声明</span></a><a href="../lectures/lecture-1.html"><span class="nav-link-text">第1章 数据库管理系统概述</span></a><a href="../lectures/lecture-2.html"><span class="nav-link-text">第2章 数据库的存储结构</span></a><a href="../lectures/lecture-3.html"><span class="nav-link-text">第3章 索引结构</span></a><a href="../lectures/lecture-4.html"><span class="nav-link-text">第4章 查询处理</span></a><a href="../lectures/lecture-5.html"><span class="nav-link-text">第5章 查询优化</span></a><a href="../lectures/lecture-6.html"><span class="nav-link-text">第6章 事务处理</span></a><a href="../lectures/references.html"><span class="nav-link-text">参考资料</span></a><a href="../lectures/index.html"><span class="nav-link-text">数据库管理系统实现基础讲义</span></a></div></details><details class="nav-group"><summary>开发环境<span>14</span></summary><div class="nav-links"><a href="../dev-env/introduction.html"><span class="nav-link-text">搭建开发环境</span></a><a href="../dev-env/vscode_dev_with_local_virtual_env.html"><span class="nav-link-text">虚拟机+vscode remote开发</span></a><a href="../dev-env/dev_by_online.html"><span class="nav-link-text">使用在线开发环境开发 MiniOB</span></a><a href="../dev-env/how-to-dev-using-docker.html"><span class="nav-link-text">使用Docker开发MiniOB</span></a><a href="../dev-env/how_to_dev_in_docker_container_by_vscode.html"><span class="nav-link-text">使用 Docker 和 VSCode 远程开发 Miniob</span></a><a href="../dev-env/how_to_dev_in_docker_container_by_vscode_on_windows.html"><span class="nav-link-text">在windows上通过docker配置环境并利用vscode调试代码（手把手版）</span></a><a href="../dev-env/how_to_dev_miniob_by_docker_on_windows.html"><span class="nav-link-text">安装Docker</span></a><a href="../dev-env/how_to_dev_miniob_by_vscode.html"><span class="nav-link-text">环境准备</span></a><a href="../dev-env/miniob-how-to-debug.html"><span class="nav-link-text">miniob调试篇</span></a><a href="../dev-env/how_to_submit_for_testing.html"><span class="nav-link-text">训练营平台使用说明</span></a><a href="../dev-env/integration_test.html"><span class="nav-link-text">MiniOB 集成测试使用文档</span></a><a href="../dev-env/cloudlab_setup.html"><span class="nav-link-text">开源学堂在线编程环境开发 MiniOB</span></a><a href="../dev-env/how_to_dev_miniob_by_docker_on_windows_simplified.html"><span class="nav-link-text">在windows上通过docker配置环境并利用vscode编辑、开发、调试代码（简易版）</span></a><a href="../dev-env/how_to_dev_miniob_in_vscodeGUI_by_docker_on_windows.html"><span class="nav-link-text">基于Windows+docker容器在本地利用VSCode编辑、开发及调试miniob</span></a></div></details><details class="nav-group"><summary>大赛与训练<span>9</span></summary><div class="nav-links"><a href="../game/introduction.html"><span class="nav-link-text">OceanBase 数据库大赛</span></a><a href="../game/miniob-output-convention.html"><span class="nav-link-text">输出规范</span></a><a href="../game/debug-output.html"><span class="nav-link-text">输出调试信息</span></a><a href="../game/miniob-memtracer.html"><span class="nav-link-text">MemTracer</span></a><a href="../game/miniob_topics.html"><span class="nav-link-text">OceanBase 数据库大赛2021届题目</span></a><a href="../game/github-introduction.html"><span class="nav-link-text">MiniOB GitHub 在训练营中的使用说明</span></a><a href="../game/gitee-instructions.html"><span class="nav-link-text">MiniOB Gitee 在训练营中的使用说明</span></a><a href="../game/miniob-vectordb.html"><span class="nav-link-text">MiniOB 向量数据库</span></a><a href="../game/git-introduction.html"><span class="nav-link-text">Git 介绍</span></a></div></details><details class="nav-group"><summary>博客<span>2</span></summary><div class="nav-links"><a href="../blog/introduction.html"><span class="nav-link-text">介绍</span></a><a href="../blog/1.html"><span class="nav-link-text">High-Performance Concurrency Control Mechanisms for Main-Memory Databases</span></a></div></details><a class="nav-flows" href="../flows.html"><span class="dot"></span>动态流程<span class="count">13</span></a></nav></aside>
+  <main class="main">
+    
+<nav class="crumbs" aria-label="面包屑导航"><a href="../index.html">首页</a><span>/</span><span>设计文档</span><span>/</span><span aria-current="page">Cascade Optimizer(查询优化器)</span></nav>
+<header class="doc-head">
+  <div class="doc-meta-bar">
+    <span class="eyebrow-pill">设计文档</span>
+    <span class="doc-meta-item">11 个章节</span>
+    <span class="doc-meta-sep">·</span>
+    <span class="doc-meta-item">约 6 分钟阅读</span>
+    <span class="doc-meta-sep">·</span>
+    <a class="doc-meta-source" href="../../docs/design/miniob-cascade.md">Markdown 源文件 ↗</a>
+  </div>
+  <h1>Cascade Optimizer(查询优化器)</h1>
+</header>
+<section class="panel map-panel" id="doc-outline-panel">
+  <div class="panel-head">
+    <div>
+      <h2>章节结构导览</h2>
+      <span>点击任意章节直达正文；支持结构卡片与交互思维导图切换</span>
+    </div>
+    <button type="button" class="map-toggle-btn" data-toggle-markmap aria-expanded="false">⊞ 切换思维导图</button>
+  </div>
+  <div class="tree-view"><div class="tree-grid"><div class="tree-branch"><div class="tree-top"><a class="tree-link" href="#基本概念"><span class="tree-num">1</span><span>基本概念</span></a></div><ul class="tree-sub"><li><a class="tree-link" href="#operator算子"><span class="tree-num">1.1</span><span>Operator（算子）</span></a></li><li><a class="tree-link" href="#expression表达式"><span class="tree-num">1.2</span><span>Expression（表达式）</span></a></li><li><a class="tree-link" href="#group"><span class="tree-num">1.3</span><span>Group</span></a></li><li><a class="tree-link" href="#m_expr"><span class="tree-num">1.4</span><span>M_EXPR</span></a></li><li><a class="tree-link" href="#rule规则"><span class="tree-num">1.5</span><span>Rule（规则）</span></a></li><li><a class="tree-link" href="#memo在-columbia-中也叫做-search-space"><span class="tree-num">1.6</span><span>Memo（在 Columbia 中也叫做 Search Space）</span></a></li></ul></div><div class="tree-branch"><div class="tree-top"><a class="tree-link" href="#搜索策略"><span class="tree-num">2</span><span>搜索策略</span></a></div></div><div class="tree-branch"><div class="tree-top"><a class="tree-link" href="#如何为-cascade-添加新的算子转换规则"><span class="tree-num">3</span><span>如何为 Cascade 添加新的算子转换规则</span></a></div></div><div class="tree-branch"><div class="tree-top"><a class="tree-link" href="#wip"><span class="tree-num">4</span><span>WIP</span></a></div></div></div></div>
+  <div class="markmap-wrap" hidden>
+    <div class="markmap"><script type="text/template"># Cascade Optimizer(查询优化器)
+  - [基本概念](#基本概念)
+    - [Operator（算子）](#operator算子)
+    - [Expression（表达式）](#expression表达式)
+    - [Group](#group)
+    - [M_EXPR](#m_expr)
+    - [Rule（规则）](#rule规则)
+    - [Memo（在 Columbia 中也叫做 Search Space）](#memo在-columbia-中也叫做-search-space)
+  - [搜索策略](#搜索策略)
+  - [如何为 Cascade 添加新的算子转换规则](#如何为-cascade-添加新的算子转换规则)
+  - [WIP](#wip)</script></div>
+  </div>
+</section>
+<div class="flows-inline">
+<section class="flow-player" id="flow-cascade-search" data-flow="cascade-search" tabindex="0" aria-label="Cascade 优化器搜索 交互流程播放器">
+  <header class="flow-head">
+    <div>
+      <div class="flow-kicker-row">
+        <span class="flow-kicker">INTERACTIVE MECHANISM · 动态机制流程</span>
+        <span class="flow-step-total">共 7 步</span>
+      </div>
+      <h2>Cascade 优化器搜索</h2>
+      <p class="flow-summary">任务栈驱动的自顶向下搜索：枚举逻辑/物理表达式，按代价选计划。</p>
+    </div>
+    <div class="flow-head-actions">
+      <button type="button" class="arch-zoom-btn" data-zoom-diagram aria-label="放大流程图">⤢ 放大</button>
+      <a class="arch-svg-link" href="../assets/diagrams/flow-cascade-search.svg" target="_blank" rel="noopener" title="打开独立 SVG 矢量图">SVG ↗</a>
+      <a class="flow-source" href="miniob-cascade.html#搜索策略">跳转原文 →</a>
+    </div>
+  </header>
+  <div class="flow-legend" aria-hidden="true">
+    <span><i class="leg-dot leg-active"></i>当前步骤节点与流转路径</span>
+    <span><i class="leg-dot leg-visited"></i>已执行路径</span>
+    <span><i class="leg-dot leg-idle"></i>待执行节点</span>
+    <span class="flow-legend-tip">💡 可直接点击图中节点、下方步骤条，或使用 ← / → 键切换步骤</span>
+  </div>
+  <div class="flow-canvas" role="img" aria-label="Cascade 优化器搜索 流程图"><svg xmlns="http://www.w3.org/2000/svg" width="1060" height="360" viewBox="0 0 1060 360" role="img" aria-labelledby="flow-cascade-search-title flow-cascade-search-desc" class="toolkit-diagram" data-diagram-id="flow-cascade-search">
+  <title id="flow-cascade-search-title">Cascade 优化器搜索 — 交互式机制流程图</title>
+  <desc id="flow-cascade-search-desc">任务栈驱动的自顶向下搜索：枚举逻辑/物理表达式，按代价选计划。</desc>
+  <defs>
+    <marker id="flow-cascade-search-arrow-ink" viewBox="0 0 10 10" refX="8.6" refY="5" markerWidth="6.8" markerHeight="6.8" orient="auto">
+      <path d="M0 0.8 L9.5 5 L0 9.2 Z" fill="#334155" />
+    </marker>
+    <marker id="flow-cascade-search-arrow-blue" viewBox="0 0 10 10" refX="8.6" refY="5" markerWidth="6.8" markerHeight="6.8" orient="auto">
+      <path d="M0 0.8 L9.5 5 L0 9.2 Z" fill="#2554C7" />
+    </marker>
+    <marker id="flow-cascade-search-arrow-amber" viewBox="0 0 10 10" refX="8.6" refY="5" markerWidth="6.8" markerHeight="6.8" orient="auto">
+      <path d="M0 0.8 L9.5 5 L0 9.2 Z" fill="#B45309" />
+    </marker>
+    <marker id="flow-cascade-search-arrow-teal" viewBox="0 0 10 10" refX="8.6" refY="5" markerWidth="6.8" markerHeight="6.8" orient="auto">
+      <path d="M0 0.8 L9.5 5 L0 9.2 Z" fill="#0F766E" />
+    </marker>
+    <marker id="flow-cascade-search-arrow-purple" viewBox="0 0 10 10" refX="8.6" refY="5" markerWidth="6.8" markerHeight="6.8" orient="auto">
+      <path d="M0 0.8 L9.5 5 L0 9.2 Z" fill="#6D28D9" />
+    </marker>
+    <marker id="flow-cascade-search-arrow-rose" viewBox="0 0 10 10" refX="8.6" refY="5" markerWidth="6.8" markerHeight="6.8" orient="auto">
+      <path d="M0 0.8 L9.5 5 L0 9.2 Z" fill="#BE123C" />
+    </marker>
+    <marker id="flow-cascade-search-arrow-muted" viewBox="0 0 10 10" refX="8.6" refY="5" markerWidth="6.8" markerHeight="6.8" orient="auto">
+      <path d="M0 0.8 L9.5 5 L0 9.2 Z" fill="#64748B" />
+    </marker>
+  </defs>
+  <g class="diag-bg">
+    <rect x="0" y="0" width="1060" height="360" rx="12" fill="#FCFDFE" stroke="none" class="diag-canvas-bg" />
+  </g>
+  <g class="diag-lanes">
+    <g class="diag-lane">
+      <rect x="16" y="16" width="200" height="328" rx="10" fill="#F4F7FB" stroke="#CBD5E1" stroke-width="1.5" class="diag-lane-rect" />
+      <text x="30" y="38" font-family="&quot;Noto Sans SC&quot;, &quot;PingFang SC&quot;, &quot;Microsoft YaHei&quot;, &quot;Segoe UI&quot;, Arial, sans-serif" font-size="12.8" font-weight="700" fill="#526077" class="diag-lane-title">调度核心 (DFS Scheduler)</text>
+      <text x="202" y="38" font-family="&quot;JetBrains Mono&quot;, &quot;SFMono-Regular&quot;, Consolas, &quot;Liberation Mono&quot;, monospace" font-size="11.2" font-weight="500" text-anchor="end" fill="#7B89A1" class="diag-lane-sub">Task Stack</text>
+    </g>
+    <g class="diag-lane">
+      <rect x="230" y="16" width="560" height="328" rx="10" fill="#F0F5FF" stroke="#2554C7" stroke-width="1.5" class="diag-lane-rect" />
+      <text x="244" y="38" font-family="&quot;Noto Sans SC&quot;, &quot;PingFang SC&quot;, &quot;Microsoft YaHei&quot;, &quot;Segoe UI&quot;, Arial, sans-serif" font-size="12.8" font-weight="700" fill="#1E40AF" class="diag-lane-title">Memo 搜索空间：Group 枚举与规则转换</text>
+      <text x="776" y="38" font-family="&quot;JetBrains Mono&quot;, &quot;SFMono-Regular&quot;, Consolas, &quot;Liberation Mono&quot;, monospace" font-size="11.2" font-weight="500" text-anchor="end" fill="#7B89A1" class="diag-lane-sub">Logical M_EXPR &amp; Rules</text>
+    </g>
+    <g class="diag-lane">
+      <rect x="804" y="16" width="240" height="328" rx="10" fill="#F0FDFA" stroke="#0F766E" stroke-width="1.5" class="diag-lane-rect" />
+      <text x="818" y="38" font-family="&quot;Noto Sans SC&quot;, &quot;PingFang SC&quot;, &quot;Microsoft YaHei&quot;, &quot;Segoe UI&quot;, Arial, sans-serif" font-size="12.8" font-weight="700" fill="#115E59" class="diag-lane-title">物理计划与代价估算</text>
+      <text x="1030" y="38" font-family="&quot;JetBrains Mono&quot;, &quot;SFMono-Regular&quot;, Consolas, &quot;Liberation Mono&quot;, monospace" font-size="11.2" font-weight="500" text-anchor="end" fill="#7B89A1" class="diag-lane-sub">Physical M_EXPR &amp; Cost</text>
+    </g>
+  </g>
+  <g class="diag-edges">
+    <g class="flow-edge" data-from="stack" data-to="ogroup">
+      <path d="M 192.0 178.0 L 254.0 178.0" fill="none" stroke="#334155" stroke-width="1.9" stroke-linejoin="round" stroke-linecap="round" class="flow-edge-path" marker-end="url(#flow-cascade-search-arrow-ink)" />
+      <rect x="193.0" y="116.5" width="59.9" height="19.0" rx="5.5" fill="#FFFFFF" stroke="#CBD5E1" stroke-width="1.1" class="flow-edge-pill" />
+      <text x="223.0" y="129.8" font-family="&quot;Noto Sans SC&quot;, &quot;PingFang SC&quot;, &quot;Microsoft YaHei&quot;, &quot;Segoe UI&quot;, Arial, sans-serif" font-size="11.2" font-weight="600" text-anchor="middle" fill="#526077" class="flow-edge-label">弹出task</text>
+    </g>
+    <g class="flow-edge" data-from="ogroup" data-to="oexpr">
+      <path d="M 331.0 140.0 L 331.0 102.0 L 438.0 102.0" fill="none" stroke="#2554C7" stroke-width="1.9" stroke-linejoin="round" stroke-linecap="round" class="flow-edge-path" marker-end="url(#flow-cascade-search-arrow-blue)" />
+      <rect x="334.9" y="76.5" width="75.2" height="19.0" rx="5.5" fill="#FFFFFF" stroke="#CBD5E1" stroke-width="1.1" class="flow-edge-pill" />
+      <text x="372.5" y="89.8" font-family="&quot;Noto Sans SC&quot;, &quot;PingFang SC&quot;, &quot;Microsoft YaHei&quot;, &quot;Segoe UI&quot;, Arial, sans-serif" font-size="11.2" font-weight="600" text-anchor="middle" fill="#526077" class="flow-edge-label">逻辑M_EXPR</text>
+    </g>
+    <g class="flow-edge" data-from="ogroup" data-to="oinputs">
+      <path d="M 408.0 178.0 L 834.0 178.0" fill="none" stroke="#0F766E" stroke-width="1.9" stroke-linejoin="round" stroke-linecap="round" class="flow-edge-path" marker-end="url(#flow-cascade-search-arrow-teal)" />
+      <rect x="693.4" y="154.5" width="75.2" height="19.0" rx="5.5" fill="#FFFFFF" stroke="#CBD5E1" stroke-width="1.1" class="flow-edge-pill" />
+      <text x="731.0" y="167.8" font-family="&quot;Noto Sans SC&quot;, &quot;PingFang SC&quot;, &quot;Microsoft YaHei&quot;, &quot;Segoe UI&quot;, Arial, sans-serif" font-size="11.2" font-weight="600" text-anchor="middle" fill="#526077" class="flow-edge-label">物理M_EXPR</text>
+    </g>
+    <g class="flow-edge" data-from="oexpr" data-to="rule">
+      <path d="M 588.0 88.0 L 622.0 88.0" fill="none" stroke="#B45309" stroke-width="1.9" stroke-linejoin="round" stroke-linecap="round" class="flow-edge-path" marker-end="url(#flow-cascade-search-arrow-amber)" />
+      <rect x="524.1" y="44.5" width="77.9" height="19.0" rx="5.5" fill="#FFFFFF" stroke="#CBD5E1" stroke-width="1.1" class="flow-edge-pill" />
+      <text x="563.0" y="57.8" font-family="&quot;Noto Sans SC&quot;, &quot;PingFang SC&quot;, &quot;Microsoft YaHei&quot;, &quot;Segoe UI&quot;, Arial, sans-serif" font-size="11.2" font-weight="600" text-anchor="middle" fill="#526077" class="flow-edge-label">有可应用规则</text>
+    </g>
+    <g class="flow-edge" data-from="rule" data-to="oexpr">
+      <path d="M 622.0 120.0 L 588.0 120.0" fill="none" stroke="#B45309" stroke-width="1.9" stroke-linejoin="round" stroke-linecap="round" class="flow-edge-path" marker-end="url(#flow-cascade-search-arrow-amber)" />
+      <rect x="560.6" y="142.5" width="88.8" height="19.0" rx="5.5" fill="#FFFFFF" stroke="#CBD5E1" stroke-width="1.1" class="flow-edge-pill" />
+      <text x="605.0" y="155.8" font-family="&quot;Noto Sans SC&quot;, &quot;PingFang SC&quot;, &quot;Microsoft YaHei&quot;, &quot;Segoe UI&quot;, Arial, sans-serif" font-size="11.2" font-weight="600" text-anchor="middle" fill="#526077" class="flow-edge-label">产生逻辑表达式</text>
+    </g>
+    <g class="flow-edge" data-from="oexpr" data-to="egroup">
+      <path d="M 482.0 138.0 L 482.0 224.0" fill="none" stroke="#6D28D9" stroke-width="1.9" stroke-linejoin="round" stroke-linecap="round" class="flow-edge-path" marker-end="url(#flow-cascade-search-arrow-purple)" />
+      <rect x="412.0" y="171.5" width="59.9" height="19.0" rx="5.5" fill="#FFFFFF" stroke="#CBD5E1" stroke-width="1.1" class="flow-edge-pill" />
+      <text x="442.0" y="184.8" font-family="&quot;Noto Sans SC&quot;, &quot;PingFang SC&quot;, &quot;Microsoft YaHei&quot;, &quot;Segoe UI&quot;, Arial, sans-serif" font-size="11.2" font-weight="600" text-anchor="middle" fill="#526077" class="flow-edge-label">生成task</text>
+    </g>
+    <g class="flow-edge" data-from="egroup" data-to="oexpr">
+      <path d="M 544.0 224.0 L 544.0 138.0" fill="none" stroke="#6D28D9" stroke-width="1.9" stroke-linejoin="round" stroke-linecap="round" class="flow-edge-path" marker-end="url(#flow-cascade-search-arrow-purple)" />
+      <rect x="548.4" y="189.5" width="127.1" height="19.0" rx="5.5" fill="#FFFFFF" stroke="#CBD5E1" stroke-width="1.1" class="flow-edge-pill" />
+      <text x="612.0" y="202.8" font-family="&quot;Noto Sans SC&quot;, &quot;PingFang SC&quot;, &quot;Microsoft YaHei&quot;, &quot;Segoe UI&quot;, Arial, sans-serif" font-size="11.2" font-weight="600" text-anchor="middle" fill="#526077" class="flow-edge-label">枚举logical M_EXPR</text>
+    </g>
+    <g class="flow-edge" data-from="rule" data-to="oinputs">
+      <path d="M 774.0 102.0 L 924.0 102.0 L 924.0 140.0" fill="none" stroke="#0F766E" stroke-width="1.9" stroke-linejoin="round" stroke-linecap="round" class="flow-edge-path" marker-end="url(#flow-cascade-search-arrow-teal)" />
+      <rect x="824.6" y="76.5" width="88.8" height="19.0" rx="5.5" fill="#FFFFFF" stroke="#CBD5E1" stroke-width="1.1" class="flow-edge-pill" />
+      <text x="869.0" y="89.8" font-family="&quot;Noto Sans SC&quot;, &quot;PingFang SC&quot;, &quot;Microsoft YaHei&quot;, &quot;Segoe UI&quot;, Arial, sans-serif" font-size="11.2" font-weight="600" text-anchor="middle" fill="#526077" class="flow-edge-label">产生物理表达式</text>
+    </g>
+    <g class="flow-edge" data-from="oinputs" data-to="ogroup">
+      <path d="M 924.0 216.0 L 924.0 322.0 L 331.0 322.0 L 331.0 216.0" fill="none" stroke="#0F766E" stroke-width="1.9" stroke-linejoin="round" stroke-linecap="round" class="flow-edge-path" marker-end="url(#flow-cascade-search-arrow-teal)" />
+      <rect x="583.1" y="300.5" width="88.8" height="19.0" rx="5.5" fill="#FFFFFF" stroke="#CBD5E1" stroke-width="1.1" class="flow-edge-pill" />
+      <text x="627.5" y="313.8" font-family="&quot;Noto Sans SC&quot;, &quot;PingFang SC&quot;, &quot;Microsoft YaHei&quot;, &quot;Segoe UI&quot;, Arial, sans-serif" font-size="11.2" font-weight="600" text-anchor="middle" fill="#526077" class="flow-edge-label">递归计算子代价</text>
+    </g>
+  </g>
+  <g class="diag-nodes">
+    <g class="flow-node role-gray" data-node-id="stack" data-steps="0" tabindex="0" role="button" aria-label="任务栈 (DFS 任务栈循环)">
+      <rect x="34" y="140" width="158" height="76" rx="9" fill="#F1F5F9" stroke="#475569" stroke-width="1.8" class="flow-node-rect" />
+      <rect x="42" y="146" width="22.0" height="16" rx="4.5" fill="#334155" stroke="none" class="flow-node-badge-bg" />
+      <text x="53.0" y="157.5" font-family="&quot;JetBrains Mono&quot;, &quot;SFMono-Regular&quot;, Consolas, &quot;Liberation Mono&quot;, monospace" font-size="10.2" font-weight="700" text-anchor="middle" fill="#FFFFFF" class="flow-node-badge-text">S1</text>
+      <text x="113.0" y="180.0" font-family="&quot;Noto Sans SC&quot;, &quot;PingFang SC&quot;, &quot;Microsoft YaHei&quot;, &quot;Segoe UI&quot;, Arial, sans-serif" font-size="14.2" font-weight="700" text-anchor="middle" fill="#141E30" class="flow-node-title">任务栈</text>
+      <text x="113.0" y="196.5" font-family="&quot;JetBrains Mono&quot;, &quot;SFMono-Regular&quot;, Consolas, &quot;Liberation Mono&quot;, monospace" font-size="11" font-weight="500" text-anchor="middle" fill="#526077" class="flow-node-sub">DFS 任务栈循环</text>
+    </g>
+    <g class="flow-node role-blue" data-node-id="ogroup" data-steps="1,6" tabindex="0" role="button" aria-label="O_GROUP (遍历 Group 分发)">
+      <rect x="254" y="140" width="154" height="76" rx="9" fill="#E6EFFD" stroke="#2554C7" stroke-width="1.8" class="flow-node-rect" />
+      <rect x="262" y="146" width="39.6" height="16" rx="4.5" fill="#1E40AF" stroke="none" class="flow-node-badge-bg" />
+      <text x="281.8" y="157.5" font-family="&quot;JetBrains Mono&quot;, &quot;SFMono-Regular&quot;, Consolas, &quot;Liberation Mono&quot;, monospace" font-size="10.2" font-weight="700" text-anchor="middle" fill="#FFFFFF" class="flow-node-badge-text">S2,S7</text>
+      <text x="331.0" y="180.0" font-family="&quot;Noto Sans SC&quot;, &quot;PingFang SC&quot;, &quot;Microsoft YaHei&quot;, &quot;Segoe UI&quot;, Arial, sans-serif" font-size="14.2" font-weight="700" text-anchor="middle" fill="#141E30" class="flow-node-title">O_GROUP</text>
+      <text x="331.0" y="196.5" font-family="&quot;JetBrains Mono&quot;, &quot;SFMono-Regular&quot;, Consolas, &quot;Liberation Mono&quot;, monospace" font-size="11" font-weight="500" text-anchor="middle" fill="#526077" class="flow-node-sub">遍历 Group 分发</text>
+    </g>
+    <g class="flow-node role-blue" data-node-id="oexpr" data-steps="2" tabindex="0" role="button" aria-label="O_EXPR (匹配规则生成任务)">
+      <rect x="438" y="66" width="150" height="72" rx="9" fill="#E6EFFD" stroke="#2554C7" stroke-width="1.8" class="flow-node-rect" />
+      <rect x="446" y="72" width="22.0" height="16" rx="4.5" fill="#1E40AF" stroke="none" class="flow-node-badge-bg" />
+      <text x="457.0" y="83.5" font-family="&quot;JetBrains Mono&quot;, &quot;SFMono-Regular&quot;, Consolas, &quot;Liberation Mono&quot;, monospace" font-size="10.2" font-weight="700" text-anchor="middle" fill="#FFFFFF" class="flow-node-badge-text">S3</text>
+      <text x="513.0" y="104.0" font-family="&quot;Noto Sans SC&quot;, &quot;PingFang SC&quot;, &quot;Microsoft YaHei&quot;, &quot;Segoe UI&quot;, Arial, sans-serif" font-size="14.2" font-weight="700" text-anchor="middle" fill="#141E30" class="flow-node-title">O_EXPR</text>
+      <text x="513.0" y="120.5" font-family="&quot;JetBrains Mono&quot;, &quot;SFMono-Regular&quot;, Consolas, &quot;Liberation Mono&quot;, monospace" font-size="11" font-weight="500" text-anchor="middle" fill="#526077" class="flow-node-sub">匹配规则生成任务</text>
+    </g>
+    <g class="flow-node role-purple" data-node-id="egroup" data-steps="3" tabindex="0" role="button" aria-label="E_GROUP (Group 逻辑表达式枚举)">
+      <rect x="438" y="224" width="150" height="72" rx="9" fill="#EDE9FE" stroke="#6D28D9" stroke-width="1.8" class="flow-node-rect" />
+      <rect x="446" y="230" width="22.0" height="16" rx="4.5" fill="#5B21B6" stroke="none" class="flow-node-badge-bg" />
+      <text x="457.0" y="241.5" font-family="&quot;JetBrains Mono&quot;, &quot;SFMono-Regular&quot;, Consolas, &quot;Liberation Mono&quot;, monospace" font-size="10.2" font-weight="700" text-anchor="middle" fill="#FFFFFF" class="flow-node-badge-text">S4</text>
+      <text x="513.0" y="262.0" font-family="&quot;Noto Sans SC&quot;, &quot;PingFang SC&quot;, &quot;Microsoft YaHei&quot;, &quot;Segoe UI&quot;, Arial, sans-serif" font-size="14.2" font-weight="700" text-anchor="middle" fill="#141E30" class="flow-node-title">E_GROUP</text>
+      <text x="513.0" y="278.5" font-family="&quot;JetBrains Mono&quot;, &quot;SFMono-Regular&quot;, Consolas, &quot;Liberation Mono&quot;, monospace" font-size="11" font-weight="500" text-anchor="middle" fill="#526077" class="flow-node-sub">Group 逻辑表达式枚举</text>
+    </g>
+    <g class="flow-node role-amber" data-node-id="rule" data-steps="4" tabindex="0" role="button" aria-label="APPLY_RULE (规则等价/物理转换)">
+      <rect x="622" y="66" width="152" height="72" rx="9" fill="#FEF0C7" stroke="#B45309" stroke-width="1.8" class="flow-node-rect" />
+      <rect x="630" y="72" width="22.0" height="16" rx="4.5" fill="#92400E" stroke="none" class="flow-node-badge-bg" />
+      <text x="641.0" y="83.5" font-family="&quot;JetBrains Mono&quot;, &quot;SFMono-Regular&quot;, Consolas, &quot;Liberation Mono&quot;, monospace" font-size="10.2" font-weight="700" text-anchor="middle" fill="#FFFFFF" class="flow-node-badge-text">S5</text>
+      <text x="698.0" y="104.0" font-family="&quot;Noto Sans SC&quot;, &quot;PingFang SC&quot;, &quot;Microsoft YaHei&quot;, &quot;Segoe UI&quot;, Arial, sans-serif" font-size="14.2" font-weight="700" text-anchor="middle" fill="#141E30" class="flow-node-title">APPLY_RULE</text>
+      <text x="698.0" y="120.5" font-family="&quot;JetBrains Mono&quot;, &quot;SFMono-Regular&quot;, Consolas, &quot;Liberation Mono&quot;, monospace" font-size="11" font-weight="500" text-anchor="middle" fill="#526077" class="flow-node-sub">规则等价/物理转换</text>
+    </g>
+    <g class="flow-node role-teal" data-node-id="oinputs" data-steps="5,6" tabindex="0" role="button" aria-label="O_INPUTS (递归计算子计划代价)">
+      <rect x="834" y="140" width="180" height="76" rx="9" fill="#CCFBF1" stroke="#0F766E" stroke-width="1.8" class="flow-node-rect" />
+      <rect x="842" y="146" width="39.6" height="16" rx="4.5" fill="#115E59" stroke="none" class="flow-node-badge-bg" />
+      <text x="861.8" y="157.5" font-family="&quot;JetBrains Mono&quot;, &quot;SFMono-Regular&quot;, Consolas, &quot;Liberation Mono&quot;, monospace" font-size="10.2" font-weight="700" text-anchor="middle" fill="#FFFFFF" class="flow-node-badge-text">S6,S7</text>
+      <text x="924.0" y="180.0" font-family="&quot;Noto Sans SC&quot;, &quot;PingFang SC&quot;, &quot;Microsoft YaHei&quot;, &quot;Segoe UI&quot;, Arial, sans-serif" font-size="14.2" font-weight="700" text-anchor="middle" fill="#141E30" class="flow-node-title">O_INPUTS</text>
+      <text x="924.0" y="196.5" font-family="&quot;JetBrains Mono&quot;, &quot;SFMono-Regular&quot;, Consolas, &quot;Liberation Mono&quot;, monospace" font-size="11" font-weight="500" text-anchor="middle" fill="#526077" class="flow-node-sub">递归计算子计划代价</text>
+    </g>
+  </g>
+  <g class="diag-labels" />
+</svg></div>
+  <div class="flow-progress-track" aria-hidden="true"><div class="flow-progress-bar" style="width:14.3%"></div></div>
+  <div class="flow-controls-row">
+    <div class="flow-bar">
+      <button type="button" class="flow-btn" data-act="prev" aria-label="上一步" title="上一步 (←)">← 上一步</button>
+      <button type="button" class="flow-btn primary" data-act="play" aria-label="自动播放" title="播放 / 暂停 (Space)">▶ 自动播放</button>
+      <button type="button" class="flow-btn" data-act="next" aria-label="下一步" title="下一步 (→)">下一步 →</button>
+    </div>
+    <span class="flow-count">步骤 1 / 7</span>
+  </div>
+  <div class="flow-steps" role="tablist" aria-label="流程步骤列表"><button type="button" class="step-chip active" data-step="0" title="任务栈循环" aria-label="第 1 步：任务栈循环"><span class="step-chip-num">1</span><span class="step-chip-label">任务栈循环</span></button><button type="button" class="step-chip" data-step="1" title="O_GROUP分发" aria-label="第 2 步：O_GROUP分发"><span class="step-chip-num">2</span><span class="step-chip-label">O_GROUP分发</span></button><button type="button" class="step-chip" data-step="2" title="O_EXPR找规则" aria-label="第 3 步：O_EXPR找规则"><span class="step-chip-num">3</span><span class="step-chip-label">O_EXPR找规则</span></button><button type="button" class="step-chip" data-step="3" title="E_GROUP枚举" aria-label="第 4 步：E_GROUP枚举"><span class="step-chip-num">4</span><span class="step-chip-label">E_GROUP枚举</span></button><button type="button" class="step-chip" data-step="4" title="APPLY_RULE转换" aria-label="第 5 步：APPLY_RULE转换"><span class="step-chip-num">5</span><span class="step-chip-label">APPLY_RULE转换</span></button><button type="button" class="step-chip" data-step="5" title="O_INPUTS算代价" aria-label="第 6 步：O_INPUTS算代价"><span class="step-chip-num">6</span><span class="step-chip-label">O_INPUTS算代价</span></button><button type="button" class="step-chip" data-step="6" title="得到最优计划" aria-label="第 7 步：得到最优计划"><span class="step-chip-num">7</span><span class="step-chip-label">得到最优计划</span></button></div>
+  <div class="flow-desc" aria-live="polite">
+    <div class="flow-desc-head">
+      <span class="flow-desc-badge">STEP 1 / 7</span>
+      <strong class="flow-desc-title">任务栈循环</strong>
+      <div class="flow-desc-tags"><span class="flow-tag">任务栈</span></div>
+    </div>
+    <p class="flow-desc-text">优化算法类似 DFS，循环从 task stack 取出 task 执行，执行可能压入新 task，直到栈为空。</p>
+  </div>
+  <details class="flow-notes"><summary><span>边界与文档未决点（3 项事实核对）</span></summary><ul><li>Group 实现路径前后不一致：基本概念节写 src/observer/sql/optimizer/cascade/group.h，开头写实现位于 src/observer/optimizer/cascade。</li><li>E_GROUP“为 Group 中每个 logical M_EXPR 生成 O_EXPR”与 O_GROUP 对 logical M_EXPR 的处理重叠，文档未说明二者何时使用；图中 O_EXPR 与 E_GROUP 双向相连。</li><li>文档称目前只实现了 Implementation Rule，但流程仍保留 APPLY_RULE 产生逻辑表达式（Transformation）的分支。</li></ul></details>
+</section></div>
+<article class="content"><h1 id="cascade-optimizer查询优化器">Cascade Optimizer(查询优化器)</h1>
+<p>优化器（Optimizer）是数据库中用于把逻辑计划转换成物理执行计划的核心组件，很大程度上决定了一个系统的性能。查询优化的本质就是对于给定的查询，找到该查询对应的正确物理执行计划并且是最低的&quot;代价(cost)&quot;。</p>
+<p>在 MiniOB 中，查询优化器目前将优化分为两个阶段（基于规则的优化和基于代价的优化）。本文主要介绍基于代价的查询优化器实现（Cascade Optimizer），其代码实现主要位于 <code>src/observer/optimizer/cascade</code>。</p>
+<h2 id="基本概念">基本概念</h2>
+<h3 id="operator算子">Operator（算子）</h3>
+<p>描述某个特定的代数运算，例如join，aggregation 等，operator 分为 logical operator/physical operator。logical operator描述算子的逻辑定义，与具体实现无关。physical operator描述算子的具体实现算法。例如对 join 来说，logical operator 就是 join operator；physical operator 有hash join operator/nested loop join operator等。
+在 MiniOB 中，operator 对应的抽象类为 <code>OperatorNode</code>。</p>
+<h3 id="expression表达式">Expression（表达式）</h3>
+<p>这里的Expression（表达式）表示一个带有零或多个Input Expression（输入表达式）的Operator，同样可以分为Logical Expression（逻辑表达式）和 Physical Expression（物理表达式）。
+例如对于 TableScan 算子来说，TableScan 算子本身就可以理解为是一个 Expression（不带输入表达式）；对于 Join 算子来说，Join 算子以及其子节点一起构成一个 Expression。</p>
+<p>MiniOB 当前的实现中为每个 <code>OperatorNode</code> 增加了一个成员变量 <code>vector&lt;OperatorNode*&gt; general_children_;</code>，可以认为这里的 Expression 也对应到 MiniOB 中的 <code>OperatorNode</code>。</p>
+<h3 id="group">Group</h3>
+<p>Group 是一组逻辑等效的逻辑和物理表达式，产生相同的输出。
+例如对于 <code>SELECT * FROM A JOIN B ON A.id = B.id JOIN C ON C.id = A.id;</code> 来说，其输出结果为 A，B，C 三个表根据 Join 条件进行 Join 的结果。逻辑表达式就可能包括 <code>(A Join B) Join C</code>，<code>A Join (B Join C)</code>；物理表达式就可能包括<code>(A Hash Join B) Nested Loop Join C</code>，<code>(A Hash Join B) Hash Join C</code>等。
+在 MiniOB 中，Group 对应的实现位于 <code>src/observer/sql/optimizer/cascade/group.h</code>。</p>
+<h3 id="m_expr">M_EXPR</h3>
+<p>M_EXPR 是 Expression（表达式） 的一种紧凑形式。 输入是 Group 而不是 Expression。因此可以理解为， M_EXPR 包含多个 Expression。在 Cascade 中，所有搜索都是通过 M_EXPR 完成的。
+在 MiniOB 中，M_EXPR 对应的实现位于 <code>src/observer/sql/optimizer/cascade/group_expr.h</code>。</p>
+<h3 id="rule规则">Rule（规则）</h3>
+<p>规则是将 Expression 转换为逻辑等价表达式。包含了Transformation Rule 和 Implementation Rule。其中，Transformation Rule 是将逻辑表达式转换为逻辑表达式；Implementation Rule 是将一个逻辑表达式转换为物理表达式。
+在 MiniOB 中，Rule 对应的实现位于 <code>src/observer/sql/optimizer/cascade/rules.h</code>，目前 MiniOB 只实现了 Implementation Rule。</p>
+<h3 id="memo在-columbia-中也叫做-search-space">Memo（在 Columbia 中也叫做 Search Space）</h3>
+<p>Memo 用于存放查询优化过程中所有枚举的计划的数据结构，利用 Memo 来避免生成重复的计划生成。
+在 MiniOB 中，Memo 对应的实现位于 <code>src/observer/sql/optimizer/cascade/memo.h</code>。</p>
+<h2 id="搜索策略">搜索策略</h2>
+<p>在 Cascade 中，优化算法类似于DFS。我们有一个 task stack，每次循环都会从 task stack 中取一个 task 执行，每次执行可能导致新的任务被压入栈。这样不停循环直到栈为空，这样我们从根节点开始就能找到一个最优的物理计划。</p>
+<p>其整体流程如下：</p>
+<pre><code>while task_list is not empty
+  pop task
+  perform task
+</code></pre>
+<p>在cascade（columbia）中，task共分为5种， 其整体调度的流程图如下：</p>
+<pre><code>       optimize()                         
+           │                              
+           │                              
+           ▼                              
+    ┌─────────────┐        ┌─────────────┐
+    │             │ ─────► │             │
+    │   O_GROUP   │        │  O_INPUTS   │
+    │             │ ◄────  │             │
+    └──────┬──────┘        └─────────────┘
+           │                      ▲       
+           ▼                      │       
+    ┌─────────────┐        ┌──────┴──────┐
+    │             │ ─────► │             │
+    │   O_EXPR    │        │ APPLY_RULE  │
+    │             │ ◄───── │             │
+    └─────┬───────┘        └─────────────┘
+          │ ▲                             
+          ▼ │                             
+    ┌───────┴─────┐                       
+    │             │                       
+    │   E_GROUP   │                       
+    │             │                       
+    └─────────────┘    
+</code></pre>
+<ul>
+<li>
+<p>O_GROUP：根据优化目标，对一个 Group 进行优化，即遍历 Group 中的每个 M_EXPR，为logical M_EXPR 生成一个 O_EXPR task，为 physical M_EXPR 生成一个 O_INPUTS task。</p>
+</li>
+<li>
+<p>O_EXPR：对一个logical M_EXPR 进行优化，对于该 logical M_EXPR，如果存在可以应用的规则，则生成一个 APPLY_RULE task。</p>
+</li>
+<li>
+<p>E_GROUP：为 Group 中的每一个 logical M_EXPR 生成一个 O_EXPR task。</p>
+</li>
+<li>
+<p>APPLY_RULE：应用具体的优化规则，从逻辑表达式转换到逻辑表达式，或者从逻辑表达式转换为物理表达式。如果产生逻辑表达式，则生成一个 O_EXPR task；如果产生物理表达式，则生成一个 O_INPUTS task。</p>
+</li>
+<li>
+<p>O_INPUTS：对物理表达式的代价进行计算，在此过程中需要递归地计算子节点的代价。</p>
+</li>
+</ul>
+<p>在 MiniOB 中，5 种类型的 task 位于 <code>src/observer/sql/optimizer/cascade/tasks</code> 目录下，
+Cascade Optimizer 的入口函数为 <code>src/observer/sql/optimizer/cascade/optimizer.h::Optimizer::optimize</code>。</p>
+<h2 id="如何为-cascade-添加新的算子转换规则">如何为 Cascade 添加新的算子转换规则</h2>
+<ol>
+<li>添加逻辑算子和物理算子的定义，可参考<code>src/observer/sql/operator/table_get_logical_operator.h</code> 和 <code>src/observer/sql/operator/table_scan_physical_operator.h</code></li>
+<li>添加逻辑算子到物理算子的转换规则，可参考<code>src/observer/sql/optimizer/implementation_rules.h::LogicalGetToPhysicalSeqScan</code></li>
+<li>在 <code>src/observer/sql/optimizer/rules.h</code> 中的 <code>RuleSet</code> 中注册相应的转换规则。</li>
+</ol>
+<h2 id="wip">WIP</h2>
+<ol>
+<li>将现有的基于规则的逻辑计划到逻辑计划的转换加入到 cascade optimizer 中。</li>
+<li>实现 Apply Rule 中的 Expr binding。</li>
+<li>实现 property enforce。</li>
+<li>统计信息收集更多信息。</li>
+</ol>
+</article>
+<nav class="pager" aria-label="相邻文档导航"><a class="prev" href="miniob-btree-storage-engine.html"><span>← 上一篇</span>MiniOB B+Tree 聚簇表存储引擎</a><a class="next" href="miniob-update-mvcc-occ.html"><span>下一篇 →</span>MiniOB UPDATE、MVCC 与 OCC 方案设计</a></nav>
+<p class="source-line">源文件：<a href="../../docs/design/miniob-cascade.md">design/miniob-cascade.md</a></p>
+
+    <footer class="page-footer">
+      <span>由 <code>docs/visual/build.py</code> &amp; <code>draw_diagrams.py</code> 从 <code>docs/docs</code> 生成</span>
+      <span>MiniOB · 可视化技术文档</span>
+    </footer>
+  </main>
+  <aside class="page-toc" aria-label="本页目录"><div class="toc-inner"><p class="toc-title">本页导览</p><ul class="toc-list"><li class="toc-item toc-flow"><a href="#flow-cascade-search">▶ 流程：Cascade 优化器搜索</a></li><li class="toc-item toc-l2"><a href="#基本概念">基本概念</a></li><li class="toc-item toc-l3"><a href="#operator算子">Operator（算子）</a></li><li class="toc-item toc-l3"><a href="#expression表达式">Expression（表达式）</a></li><li class="toc-item toc-l3"><a href="#group">Group</a></li><li class="toc-item toc-l3"><a href="#m_expr">M_EXPR</a></li><li class="toc-item toc-l3"><a href="#rule规则">Rule（规则）</a></li><li class="toc-item toc-l3"><a href="#memo在-columbia-中也叫做-search-space">Memo（在 Columbia 中也叫做 Search Space）</a></li><li class="toc-item toc-l2"><a href="#搜索策略">搜索策略</a></li><li class="toc-item toc-l2"><a href="#如何为-cascade-添加新的算子转换规则">如何为 Cascade 添加新的算子转换规则</a></li><li class="toc-item toc-l2"><a href="#wip">WIP</a></li></ul><a class="toc-top" href="#top">↑ 回到顶部</a></div></aside>
+</div>
+<div class="nav-scrim" id="navScrim"></div>
+<div class="diagram-modal" id="diagramModal" hidden role="dialog" aria-modal="true" aria-label="图表放大检视">
+  <div class="diagram-modal-bar">
+    <span class="diagram-modal-title" id="diagramModalTitle">架构与流程图检视</span>
+    <button type="button" class="diagram-modal-close" id="diagramModalClose" aria-label="关闭">✕ 关闭 (Esc)</button>
+  </div>
+  <div class="diagram-modal-body" id="diagramModalBody"></div>
+</div>
+<script src="../assets/markmap-config.js"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/markmap-autoloader@0.18"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/@highlightjs/cdn-assets@11/highlight.min.js"></script>
+<script type="application/json" id="flow-data">[{"id": "cascade-search", "title": "Cascade 优化器搜索", "source": "design/miniob-cascade.md", "anchor": "搜索策略", "nodes": [{"id": "stack", "label": "任务栈"}, {"id": "ogroup", "label": "O_GROUP"}, {"id": "oexpr", "label": "O_EXPR"}, {"id": "egroup", "label": "E_GROUP"}, {"id": "rule", "label": "APPLY_RULE"}, {"id": "oinputs", "label": "O_INPUTS"}], "edges": [["stack", "ogroup", "弹出task"], ["ogroup", "oexpr", "逻辑M_EXPR"], ["ogroup", "oinputs", "物理M_EXPR"], ["oexpr", "rule", "有可应用规则"], ["oexpr", "egroup", "生成task"], ["egroup", "oexpr", "枚举logical M_EXPR"], ["rule", "oexpr", "产生逻辑表达式"], ["rule", "oinputs", "产生物理表达式"], ["oinputs", "ogroup", "递归计算子代价"]], "steps": [{"title": "任务栈循环", "desc": "优化算法类似 DFS，循环从 task stack 取出 task 执行，执行可能压入新 task，直到栈为空。", "highlight": ["stack"]}, {"title": "O_GROUP分发", "desc": "根据优化目标遍历 Group 中每个 M_EXPR，为 logical M_EXPR 生成 O_EXPR task，为 physical M_EXPR 生成 O_INPUTS task。", "highlight": ["ogroup"]}, {"title": "O_EXPR找规则", "desc": "对一个 logical M_EXPR，如果存在可以应用的规则，则生成一个 APPLY_RULE task。", "highlight": ["oexpr"]}, {"title": "E_GROUP枚举", "desc": "为 Group 中的每一个 logical M_EXPR 生成一个 O_EXPR task。", "highlight": ["egroup"]}, {"title": "APPLY_RULE转换", "desc": "应用规则把逻辑表达式转换为逻辑表达式或物理表达式，前者生成 O_EXPR task，后者生成 O_INPUTS task。", "highlight": ["rule"]}, {"title": "O_INPUTS算代价", "desc": "对物理表达式的代价进行计算，过程中需要递归地计算子节点的代价。", "highlight": ["oinputs"]}, {"title": "得到最优计划", "desc": "任务栈为空后，从根节点即可找到一个最优（最低代价）的物理执行计划。", "highlight": ["oinputs", "ogroup"]}], "uncertainties": ["Group 实现路径前后不一致：基本概念节写 src/observer/sql/optimizer/cascade/group.h，开头写实现位于 src/observer/optimizer/cascade。", "E_GROUP“为 Group 中每个 logical M_EXPR 生成 O_EXPR”与 O_GROUP 对 logical M_EXPR 的处理重叠，文档未说明二者何时使用；图中 O_EXPR 与 E_GROUP 双向相连。", "文档称目前只实现了 Implementation Rule，但流程仍保留 APPLY_RULE 产生逻辑表达式（Transformation）的分支。"], "summary": "任务栈驱动的自顶向下搜索：枚举逻辑/物理表达式，按代价选计划。"}]</script>
+<script defer src="../assets/site.js"></script>
+</body>
+</html>

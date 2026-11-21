@@ -1,0 +1,437 @@
+<!doctype html>
+<html lang="zh-CN" id="top">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>MiniOB LSM-Tree 存储引擎 · MiniOB 可视化文档</title>
+<link rel="stylesheet" href="../assets/style.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@highlightjs/cdn-assets@11/styles/atom-one-dark.min.css">
+<script src="../assets/theme.js"></script>
+
+</head>
+<body class="">
+<div class="reading-progress" id="readingProgress" aria-hidden="true"></div>
+<header class="topbar">
+  <button class="menu-btn" id="menuBtn" aria-label="切换侧栏" aria-expanded="false">☰</button>
+  <a class="brand" href="../index.html"><span class="brand-mark">M</span><span>MiniOB <em>可视化文档</em></span></a>
+  <div class="top-actions">
+    <a class="top-link" href="../flows.html">动态流程</a>
+    <button class="theme-btn" id="themeBtn" aria-label="切换明暗主题" title="切换明暗主题">◐</button>
+  </div>
+</header>
+<div class="layout has-toc">
+  <aside class="sidebar" id="sidebar"><nav class="site-nav" aria-label="文档目录"><a class="nav-home" href="../index.html"><span class="brand-mark">M</span><span>MiniOB 可视化文档</span></a><details class="nav-group"><summary>快速开始<span>2</span></summary><div class="nav-links"><a href="../how_to_build.html"><span class="nav-link-text">如何编译</span></a><a href="../how_to_run.html"><span class="nav-link-text">如何运行</span></a></div></details><details class="nav-group" open><summary>设计文档<span>21</span></summary><div class="nav-links"><a href="miniob-architecture.html"><span class="nav-link-text">MiniOB代码架构框架设计和说明</span><span class="nav-badge" title="含交互流程图或架构图">图</span></a><a href="miniob-buffer-pool.html"><span class="nav-link-text">MiniOB 存储实现</span><span class="nav-badge" title="含交互流程图或架构图">图</span></a><a href="miniob-double-write-buffer.html"><span class="nav-link-text">MiniOB Double Write Buffer 实现</span><span class="nav-badge" title="含交互流程图或架构图">图</span></a><a href="miniob-transaction.html"><span class="nav-link-text">事务模块</span><span class="nav-badge" title="含交互流程图或架构图">图</span></a><a href="miniob-durability.html"><span class="nav-link-text">持久化</span><span class="nav-badge" title="含交互流程图或架构图">图</span></a><a href="miniob-persistence-files.html"><span class="nav-link-text">持久化文件与恢复路径</span><span class="nav-badge" title="含交互流程图或架构图">图</span></a><a href="miniob-checkpoint-wal.html"><span class="nav-link-text">MiniOB 检查点与 WAL 截断</span><span class="nav-badge" title="含交互流程图或架构图">图</span></a><a href="miniob-sql-parser.html"><span class="nav-link-text">SQL 词法语法分析</span></a><a href="miniob-how-to-add-new-sql.html"><span class="nav-link-text">SQL语句执行流程</span><span class="nav-badge" title="含交互流程图或架构图">图</span></a><a href="miniob-sql-expression.html"><span class="nav-link-text">SQL 表达式</span></a><a href="miniob-bplus-tree.html"><span class="nav-link-text">MiniOB B+Tree 实现</span><span class="nav-badge" title="含交互流程图或架构图">图</span></a><a href="miniob-bplus-tree-concurrency.html"><span class="nav-link-text">B+ 树并发操作</span><span class="nav-badge" title="含交互流程图或架构图">图</span></a><a href="miniob-thread-model.html"><span class="nav-link-text">线程模型</span><span class="nav-badge" title="含交互流程图或架构图">图</span></a><a href="miniob-mysql-protocol.html"><span class="nav-link-text">MySQL 通讯协议</span></a><a href="miniob-pax-storage.html"><span class="nav-link-text">MiniOB PAX 存储格式</span><span class="nav-badge" title="含交互流程图或架构图">图</span></a><a href="miniob-aggregation-and-group-by.html"><span class="nav-link-text">MiniOB 向量化执行 aggregation 和 group by 实现</span></a><a href="miniob-lsm-tree.html" class="active" aria-current="page"><span class="nav-link-text">MiniOB LSM-Tree 存储引擎</span><span class="nav-badge" title="含交互流程图或架构图">图</span></a><a href="introduction.html"><span class="nav-link-text">功能模块设计说明</span></a><a href="miniob-btree-storage-engine.html"><span class="nav-link-text">MiniOB B+Tree 聚簇表存储引擎</span><span class="nav-badge" title="含交互流程图或架构图">图</span></a><a href="miniob-cascade.html"><span class="nav-link-text">Cascade Optimizer(查询优化器)</span><span class="nav-badge" title="含交互流程图或架构图">图</span></a><a href="miniob-update-mvcc-occ.html"><span class="nav-link-text">MiniOB UPDATE、MVCC 与 OCC 方案设计</span><span class="nav-badge" title="含交互流程图或架构图">图</span></a></div></details><details class="nav-group"><summary>课程实验<span>6</span></summary><div class="nav-links"><a href="../db_course_lab/overview.html"><span class="nav-link-text">数据库系统实现原理与实践课程实验</span></a><a href="../db_course_lab/lab0.html"><span class="nav-link-text">LAB#0 C++ 基础</span></a><a href="../db_course_lab/lab1.html"><span class="nav-link-text">LAB#1 LSM-Tree 存储引擎</span></a><a href="../db_course_lab/lab2.html"><span class="nav-link-text">LAB#2 查询引擎</span></a><a href="../db_course_lab/lab3.html"><span class="nav-link-text">LAB#3 事务引擎</span></a><a href="../db_course_lab/lab4.html"><span class="nav-link-text">LAB#4 性能测试</span></a></div></details><details class="nav-group"><summary>简明教程<span>9</span></summary><div class="nav-links"><a href="../lectures/copyright.html"><span class="nav-link-text">版权声明</span></a><a href="../lectures/lecture-1.html"><span class="nav-link-text">第1章 数据库管理系统概述</span></a><a href="../lectures/lecture-2.html"><span class="nav-link-text">第2章 数据库的存储结构</span></a><a href="../lectures/lecture-3.html"><span class="nav-link-text">第3章 索引结构</span></a><a href="../lectures/lecture-4.html"><span class="nav-link-text">第4章 查询处理</span></a><a href="../lectures/lecture-5.html"><span class="nav-link-text">第5章 查询优化</span></a><a href="../lectures/lecture-6.html"><span class="nav-link-text">第6章 事务处理</span></a><a href="../lectures/references.html"><span class="nav-link-text">参考资料</span></a><a href="../lectures/index.html"><span class="nav-link-text">数据库管理系统实现基础讲义</span></a></div></details><details class="nav-group"><summary>开发环境<span>14</span></summary><div class="nav-links"><a href="../dev-env/introduction.html"><span class="nav-link-text">搭建开发环境</span></a><a href="../dev-env/vscode_dev_with_local_virtual_env.html"><span class="nav-link-text">虚拟机+vscode remote开发</span></a><a href="../dev-env/dev_by_online.html"><span class="nav-link-text">使用在线开发环境开发 MiniOB</span></a><a href="../dev-env/how-to-dev-using-docker.html"><span class="nav-link-text">使用Docker开发MiniOB</span></a><a href="../dev-env/how_to_dev_in_docker_container_by_vscode.html"><span class="nav-link-text">使用 Docker 和 VSCode 远程开发 Miniob</span></a><a href="../dev-env/how_to_dev_in_docker_container_by_vscode_on_windows.html"><span class="nav-link-text">在windows上通过docker配置环境并利用vscode调试代码（手把手版）</span></a><a href="../dev-env/how_to_dev_miniob_by_docker_on_windows.html"><span class="nav-link-text">安装Docker</span></a><a href="../dev-env/how_to_dev_miniob_by_vscode.html"><span class="nav-link-text">环境准备</span></a><a href="../dev-env/miniob-how-to-debug.html"><span class="nav-link-text">miniob调试篇</span></a><a href="../dev-env/how_to_submit_for_testing.html"><span class="nav-link-text">训练营平台使用说明</span></a><a href="../dev-env/integration_test.html"><span class="nav-link-text">MiniOB 集成测试使用文档</span></a><a href="../dev-env/cloudlab_setup.html"><span class="nav-link-text">开源学堂在线编程环境开发 MiniOB</span></a><a href="../dev-env/how_to_dev_miniob_by_docker_on_windows_simplified.html"><span class="nav-link-text">在windows上通过docker配置环境并利用vscode编辑、开发、调试代码（简易版）</span></a><a href="../dev-env/how_to_dev_miniob_in_vscodeGUI_by_docker_on_windows.html"><span class="nav-link-text">基于Windows+docker容器在本地利用VSCode编辑、开发及调试miniob</span></a></div></details><details class="nav-group"><summary>大赛与训练<span>9</span></summary><div class="nav-links"><a href="../game/introduction.html"><span class="nav-link-text">OceanBase 数据库大赛</span></a><a href="../game/miniob-output-convention.html"><span class="nav-link-text">输出规范</span></a><a href="../game/debug-output.html"><span class="nav-link-text">输出调试信息</span></a><a href="../game/miniob-memtracer.html"><span class="nav-link-text">MemTracer</span></a><a href="../game/miniob_topics.html"><span class="nav-link-text">OceanBase 数据库大赛2021届题目</span></a><a href="../game/github-introduction.html"><span class="nav-link-text">MiniOB GitHub 在训练营中的使用说明</span></a><a href="../game/gitee-instructions.html"><span class="nav-link-text">MiniOB Gitee 在训练营中的使用说明</span></a><a href="../game/miniob-vectordb.html"><span class="nav-link-text">MiniOB 向量数据库</span></a><a href="../game/git-introduction.html"><span class="nav-link-text">Git 介绍</span></a></div></details><details class="nav-group"><summary>博客<span>2</span></summary><div class="nav-links"><a href="../blog/introduction.html"><span class="nav-link-text">介绍</span></a><a href="../blog/1.html"><span class="nav-link-text">High-Performance Concurrency Control Mechanisms for Main-Memory Databases</span></a></div></details><a class="nav-flows" href="../flows.html"><span class="dot"></span>动态流程<span class="count">13</span></a></nav></aside>
+  <main class="main">
+    
+<nav class="crumbs" aria-label="面包屑导航"><a href="../index.html">首页</a><span>/</span><span>设计文档</span><span>/</span><span aria-current="page">MiniOB LSM-Tree 存储引擎</span></nav>
+<header class="doc-head">
+  <div class="doc-meta-bar">
+    <span class="eyebrow-pill">设计文档</span>
+    <span class="doc-meta-item">25 个章节</span>
+    <span class="doc-meta-sep">·</span>
+    <span class="doc-meta-item">约 13 分钟阅读</span>
+    <span class="doc-meta-sep">·</span>
+    <a class="doc-meta-source" href="../../docs/design/miniob-lsm-tree.md">Markdown 源文件 ↗</a>
+  </div>
+  <h1>MiniOB LSM-Tree 存储引擎</h1>
+</header>
+<section class="panel map-panel" id="doc-outline-panel">
+  <div class="panel-head">
+    <div>
+      <h2>章节结构导览</h2>
+      <span>点击任意章节直达正文；支持结构卡片与交互思维导图切换</span>
+    </div>
+    <button type="button" class="map-toggle-btn" data-toggle-markmap aria-expanded="false">⊞ 切换思维导图</button>
+  </div>
+  <div class="tree-view"><div class="tree-grid"><div class="tree-branch"><div class="tree-top"><a class="tree-link" href="#lsm-tree-背景介绍"><span class="tree-num">1</span><span>LSM-Tree 背景介绍</span></a></div></div><div class="tree-branch"><div class="tree-top"><a class="tree-link" href="#oblsm-存储引擎"><span class="tree-num">2</span><span>ObLsm 存储引擎</span></a></div><ul class="tree-sub"><li><a class="tree-link" href="#memtable"><span class="tree-num">2.1</span><span>MemTable</span></a></li><li><a class="tree-link" href="#sstable"><span class="tree-num">2.2</span><span>SSTable</span></a></li><li><a class="tree-link" href="#compaction"><span class="tree-num">2.3</span><span>Compaction</span></a></li></ul></div><div class="tree-branch"><div class="tree-top"><a class="tree-link" href="#系统恢复"><span class="tree-num">3</span><span>系统恢复</span></a></div><ul class="tree-sub"><li><a class="tree-link" href="#manifest"><span class="tree-num">3.1</span><span>Manifest</span></a></li><li><a class="tree-link" href="#wal"><span class="tree-num">3.2</span><span>WAL</span></a></li><li><a class="tree-link" href="#系统恢复步骤"><span class="tree-num">3.3</span><span>系统恢复步骤</span></a></li></ul></div><div class="tree-branch"><div class="tree-top"><a class="tree-link" href="#基于-oblsm-的表引擎"><span class="tree-num">4</span><span>基于 ObLsm 的表引擎</span></a></div><ul class="tree-sub"><li><a class="tree-link" href="#当前实现状态"><span class="tree-num">4.1</span><span>当前实现状态</span></a></li></ul></div><div class="tree-branch"><div class="tree-top"><a class="tree-link" href="#参考资料"><span class="tree-num">5</span><span>参考资料</span></a></div></div></div></div>
+  <div class="markmap-wrap" hidden>
+    <div class="markmap"><script type="text/template"># MiniOB LSM-Tree 存储引擎
+  - [LSM-Tree 背景介绍](#lsm-tree-背景介绍)
+  - [ObLsm 存储引擎](#oblsm-存储引擎)
+    - [MemTable](#memtable)
+    - [SSTable](#sstable)
+    - [Compaction](#compaction)
+  - [系统恢复](#系统恢复)
+    - [Manifest](#manifest)
+    - [WAL](#wal)
+    - [系统恢复步骤](#系统恢复步骤)
+  - [基于 ObLsm 的表引擎](#基于-oblsm-的表引擎)
+    - [当前实现状态](#当前实现状态)
+  - [参考资料](#参考资料)</script></div>
+  </div>
+</section>
+<div class="flows-inline">
+<section class="flow-player" id="flow-lsm-tree-write-compaction-recovery" data-flow="lsm-tree-write-compaction-recovery" tabindex="0" aria-label="LSM-Tree 写入、Compaction 与恢复 交互流程播放器">
+  <header class="flow-head">
+    <div>
+      <div class="flow-kicker-row">
+        <span class="flow-kicker">INTERACTIVE MECHANISM · 动态机制流程</span>
+        <span class="flow-step-total">共 8 步</span>
+      </div>
+      <h2>LSM-Tree 写入、Compaction 与恢复</h2>
+      <p class="flow-summary">WAL → MemTable → SSTable → Compaction → Manifest 与 WAL 恢复。</p>
+    </div>
+    <div class="flow-head-actions">
+      <button type="button" class="arch-zoom-btn" data-zoom-diagram aria-label="放大流程图">⤢ 放大</button>
+      <a class="arch-svg-link" href="../assets/diagrams/flow-lsm-tree-write-compaction-recovery.svg" target="_blank" rel="noopener" title="打开独立 SVG 矢量图">SVG ↗</a>
+      <a class="flow-source" href="miniob-lsm-tree.html#系统恢复">跳转原文 →</a>
+    </div>
+  </header>
+  <div class="flow-legend" aria-hidden="true">
+    <span><i class="leg-dot leg-active"></i>当前步骤节点与流转路径</span>
+    <span><i class="leg-dot leg-visited"></i>已执行路径</span>
+    <span><i class="leg-dot leg-idle"></i>待执行节点</span>
+    <span class="flow-legend-tip">💡 可直接点击图中节点、下方步骤条，或使用 ← / → 键切换步骤</span>
+  </div>
+  <div class="flow-canvas" role="img" aria-label="LSM-Tree 写入、Compaction 与恢复 流程图"><svg xmlns="http://www.w3.org/2000/svg" width="1060" height="360" viewBox="0 0 1060 360" role="img" aria-labelledby="flow-lsm-tree-write-compaction-recovery-title flow-lsm-tree-write-compaction-recovery-desc" class="toolkit-diagram" data-diagram-id="flow-lsm-tree-write-compaction-recovery">
+  <title id="flow-lsm-tree-write-compaction-recovery-title">LSM-Tree 写入、Compaction 与恢复 — 交互式机制流程图</title>
+  <desc id="flow-lsm-tree-write-compaction-recovery-desc">WAL → MemTable → SSTable → Compaction → Manifest 与 WAL 恢复。</desc>
+  <defs>
+    <marker id="flow-lsm-tree-write-compaction-recovery-arrow-ink" viewBox="0 0 10 10" refX="8.6" refY="5" markerWidth="6.8" markerHeight="6.8" orient="auto">
+      <path d="M0 0.8 L9.5 5 L0 9.2 Z" fill="#334155" />
+    </marker>
+    <marker id="flow-lsm-tree-write-compaction-recovery-arrow-blue" viewBox="0 0 10 10" refX="8.6" refY="5" markerWidth="6.8" markerHeight="6.8" orient="auto">
+      <path d="M0 0.8 L9.5 5 L0 9.2 Z" fill="#2554C7" />
+    </marker>
+    <marker id="flow-lsm-tree-write-compaction-recovery-arrow-amber" viewBox="0 0 10 10" refX="8.6" refY="5" markerWidth="6.8" markerHeight="6.8" orient="auto">
+      <path d="M0 0.8 L9.5 5 L0 9.2 Z" fill="#B45309" />
+    </marker>
+    <marker id="flow-lsm-tree-write-compaction-recovery-arrow-teal" viewBox="0 0 10 10" refX="8.6" refY="5" markerWidth="6.8" markerHeight="6.8" orient="auto">
+      <path d="M0 0.8 L9.5 5 L0 9.2 Z" fill="#0F766E" />
+    </marker>
+    <marker id="flow-lsm-tree-write-compaction-recovery-arrow-purple" viewBox="0 0 10 10" refX="8.6" refY="5" markerWidth="6.8" markerHeight="6.8" orient="auto">
+      <path d="M0 0.8 L9.5 5 L0 9.2 Z" fill="#6D28D9" />
+    </marker>
+    <marker id="flow-lsm-tree-write-compaction-recovery-arrow-rose" viewBox="0 0 10 10" refX="8.6" refY="5" markerWidth="6.8" markerHeight="6.8" orient="auto">
+      <path d="M0 0.8 L9.5 5 L0 9.2 Z" fill="#BE123C" />
+    </marker>
+    <marker id="flow-lsm-tree-write-compaction-recovery-arrow-muted" viewBox="0 0 10 10" refX="8.6" refY="5" markerWidth="6.8" markerHeight="6.8" orient="auto">
+      <path d="M0 0.8 L9.5 5 L0 9.2 Z" fill="#64748B" />
+    </marker>
+  </defs>
+  <g class="diag-bg">
+    <rect x="0" y="0" width="1060" height="360" rx="12" fill="#FCFDFE" stroke="none" class="diag-canvas-bg" />
+  </g>
+  <g class="diag-lanes">
+    <g class="diag-lane">
+      <rect x="16" y="16" width="1028" height="174" rx="10" fill="#F0F5FF" stroke="#2554C7" stroke-width="1.5" class="diag-lane-rect" />
+      <text x="30" y="38" font-family="&quot;Noto Sans SC&quot;, &quot;PingFang SC&quot;, &quot;Microsoft YaHei&quot;, &quot;Segoe UI&quot;, Arial, sans-serif" font-size="12.8" font-weight="700" fill="#1E40AF" class="diag-lane-title">1. 写入、冻结转储与 Compaction 路径 (Write → Freeze → SSTable → Compaction → Manifest)</text>
+      <text x="1030" y="38" font-family="&quot;JetBrains Mono&quot;, &quot;SFMono-Regular&quot;, Consolas, &quot;Liberation Mono&quot;, monospace" font-size="11.2" font-weight="500" text-anchor="end" fill="#7B89A1" class="diag-lane-sub">顺序写 WAL → SkipList MemTable → 8KB 冻结转储 → Compaction</text>
+    </g>
+    <g class="diag-lane">
+      <rect x="16" y="204" width="1028" height="140" rx="10" fill="#F0FDFA" stroke="#0F766E" stroke-width="1.5" class="diag-lane-rect" />
+      <text x="30" y="226" font-family="&quot;Noto Sans SC&quot;, &quot;PingFang SC&quot;, &quot;Microsoft YaHei&quot;, &quot;Segoe UI&quot;, Arial, sans-serif" font-size="12.8" font-weight="700" fill="#115E59" class="diag-lane-title">2. 系统启动与恢复路径 (CURRENT → Manifest Snapshot/Compaction → WAL Replay)</text>
+      <text x="1030" y="226" font-family="&quot;JetBrains Mono&quot;, &quot;SFMono-Regular&quot;, Consolas, &quot;Liberation Mono&quot;, monospace" font-size="11.2" font-weight="500" text-anchor="end" fill="#7B89A1" class="diag-lane-sub">读取 CURRENT → 恢复 Snapshot 与 Compaction Record → 回放 WAL</text>
+    </g>
+  </g>
+  <g class="diag-edges">
+    <g class="flow-edge" data-from="wal_first" data-to="write_memtable">
+      <path d="M 168.0 101.0 L 188.0 101.0" fill="none" stroke="#2554C7" stroke-width="1.9" stroke-linejoin="round" stroke-linecap="round" class="flow-edge-path" marker-end="url(#flow-lsm-tree-write-compaction-recovery-arrow-blue)" />
+    </g>
+    <g class="flow-edge" data-from="write_memtable" data-to="memtable_full">
+      <path d="M 334.0 101.0 L 354.0 101.0" fill="none" stroke="#2554C7" stroke-width="1.9" stroke-linejoin="round" stroke-linecap="round" class="flow-edge-path" marker-end="url(#flow-lsm-tree-write-compaction-recovery-arrow-blue)" />
+    </g>
+    <g class="flow-edge" data-from="memtable_full" data-to="dump_sstable">
+      <path d="M 506.0 101.0 L 526.0 101.0" fill="none" stroke="#0F766E" stroke-width="1.9" stroke-linejoin="round" stroke-linecap="round" class="flow-edge-path" marker-end="url(#flow-lsm-tree-write-compaction-recovery-arrow-teal)" />
+    </g>
+    <g class="flow-edge" data-from="dump_sstable" data-to="compaction">
+      <path d="M 678.0 89.0 L 700.0 89.0" fill="none" stroke="#6D28D9" stroke-width="1.9" stroke-linejoin="round" stroke-linecap="round" class="flow-edge-path" marker-end="url(#flow-lsm-tree-write-compaction-recovery-arrow-purple)" />
+    </g>
+    <g class="flow-edge" data-from="compaction" data-to="manifest_write">
+      <path d="M 852.0 89.0 L 874.0 89.0" fill="none" stroke="#0F766E" stroke-width="1.9" stroke-linejoin="round" stroke-linecap="round" class="flow-edge-path" marker-end="url(#flow-lsm-tree-write-compaction-recovery-arrow-teal)" />
+    </g>
+    <g class="flow-edge" data-from="dump_sstable" data-to="manifest_write">
+      <path d="M 602.0 136.0 L 602.0 168.0 L 951.0 168.0 L 951.0 136.0" fill="none" stroke="#0F766E" stroke-width="1.9" stroke-linejoin="round" stroke-linecap="round" class="flow-edge-path" marker-end="url(#flow-lsm-tree-write-compaction-recovery-arrow-teal)" />
+      <rect x="718.5" y="146.5" width="115.9" height="19.0" rx="5.5" fill="#FFFFFF" stroke="#CBD5E1" stroke-width="1.1" class="flow-edge-pill" />
+      <text x="776.5" y="159.8" font-family="&quot;Noto Sans SC&quot;, &quot;PingFang SC&quot;, &quot;Microsoft YaHei&quot;, &quot;Segoe UI&quot;, Arial, sans-serif" font-size="11.2" font-weight="600" text-anchor="middle" fill="#526077" class="flow-edge-label">minor compaction</text>
+    </g>
+    <g class="flow-edge" data-from="manifest_write" data-to="read_manifest">
+      <path d="M 951.0 136.0 L 951.0 283.0 L 856.0 283.0" fill="none" stroke="#B45309" stroke-width="1.9" stroke-linejoin="round" stroke-linecap="round" class="flow-edge-path" marker-end="url(#flow-lsm-tree-write-compaction-recovery-arrow-amber)" />
+      <rect x="966.0" y="184.0" width="34.0" height="19.0" rx="5.5" fill="#FFFFFF" stroke="#CBD5E1" stroke-width="1.1" class="flow-edge-pill" />
+      <text x="983.0" y="197.3" font-family="&quot;Noto Sans SC&quot;, &quot;PingFang SC&quot;, &quot;Microsoft YaHei&quot;, &quot;Segoe UI&quot;, Arial, sans-serif" font-size="11.2" font-weight="600" text-anchor="middle" fill="#526077" class="flow-edge-label">重启</text>
+    </g>
+    <g class="flow-edge" data-from="read_manifest" data-to="replay_order">
+      <path d="M 680.0 283.0 L 604.0 283.0" fill="none" stroke="#0F766E" stroke-width="1.9" stroke-linejoin="round" stroke-linecap="round" class="flow-edge-path" marker-end="url(#flow-lsm-tree-write-compaction-recovery-arrow-teal)" />
+    </g>
+    <g class="flow-edge" data-from="replay_order" data-to="replay_wal">
+      <path d="M 416.0 283.0 L 340.0 283.0" fill="none" stroke="#B45309" stroke-width="1.9" stroke-linejoin="round" stroke-linecap="round" class="flow-edge-path" marker-end="url(#flow-lsm-tree-write-compaction-recovery-arrow-amber)" />
+    </g>
+  </g>
+  <g class="diag-nodes">
+    <g class="flow-node role-amber" data-node-id="wal_first" data-steps="0" tabindex="0" role="button" aria-label="写 WAL 日志 (顺序追加 0.wal)">
+      <rect x="30" y="66" width="138" height="70" rx="9" fill="#FEF0C7" stroke="#B45309" stroke-width="1.8" class="flow-node-rect" />
+      <rect x="38" y="72" width="22.0" height="16" rx="4.5" fill="#92400E" stroke="none" class="flow-node-badge-bg" />
+      <text x="49.0" y="83.5" font-family="&quot;JetBrains Mono&quot;, &quot;SFMono-Regular&quot;, Consolas, &quot;Liberation Mono&quot;, monospace" font-size="10.2" font-weight="700" text-anchor="middle" fill="#FFFFFF" class="flow-node-badge-text">S1</text>
+      <text x="99.0" y="103.0" font-family="&quot;Noto Sans SC&quot;, &quot;PingFang SC&quot;, &quot;Microsoft YaHei&quot;, &quot;Segoe UI&quot;, Arial, sans-serif" font-size="14.2" font-weight="700" text-anchor="middle" fill="#141E30" class="flow-node-title">写 WAL 日志</text>
+      <text x="99.0" y="119.5" font-family="&quot;JetBrains Mono&quot;, &quot;SFMono-Regular&quot;, Consolas, &quot;Liberation Mono&quot;, monospace" font-size="11" font-weight="500" text-anchor="middle" fill="#526077" class="flow-node-sub">顺序追加 0.wal</text>
+    </g>
+    <g class="flow-node role-blue" data-node-id="write_memtable" data-steps="1" tabindex="0" role="button" aria-label="写入 MemTable (SkipList 插入记录)">
+      <rect x="188" y="66" width="146" height="70" rx="9" fill="#E6EFFD" stroke="#2554C7" stroke-width="1.8" class="flow-node-rect" />
+      <rect x="196" y="72" width="22.0" height="16" rx="4.5" fill="#1E40AF" stroke="none" class="flow-node-badge-bg" />
+      <text x="207.0" y="83.5" font-family="&quot;JetBrains Mono&quot;, &quot;SFMono-Regular&quot;, Consolas, &quot;Liberation Mono&quot;, monospace" font-size="10.2" font-weight="700" text-anchor="middle" fill="#FFFFFF" class="flow-node-badge-text">S2</text>
+      <text x="261.0" y="103.0" font-family="&quot;Noto Sans SC&quot;, &quot;PingFang SC&quot;, &quot;Microsoft YaHei&quot;, &quot;Segoe UI&quot;, Arial, sans-serif" font-size="14.2" font-weight="700" text-anchor="middle" fill="#141E30" class="flow-node-title">写入 MemTable</text>
+      <text x="261.0" y="119.5" font-family="&quot;JetBrains Mono&quot;, &quot;SFMono-Regular&quot;, Consolas, &quot;Liberation Mono&quot;, monospace" font-size="11" font-weight="500" text-anchor="middle" fill="#526077" class="flow-node-sub">SkipList 插入记录</text>
+    </g>
+    <g class="flow-node role-blue" data-node-id="memtable_full" data-steps="2" tabindex="0" role="button" aria-label="MemTable 达上限 (try_freeze_memtable)">
+      <rect x="354" y="66" width="152" height="70" rx="9" fill="#E6EFFD" stroke="#2554C7" stroke-width="1.8" class="flow-node-rect" />
+      <rect x="362" y="72" width="22.0" height="16" rx="4.5" fill="#1E40AF" stroke="none" class="flow-node-badge-bg" />
+      <text x="373.0" y="83.5" font-family="&quot;JetBrains Mono&quot;, &quot;SFMono-Regular&quot;, Consolas, &quot;Liberation Mono&quot;, monospace" font-size="10.2" font-weight="700" text-anchor="middle" fill="#FFFFFF" class="flow-node-badge-text">S3</text>
+      <text x="430.0" y="103.0" font-family="&quot;Noto Sans SC&quot;, &quot;PingFang SC&quot;, &quot;Microsoft YaHei&quot;, &quot;Segoe UI&quot;, Arial, sans-serif" font-size="14.2" font-weight="700" text-anchor="middle" fill="#141E30" class="flow-node-title">MemTable 达上限</text>
+      <text x="430.0" y="119.5" font-family="&quot;JetBrains Mono&quot;, &quot;SFMono-Regular&quot;, Consolas, &quot;Liberation Mono&quot;, monospace" font-size="11" font-weight="500" text-anchor="middle" fill="#526077" class="flow-node-sub">try_freeze_memtable</text>
+    </g>
+    <g class="flow-node role-teal" data-node-id="dump_sstable" data-steps="3" tabindex="0" role="button" aria-label="转储为 SSTable (构建 Block / *.sst)">
+      <rect x="526" y="66" width="152" height="70" rx="9" fill="#CCFBF1" stroke="#0F766E" stroke-width="1.8" class="flow-node-rect" />
+      <rect x="534" y="72" width="22.0" height="16" rx="4.5" fill="#115E59" stroke="none" class="flow-node-badge-bg" />
+      <text x="545.0" y="83.5" font-family="&quot;JetBrains Mono&quot;, &quot;SFMono-Regular&quot;, Consolas, &quot;Liberation Mono&quot;, monospace" font-size="10.2" font-weight="700" text-anchor="middle" fill="#FFFFFF" class="flow-node-badge-text">S4</text>
+      <text x="602.0" y="103.0" font-family="&quot;Noto Sans SC&quot;, &quot;PingFang SC&quot;, &quot;Microsoft YaHei&quot;, &quot;Segoe UI&quot;, Arial, sans-serif" font-size="14.2" font-weight="700" text-anchor="middle" fill="#141E30" class="flow-node-title">转储为 SSTable</text>
+      <text x="602.0" y="119.5" font-family="&quot;JetBrains Mono&quot;, &quot;SFMono-Regular&quot;, Consolas, &quot;Liberation Mono&quot;, monospace" font-size="11" font-weight="500" text-anchor="middle" fill="#526077" class="flow-node-sub">构建 Block / *.sst</text>
+    </g>
+    <g class="flow-node role-purple" data-node-id="compaction" data-steps="4" tabindex="0" role="button" aria-label="Compaction 合并 (多 SSTable 归并)">
+      <rect x="700" y="56" width="152" height="66" rx="9" fill="#EDE9FE" stroke="#6D28D9" stroke-width="1.8" class="flow-node-rect" />
+      <rect x="708" y="62" width="22.0" height="16" rx="4.5" fill="#5B21B6" stroke="none" class="flow-node-badge-bg" />
+      <text x="719.0" y="73.5" font-family="&quot;JetBrains Mono&quot;, &quot;SFMono-Regular&quot;, Consolas, &quot;Liberation Mono&quot;, monospace" font-size="10.2" font-weight="700" text-anchor="middle" fill="#FFFFFF" class="flow-node-badge-text">S5</text>
+      <text x="776.0" y="91.0" font-family="&quot;Noto Sans SC&quot;, &quot;PingFang SC&quot;, &quot;Microsoft YaHei&quot;, &quot;Segoe UI&quot;, Arial, sans-serif" font-size="14.2" font-weight="700" text-anchor="middle" fill="#141E30" class="flow-node-title">Compaction 合并</text>
+      <text x="776.0" y="107.5" font-family="&quot;JetBrains Mono&quot;, &quot;SFMono-Regular&quot;, Consolas, &quot;Liberation Mono&quot;, monospace" font-size="11" font-weight="500" text-anchor="middle" fill="#526077" class="flow-node-sub">多 SSTable 归并</text>
+    </g>
+    <g class="flow-node role-teal" data-node-id="manifest_write" data-steps="5" tabindex="0" role="button" aria-label="写 Manifest 记录 (Compaction / NewMem)">
+      <rect x="874" y="66" width="154" height="70" rx="9" fill="#CCFBF1" stroke="#0F766E" stroke-width="1.8" class="flow-node-rect" />
+      <rect x="882" y="72" width="22.0" height="16" rx="4.5" fill="#115E59" stroke="none" class="flow-node-badge-bg" />
+      <text x="893.0" y="83.5" font-family="&quot;JetBrains Mono&quot;, &quot;SFMono-Regular&quot;, Consolas, &quot;Liberation Mono&quot;, monospace" font-size="10.2" font-weight="700" text-anchor="middle" fill="#FFFFFF" class="flow-node-badge-text">S6</text>
+      <text x="951.0" y="103.0" font-family="&quot;Noto Sans SC&quot;, &quot;PingFang SC&quot;, &quot;Microsoft YaHei&quot;, &quot;Segoe UI&quot;, Arial, sans-serif" font-size="14.2" font-weight="700" text-anchor="middle" fill="#141E30" class="flow-node-title">写 Manifest 记录</text>
+      <text x="951.0" y="119.5" font-family="&quot;JetBrains Mono&quot;, &quot;SFMono-Regular&quot;, Consolas, &quot;Liberation Mono&quot;, monospace" font-size="11" font-weight="500" text-anchor="middle" fill="#526077" class="flow-node-sub">Compaction / NewMem</text>
+    </g>
+    <g class="flow-node role-teal" data-node-id="read_manifest" data-steps="6" tabindex="0" role="button" aria-label="启动读 CURRENT (打开当前 *.mf 文件)">
+      <rect x="680" y="248" width="176" height="70" rx="9" fill="#CCFBF1" stroke="#0F766E" stroke-width="1.8" class="flow-node-rect" />
+      <rect x="688" y="254" width="22.0" height="16" rx="4.5" fill="#115E59" stroke="none" class="flow-node-badge-bg" />
+      <text x="699.0" y="265.5" font-family="&quot;JetBrains Mono&quot;, &quot;SFMono-Regular&quot;, Consolas, &quot;Liberation Mono&quot;, monospace" font-size="10.2" font-weight="700" text-anchor="middle" fill="#FFFFFF" class="flow-node-badge-text">S7</text>
+      <text x="768.0" y="285.0" font-family="&quot;Noto Sans SC&quot;, &quot;PingFang SC&quot;, &quot;Microsoft YaHei&quot;, &quot;Segoe UI&quot;, Arial, sans-serif" font-size="14.2" font-weight="700" text-anchor="middle" fill="#141E30" class="flow-node-title">启动读 CURRENT</text>
+      <text x="768.0" y="301.5" font-family="&quot;JetBrains Mono&quot;, &quot;SFMono-Regular&quot;, Consolas, &quot;Liberation Mono&quot;, monospace" font-size="11" font-weight="500" text-anchor="middle" fill="#526077" class="flow-node-sub">打开当前 *.mf 文件</text>
+    </g>
+    <g class="flow-node role-blue" data-node-id="replay_order" data-steps="7" tabindex="0" role="button" aria-label="按记录恢复 (Snapshot + Compaction)">
+      <rect x="416" y="248" width="188" height="70" rx="9" fill="#E6EFFD" stroke="#2554C7" stroke-width="1.8" class="flow-node-rect" />
+      <rect x="424" y="254" width="22.0" height="16" rx="4.5" fill="#1E40AF" stroke="none" class="flow-node-badge-bg" />
+      <text x="435.0" y="265.5" font-family="&quot;JetBrains Mono&quot;, &quot;SFMono-Regular&quot;, Consolas, &quot;Liberation Mono&quot;, monospace" font-size="10.2" font-weight="700" text-anchor="middle" fill="#FFFFFF" class="flow-node-badge-text">S8</text>
+      <text x="510.0" y="285.0" font-family="&quot;Noto Sans SC&quot;, &quot;PingFang SC&quot;, &quot;Microsoft YaHei&quot;, &quot;Segoe UI&quot;, Arial, sans-serif" font-size="14.2" font-weight="700" text-anchor="middle" fill="#141E30" class="flow-node-title">按记录恢复</text>
+      <text x="510.0" y="301.5" font-family="&quot;JetBrains Mono&quot;, &quot;SFMono-Regular&quot;, Consolas, &quot;Liberation Mono&quot;, monospace" font-size="11" font-weight="500" text-anchor="middle" fill="#526077" class="flow-node-sub">Snapshot + Compaction</text>
+    </g>
+    <g class="flow-node role-amber" data-node-id="replay_wal" data-steps="7" tabindex="0" role="button" aria-label="回放 WAL 恢复 (按 NewMemtable 重放)">
+      <rect x="152" y="248" width="188" height="70" rx="9" fill="#FEF0C7" stroke="#B45309" stroke-width="1.8" class="flow-node-rect" />
+      <rect x="160" y="254" width="22.0" height="16" rx="4.5" fill="#92400E" stroke="none" class="flow-node-badge-bg" />
+      <text x="171.0" y="265.5" font-family="&quot;JetBrains Mono&quot;, &quot;SFMono-Regular&quot;, Consolas, &quot;Liberation Mono&quot;, monospace" font-size="10.2" font-weight="700" text-anchor="middle" fill="#FFFFFF" class="flow-node-badge-text">S8</text>
+      <text x="246.0" y="285.0" font-family="&quot;Noto Sans SC&quot;, &quot;PingFang SC&quot;, &quot;Microsoft YaHei&quot;, &quot;Segoe UI&quot;, Arial, sans-serif" font-size="14.2" font-weight="700" text-anchor="middle" fill="#141E30" class="flow-node-title">回放 WAL 恢复</text>
+      <text x="246.0" y="301.5" font-family="&quot;JetBrains Mono&quot;, &quot;SFMono-Regular&quot;, Consolas, &quot;Liberation Mono&quot;, monospace" font-size="11" font-weight="500" text-anchor="middle" fill="#526077" class="flow-node-sub">按 NewMemtable 重放</text>
+    </g>
+  </g>
+  <g class="diag-labels" />
+</svg></div>
+  <div class="flow-progress-track" aria-hidden="true"><div class="flow-progress-bar" style="width:12.5%"></div></div>
+  <div class="flow-controls-row">
+    <div class="flow-bar">
+      <button type="button" class="flow-btn" data-act="prev" aria-label="上一步" title="上一步 (←)">← 上一步</button>
+      <button type="button" class="flow-btn primary" data-act="play" aria-label="自动播放" title="播放 / 暂停 (Space)">▶ 自动播放</button>
+      <button type="button" class="flow-btn" data-act="next" aria-label="下一步" title="下一步 (→)">下一步 →</button>
+    </div>
+    <span class="flow-count">步骤 1 / 8</span>
+  </div>
+  <div class="flow-steps" role="tablist" aria-label="流程步骤列表"><button type="button" class="step-chip active" data-step="0" title="先写 WAL" aria-label="第 1 步：先写 WAL"><span class="step-chip-num">1</span><span class="step-chip-label">先写 WAL</span></button><button type="button" class="step-chip" data-step="1" title="再写 MemTable" aria-label="第 2 步：再写 MemTable"><span class="step-chip-num">2</span><span class="step-chip-label">再写 MemTable</span></button><button type="button" class="step-chip" data-step="2" title="达到大小触发转储" aria-label="第 3 步：达到大小触发转储"><span class="step-chip-num">3</span><span class="step-chip-label">达到大小触发转储</span></button><button type="button" class="step-chip" data-step="3" title="生成 SSTable" aria-label="第 4 步：生成 SSTable"><span class="step-chip-num">4</span><span class="step-chip-label">生成 SSTable</span></button><button type="button" class="step-chip" data-step="4" title="Compaction 合并" aria-label="第 5 步：Compaction 合并"><span class="step-chip-num">5</span><span class="step-chip-label">Compaction 合并</span></button><button type="button" class="step-chip" data-step="5" title="写 Manifest 记录" aria-label="第 6 步：写 Manifest 记录"><span class="step-chip-num">6</span><span class="step-chip-label">写 Manifest 记录</span></button><button type="button" class="step-chip" data-step="6" title="启动读 Manifest" aria-label="第 7 步：启动读 Manifest"><span class="step-chip-num">7</span><span class="step-chip-label">启动读 Manifest</span></button><button type="button" class="step-chip" data-step="7" title="按序恢复并回放 WAL" aria-label="第 8 步：按序恢复并回放 WAL"><span class="step-chip-num">8</span><span class="step-chip-label">按序恢复并回放 WAL</span></button></div>
+  <div class="flow-desc" aria-live="polite">
+    <div class="flow-desc-head">
+      <span class="flow-desc-badge">STEP 1 / 8</span>
+      <strong class="flow-desc-title">先写 WAL</strong>
+      <div class="flow-desc-tags"><span class="flow-tag">写 WAL 日志</span></div>
+    </div>
+    <p class="flow-desc-text">每次向 MemTable 写入数据时，先把数据写入当前 memtable 对应的 WAL 日志文件，WAL 顺序写入以提升写性能。</p>
+  </div>
+  <details class="flow-notes"><summary><span>边界与文档未决点（4 项事实核对）</span></summary><ul><li>流程跨“写入日志”“MemTable 转储”“Compaction”“系统恢复”多节，anchor 取总述恢复机制的“系统恢复”。</li><li>“当前实现状态”明确说明 SSTable/Block 读写、compaction、ObLsmTransaction 尚未完成，memtable 超过默认 8KB 触发冻结与 -t lsm 事务路径仍返回 UNIMPLEMENTED，因此转储与 Compaction 属文档设计描述而非已验证行为。</li><li>WAL 实现路径写作 `oblsm/wal/ob_lsm_wal.h`，与文档其余 `src/oblsm/...` 的写法不一致。</li><li>文档未说明 Compaction 的分层策略、触发条件与选层规则，只说“定期重新组织数据”。</li></ul></details>
+</section></div>
+<article class="content"><h1 id="miniob-lsm-tree-存储引擎">MiniOB LSM-Tree 存储引擎</h1>
+<h2 id="lsm-tree-背景介绍">LSM-Tree 背景介绍</h2>
+<p>LSM-Tree 是一种数据结构，可用于存储键值对。LSM-Tree 采用了多层的结构，存储部分可以分为内存和磁盘两个部分。内存中的部分称为 MemTable，磁盘中的部分称为 SSTable(Sorted String Table)。LSM 树通过 Append-Only 的方式提供高效的数据写入，为了优化读取性能，LSM-Tree 通过 Compaction 操作定期重新组织数据。</p>
+<p>OceanBase 数据库的存储引擎也是基于 LSM-Tree 架构，将数据分为静态基线数据（放在 SSTable 中）和动态增量数据（放在 MemTable 中）两部分，其中 SSTable 是只读的，一旦生成就不再被修改，存储于磁盘；MemTable 支持读写，存储于内存。数据库 DML 操作插入、更新、删除等首先写入 MemTable，等到 MemTable 达到一定大小时转储到磁盘成为 SSTable。在进行查询时，需要分别对 SSTable 和 MemTable 进行查询，并将查询结果进行归并，返回给 SQL 层归并后的查询结果。同时在内存实现了 Block Cache 和 Row cache，来避免对基线数据的随机读。关于 OceanBase 数据库的更多细节可以参考：https://www.oceanbase.com/docs/oceanbase-database-cn</p>
+<p>ObLsm 是一个为教学设计的 LSM-Tree 结构的 Key-Value 存储引擎。ObLsm 本身是一个独立于 MiniOB 的模块，可以独立编译使用。ObLsm 包含了 LSM-Tree 中的关键结构，可以帮助大家学习 LSM-Tree 架构。
+MiniOB 中也基于 ObLsm 实现了一个基于 LSM-Tree 的表引擎，可以将表数据以 Key-Value 的格式存储到磁盘。</p>
+<h2 id="oblsm-存储引擎">ObLsm 存储引擎</h2>
+<p>下面会对 ObLsm 的各个模块作简单介绍，便于大家对 ObLsm 有一个初步的了解，更多细节可以参考源代码 <code>src/oblsm</code>。</p>
+<h3 id="memtable">MemTable</h3>
+<p>MemTable 是一种内存数据结构，用作处理即将到来的操作（insert/delete/update）的缓冲区（buffer）。很多数据结构都可以用于 MemTable 的实现，现有的 LSM-Tree 实现（如 LevelDB/RocksDB）中多采用 SkipList，ObLsm 目前也使用 SkipList 作为 MemTable 的底层数据结构。ObLsm 将 insert/update/delete 都视作一条记录来插入到 MemTable 中。</p>
+<ul>
+<li>insert：将一条记录插入到 MemTable 中。</li>
+<li>update：将一条时间戳更大的记录插入到 MemTable 中。</li>
+<li>delete：将一条 value 为空的记录插入到 MemTable 中。</li>
+</ul>
+<p>MemTable 将插入的 Key-Value 编码为如下的记录存储。</p>
+<pre><code>    ┌───────────┬──────────────┬───────┬──────────────┬──────────────────┐
+    │           │              │       │              │                  │
+    │key_size(8)│ key(key_size)│ seq(8)│ value_size(8)│ value(value_size)│
+    │           │              │       │              │                  │
+    └───────────┴──────────────┴───────┴──────────────┴──────────────────┘
+
+</code></pre>
+<p>其中，key_size 和 value_size 分别表示 key+seq 和 value 的长度，seq 表示记录的时间戳。括号中表示占用字节数。</p>
+<p>MemTable 的实现位于：<code>src/oblsm/memtable/</code>，在代码中，我们将上图中的<code>key</code> 称为 user_key，将 <code>key + seq</code> 称为 internal_key，将<code>key_size + key + seq</code> 称为 lookup_key。</p>
+<h4 id="skiplist">SkipList</h4>
+<p>SkipList（跳表）是用于有序元素序列快速搜索的一个数据结构，SkipList 是一个随机化的数据结构，实质就是一种可以进行二分查找的有序链表。SkipList 在原有的有序链表上面增加了多级索引，通过索引来实现快速查找。跳表不仅能提高搜索性能，同时也可以提高插入和删除操作的性能。它在性能上和红黑树，AVL树不相上下，但是跳表的原理非常简单，实现也比红黑树简单很多。</p>
+<p>SkipList 的实现位于：<code>src/oblsm/memtable/ob_skiplist.h</code></p>
+<h4 id="memtableiterator">MemTableIterator</h4>
+<p>MemTableIterator 提供了一种遍历 MemTable 的机制。它可以按序访问 MemTable 中的所有键值对。</p>
+<p>MemTableIterator 的实现位于：<code>src/oblsm/memtable/ob_memtable.h::ObMemTableIterator</code></p>
+<h4 id="memtable-转储">MemTable 转储</h4>
+<p>MemTable 转储是将内存中的 MemTable 持久化到磁盘上的过程。当 MemTable 达到一定大小时，会被转储为不可变的 SSTable。转储过程通常包括排序数据、生成 SSTable 文件并将其写入磁盘。</p>
+<p>转储相关代码位于：<code>src/oblsm/oblsm_impl.h::ObLsmImpl::try_freeze_memtable</code></p>
+<h3 id="sstable">SSTable</h3>
+<p>MemTable 的大小达到限制条件，MemTable 的数据以按顺序被转储到磁盘中，被转储到磁盘中的结构称为（SSTable：Sorted Strings table）。</p>
+<p>SSTable 是一种有序的键值对存储结构，它通常包含一个或多个块（block），每个块中包含一组有序的键值对。</p>
+<p>SSTable 的存储格式示例如下：</p>
+<pre><code>   ┌─────────────────┐    
+   │    block 1      │◄──┐
+   ├─────────────────┤   │
+   │    block 2      │   │
+   ├─────────────────┤   │
+   │      ..         │   │
+   ├─────────────────┤   │
+   │    block n      │◄┐ │
+   ├─────────────────┤ │ │
+┌─►│  meta size(n)   │ │ │
+│  ├─────────────────┤ │ │
+│  │block meta 1 size│ │ │
+│  ├─────────────────┤ │ │
+│  │  block meta 1   ┼─┼─┘
+│  ├─────────────────┤ │  
+│  │      ..         │ │  
+│  ├─────────────────┤ │  
+│  │block meta n size│ │  
+│  ├─────────────────┤ │  
+│  │  block meta n   ┼─┘  
+│  ├─────────────────┤    
+└──┼                 │    
+   └─────────────────┘    
+</code></pre>
+<p>其中，block 表示由若干键值对组成的数据块。block meta 用于存储 block 的元信息，包括 block 的大小、block 的位置信息，block 中的键值对数量等。</p>
+<p>SSTable 的实现位于：<code>src/oblsm/table/</code></p>
+<h4 id="block">Block</h4>
+<p>为了提高整体的读写效率，一个sstable文件按照固定大小划分为 Block。每个Block中，目前只存储了键值对数据。
+Block 的存储格式如下：</p>
+<pre><code>      ┌─────────────────┐
+      │    entry 1      │◄───┐
+      ├─────────────────┤    │
+      │    entry 2      │    │
+      ├─────────────────┤    │
+      │      ..         │    │
+      ├─────────────────┤    │
+      │    entry n      │◄─┐ │
+      ├─────────────────┤  │ │
+ ┌───►│  offset size(n) │  │ │
+ │    ├─────────────────┤  │ │
+ │    │    offset 1     ├──┼─┘
+ │    ├─────────────────┤  │
+ │    │      ..         │  │
+ │    ├─────────────────┤  │
+ │    │    offset n     ├──┘
+ │    ├─────────────────┤
+ └────┤  offset start   │
+      └─────────────────┘
+</code></pre>
+<p>Block 的主要实现位于 <code>src/oblsm/table/ob_block.h</code></p>
+<h4 id="sstablebuilder">SSTableBuilder</h4>
+<p>用于构造一个 <code>SSTable</code>，主要实现位于 <code>src/oblsm/table/ob_sstable_builder.h</code></p>
+<h4 id="blockbuilder">BlockBuilder</h4>
+<p>用于构造一个 <code>Block</code>，主要实现位于 <code>src/oblsm/table/ob_block_builder.h</code></p>
+<h3 id="compaction">Compaction</h3>
+<p>Compaction 是 LSM-Tree 的关键组件，Compaction 会将多个 SSTable 合并为一个或多个新的 SSTable。Compaction 的实现主要位于 <code>src/oblsm/compaction/</code></p>
+<h2 id="系统恢复">系统恢复</h2>
+<h3 id="manifest">Manifest</h3>
+<p>每次 LSM-Tree 进行 Compaction 操作，系统就是一个新的版本，Manifest 组件则需要去记录这组版本更替的 SSTable 变动信息。主要实现位于 <code>src/oblsm/ob_manifest.h</code></p>
+<p>Manifest 的记录分为三种:</p>
+<h4 id="compaction-record">Compaction Record</h4>
+<p>用于记录每次合并操作时，增加的新的 sstables ， 删除的 sstables，这组操作持久化到磁盘上的最大的时间戳(seq), 以及下一个 sstable 的 id。</p>
+<h4 id="snapshot-record">Snapshot Record</h4>
+<p>用于记录系统当前的元数据的快照，包括 当前的sstables信息，分层信息，时间戳，下一个sstable的id 。用于提升系统恢复速度，当系统恢复完毕，就会生成一个 snapshot record 写入一个新的 manifest 文件。</p>
+<h4 id="new-memtable-record">New Memtable Record</h4>
+<p>系统进行 minor compaction 时，会将当前的 memtable 转换成 sstable, 创建一个新的 memtable, 这条记录用于记录新的 memtable 的 id， 恢复系统的时候通过这个 id 找到对应的 WAL 文件，恢复 memtbale。</p>
+<h3 id="wal">WAL</h3>
+<p>WAL（Write-Ahead Log）是 LSM-Tree 用于恢复系统内存数据结构（Memtable）状态的组件。每次向 Memtable 写入数据时，都会先将数据写入 WAL 日志文件，然后再将数据写入 Memtable。主要实现位于 <code>oblsm/wal/ob_lsm_wal.h</code></p>
+<h4 id="日志格式">日志格式</h4>
+<pre><code>    ┌───────────┬──────────────┬───────┬──────────────┬──────────────────┐
+    │           │              │       │              │                  │
+    │ seq(8)    │ key_len(8)   │ key   │ val_len(8)   │ val              │
+    │           │              │       │              │                  │
+    └───────────┴──────────────┴───────┴──────────────┴──────────────────┘
+</code></pre>
+<h4 id="写入日志">写入日志</h4>
+<p>向 LSM-Tree 中插入数据的时候，系统会先向当前 memtable 对应的 WAL 文件 中写入一条日志，日志格式如上图，然后再写入进 memtable 。WAL 记录了所有的写操作，并且是顺序写入的，有助于提高写入性能。WAL 的结构通常是一个顺序文件，其中每一条记录都代表一个写入操作。</p>
+<h4 id="memtable恢复">Memtable恢复</h4>
+<p>当 Memtable 被持久化到磁盘时，WAL 文件中的操作会被回放，确保内存中的数据与磁盘上的数据一致。恢复过程通常如下：</p>
+<ol>
+<li><strong>读取 WAL 文件</strong>：系统首先读取所有尚未被处理的 WAL 日志记录。</li>
+<li><strong>重放日志</strong>：按照 WAL 文件中记录的操作顺序，将数据重新写入 Memtable。</li>
+<li><strong>合并数据</strong>：恢复的 Memtable 会与当前存储的数据合并，从而恢复到系统崩溃前的最新状态。</li>
+<li><strong>清理 WAL 文件</strong>：旧的 WAL 文件会被清除。</li>
+</ol>
+<h3 id="系统恢复步骤">系统恢复步骤</h3>
+<p>每次发生 Compaction 操作，系统会写入一条 Compaction Record 进入当前 Manifest 文件中，特别的，当发送 minor compaction 的时候会写入一条 NewMemtable Record 进入当前 Manifest 文件中。</p>
+<p>当 LSM-Tree 启动的时候，会读取目录下的 CURRENT 文件，里面保存当前 Manifest 文件的名称，打开当前 Manifest 文件，读取所有的记录，并按照记录信息恢复。</p>
+<ol>
+<li>首先从系统快照（Snapshot）恢复</li>
+<li>然后一条条地按照合并信息（Compaction Record） 恢复</li>
+<li>根据最新的 NewMemtable Record 的记录找到对应的日志文件(WAL) , 然后从日志中恢复 Memtable</li>
+<li>恢复完毕之后，创建一个新的 Manifest 文件，生成系统快照，写入到新的 Manifest 文件中，同时写入一条 NewMemtable Record。</li>
+</ol>
+<h2 id="基于-oblsm-的表引擎">基于 ObLsm 的表引擎</h2>
+<p>MiniOB 基于 ObLsm 模块实现了一个 LSM-Tree 表引擎，用于以 Key-Value 格式存储表数据。表引擎的实现位于：<code>src/observer/storage/table/lsm_table_engine.h</code>。</p>
+<p>LSM-Tree 表引擎使用方法：
+在创建表时指定 engine=lsm，即可使用 LSM-Tree 表引擎。
+当不指定engine 或指定 engine=heap，将使用堆表作为表数据的存储方式。</p>
+<pre><code class="language-sql">create table t1 (id int primary key, name varchar(20))engine=lsm;
+</code></pre>
+<p>在 MiniOB 中，使用关系型模型来描述表结构，而 LSM-Tree 表引擎将表数据以 Key-Value 的形式存储到磁盘，因此需要提供一种机制来将关系型模型转换为 Key-Value 模型。
+目前 MiniOB 中以自增列作为 Key，将行数据以 <code>Table::make_record</code> 编码为 Value。通过 <a target="_blank" rel="noopener" href="https://github.com/google/orderedcode">orderedcode</a> 来对 Key 列做编码，使得在编码后 Key 的字典序上比较与 Key 对应的原始序列（目前可以认为只有自增列一列，后续支持主键后，Key 会对应表中的多列）上进行比较具有相同的顺序。</p>
+<p>此外，为了在同一个 LSM-Tree 引擎中存储多张表的数据，MiniOB 为每一张表分配一个 TableID，并在 Key 中加入 TableID 作为前缀。</p>
+<p>因此，每行数据按照如下规则编码成 (Key, Value) 键值对：</p>
+<pre><code>Key:   t{TableID}r{AutoIncID}
+Value: [col1, col2, col3, col4]
+</code></pre>
+<h3 id="当前实现状态">当前实现状态</h3>
+<p>表引擎侧已补齐到与 heap 相同的 DML 能力（仍以自增列作 Key）：</p>
+<ul>
+<li>支持 insert/delete、全表扫描和二级索引（<code>create index</code>）。二级索引的叶子 value 保存自增 rid，回表时用 <code>Codec::encode</code> 重新构造 Key 并读取整行。</li>
+<li><code>record.key()</code> 保存完整的 LSM Key；删除依赖它定位数据，索引扫描依赖它回表。</li>
+<li>重启时从 manifest 找到当前 memtable 的 WAL 并回放；WAL 格式为 <code>seq/key_len/key/value_len/value</code>，写入后 flush。</li>
+<li>删除由空 value 墓碑表示，UserIterator 已按墓碑过滤。</li>
+</ul>
+<p>尚未完成（ObLsm 课程实验的剩余部分）：SSTable/Block 读写、compaction、<code>ObLsmTransaction</code>。
+因此 memtable 超过 <code>memtable_size</code>（默认 8KB）触发冻结、以及 <code>-t lsm</code> 事务路径仍会返回 <code>UNIMPLEMENTED</code>；
+vacuous 事务下的小数据量 DML、索引与重启回放已通过测试。</p>
+<h2 id="参考资料">参考资料</h2>
+<ol>
+<li><a target="_blank" rel="noopener" href="https://www.oceanbase.com/docs/oceanbase-database-cn">OceanBase</a></li>
+<li><a target="_blank" rel="noopener" href="https://www.cs.umb.edu/~poneil/lsmtree.pdf">LSM-Tree</a></li>
+<li><a target="_blank" rel="noopener" href="https://github.com/google/leveldb">LevelDB</a></li>
+<li><a target="_blank" rel="noopener" href="https://github.com/facebook/rocksdb/wiki">RocksDB</a></li>
+<li><a target="_blank" rel="noopener" href="https://skyzh.github.io/mini-lsm/">Mini-LSM</a></li>
+</ol>
+</article>
+<nav class="pager" aria-label="相邻文档导航"><a class="prev" href="miniob-aggregation-and-group-by.html"><span>← 上一篇</span>MiniOB 向量化执行 aggregation 和 group by 实现</a><a class="next" href="introduction.html"><span>下一篇 →</span>功能模块设计说明</a></nav>
+<p class="source-line">源文件：<a href="../../docs/design/miniob-lsm-tree.md">design/miniob-lsm-tree.md</a></p>
+
+    <footer class="page-footer">
+      <span>由 <code>docs/visual/build.py</code> &amp; <code>draw_diagrams.py</code> 从 <code>docs/docs</code> 生成</span>
+      <span>MiniOB · 可视化技术文档</span>
+    </footer>
+  </main>
+  <aside class="page-toc" aria-label="本页目录"><div class="toc-inner"><p class="toc-title">本页导览</p><ul class="toc-list"><li class="toc-item toc-flow"><a href="#flow-lsm-tree-write-compaction-recovery">▶ 流程：LSM-Tree 写入、Compaction 与恢复</a></li><li class="toc-item toc-l2"><a href="#lsm-tree-背景介绍">LSM-Tree 背景介绍</a></li><li class="toc-item toc-l2"><a href="#oblsm-存储引擎">ObLsm 存储引擎</a></li><li class="toc-item toc-l3"><a href="#memtable">MemTable</a></li><li class="toc-item toc-l3"><a href="#sstable">SSTable</a></li><li class="toc-item toc-l3"><a href="#compaction">Compaction</a></li><li class="toc-item toc-l2"><a href="#系统恢复">系统恢复</a></li><li class="toc-item toc-l3"><a href="#manifest">Manifest</a></li><li class="toc-item toc-l3"><a href="#wal">WAL</a></li><li class="toc-item toc-l3"><a href="#系统恢复步骤">系统恢复步骤</a></li><li class="toc-item toc-l2"><a href="#基于-oblsm-的表引擎">基于 ObLsm 的表引擎</a></li><li class="toc-item toc-l3"><a href="#当前实现状态">当前实现状态</a></li><li class="toc-item toc-l2"><a href="#参考资料">参考资料</a></li></ul><a class="toc-top" href="#top">↑ 回到顶部</a></div></aside>
+</div>
+<div class="nav-scrim" id="navScrim"></div>
+<div class="diagram-modal" id="diagramModal" hidden role="dialog" aria-modal="true" aria-label="图表放大检视">
+  <div class="diagram-modal-bar">
+    <span class="diagram-modal-title" id="diagramModalTitle">架构与流程图检视</span>
+    <button type="button" class="diagram-modal-close" id="diagramModalClose" aria-label="关闭">✕ 关闭 (Esc)</button>
+  </div>
+  <div class="diagram-modal-body" id="diagramModalBody"></div>
+</div>
+<script src="../assets/markmap-config.js"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/markmap-autoloader@0.18"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/@highlightjs/cdn-assets@11/highlight.min.js"></script>
+<script type="application/json" id="flow-data">[{"id": "lsm-tree-write-compaction-recovery", "title": "LSM-Tree 写入、Compaction 与恢复", "source": "design/miniob-lsm-tree.md", "anchor": "系统恢复", "nodes": [{"id": "wal_first", "label": "写 WAL 日志"}, {"id": "write_memtable", "label": "写入 MemTable"}, {"id": "memtable_full", "label": "MemTable 达上限"}, {"id": "dump_sstable", "label": "转储为 SSTable"}, {"id": "compaction", "label": "Compaction 合并"}, {"id": "manifest_write", "label": "写 Manifest 记录"}, {"id": "read_manifest", "label": "启动读 CURRENT"}, {"id": "replay_order", "label": "按记录恢复"}, {"id": "replay_wal", "label": "回放 WAL 恢复"}], "edges": [["wal_first", "write_memtable"], ["write_memtable", "memtable_full"], ["memtable_full", "dump_sstable"], ["dump_sstable", "compaction"], ["compaction", "manifest_write"], ["dump_sstable", "manifest_write", "minor compaction"], ["manifest_write", "read_manifest", "重启"], ["read_manifest", "replay_order"], ["replay_order", "replay_wal"]], "steps": [{"title": "先写 WAL", "desc": "每次向 MemTable 写入数据时，先把数据写入当前 memtable 对应的 WAL 日志文件，WAL 顺序写入以提升写性能。", "highlight": ["wal_first"]}, {"title": "再写 MemTable", "desc": "insert/update/delete 都被视作一条记录插入 MemTable，其中 delete 是 value 为空的记录。", "highlight": ["write_memtable"]}, {"title": "达到大小触发转储", "desc": "MemTable 达到一定大小时会被转储为不可变的 SSTable，转储入口为 ObLsmImpl::try_freeze_memtable。", "highlight": ["memtable_full"]}, {"title": "生成 SSTable", "desc": "转储过程包括排序数据、生成 SSTable 文件并写入磁盘，SSTable 按固定大小划分为 Block。", "highlight": ["dump_sstable"]}, {"title": "Compaction 合并", "desc": "Compaction 将多个 SSTable 合并为一个或多个新的 SSTable，每次合并都产生一个新的版本。", "highlight": ["compaction"]}, {"title": "写 Manifest 记录", "desc": "每次 Compaction 写入 Compaction Record，记录新增/删除的 sstables、最大时间戳(seq)与下一个 sstable id；minor compaction 还会写入 NewMemtable Record。", "highlight": ["manifest_write"]}, {"title": "启动读 Manifest", "desc": "LSM-Tree 启动时读取目录下的 CURRENT 文件得到当前 Manifest 名称，打开并读取其中的所有记录。", "highlight": ["read_manifest"]}, {"title": "按序恢复并回放 WAL", "desc": "先从 Snapshot 恢复，再逐条按 Compaction Record 恢复，最后按最新的 NewMemtable Record 找到 WAL 回放 MemTable，恢复完毕生成新的 Manifest 快照与 NewMemtable Record。", "highlight": ["replay_order", "replay_wal"]}], "uncertainties": ["流程跨“写入日志”“MemTable 转储”“Compaction”“系统恢复”多节，anchor 取总述恢复机制的“系统恢复”。", "“当前实现状态”明确说明 SSTable/Block 读写、compaction、ObLsmTransaction 尚未完成，memtable 超过默认 8KB 触发冻结与 -t lsm 事务路径仍返回 UNIMPLEMENTED，因此转储与 Compaction 属文档设计描述而非已验证行为。", "WAL 实现路径写作 `oblsm/wal/ob_lsm_wal.h`，与文档其余 `src/oblsm/...` 的写法不一致。", "文档未说明 Compaction 的分层策略、触发条件与选层规则，只说“定期重新组织数据”。"], "summary": "WAL → MemTable → SSTable → Compaction → Manifest 与 WAL 恢复。"}]</script>
+<script defer src="../assets/site.js"></script>
+</body>
+</html>

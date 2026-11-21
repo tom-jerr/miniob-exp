@@ -1,0 +1,1836 @@
+[
+  {
+    "id": "sql-lifecycle",
+    "title": "SQL 请求全链路",
+    "source": "design/miniob-architecture.md",
+    "anchor": "各模块工作原理介绍",
+    "nodes": [
+      {
+        "id": "client",
+        "label": "客户端"
+      },
+      {
+        "id": "net",
+        "label": "网络模块"
+      },
+      {
+        "id": "parser",
+        "label": "SQL解析"
+      },
+      {
+        "id": "resolver",
+        "label": "语义解析"
+      },
+      {
+        "id": "optimizer",
+        "label": "查询优化"
+      },
+      {
+        "id": "executor",
+        "label": "计划执行"
+      },
+      {
+        "id": "storage",
+        "label": "存储引擎"
+      }
+    ],
+    "edges": [
+      [
+        "client",
+        "net",
+        "发送SQL请求"
+      ],
+      [
+        "net",
+        "parser",
+        "交给处理模块"
+      ],
+      [
+        "parser",
+        "resolver",
+        "语法树"
+      ],
+      [
+        "resolver",
+        "optimizer",
+        "内部数据结构"
+      ],
+      [
+        "optimizer",
+        "executor",
+        "执行计划"
+      ],
+      [
+        "executor",
+        "storage",
+        "读写数据"
+      ],
+      [
+        "executor",
+        "net",
+        "返回结果"
+      ],
+      [
+        "net",
+        "client",
+        "发送应答"
+      ]
+    ],
+    "steps": [
+      {
+        "title": "客户端发起请求",
+        "desc": "客户端作为测试工具从标准输入接收用户输入，一行即视为一个命令，并把请求发给服务端。",
+        "highlight": [
+          "client"
+        ]
+      },
+      {
+        "title": "网络模块收发",
+        "desc": "网络模块负责与客户端交互，收发客户端请求与应答，并把请求交给具体的处理模块。",
+        "highlight": [
+          "net"
+        ]
+      },
+      {
+        "title": "SQL解析",
+        "desc": "SQL解析是开始正式处理的第一步，把用户输入的SQL语句解析成语法树。",
+        "highlight": [
+          "parser"
+        ]
+      },
+      {
+        "title": "语义解析",
+        "desc": "Resolver 把语法树中的表名、字段名等节点转换为内部数据结构中的真实对象。",
+        "highlight": [
+          "resolver"
+        ]
+      },
+      {
+        "title": "查询优化",
+        "desc": "优化阶段按规则对语法树做等价调整，并结合表数据量、索引情况等统计数据选择更好的执行计划。",
+        "highlight": [
+          "optimizer"
+        ]
+      },
+      {
+        "title": "计划执行",
+        "desc": "查询被转换为火山模型执行计划、通过算子 next 逐行取结果；DDL 等操作转为 Command 由 CommandExecutor 执行。",
+        "highlight": [
+          "executor"
+        ]
+      },
+      {
+        "title": "存储引擎读写",
+        "desc": "存储引擎负责数据的存储和检索，计划执行通过它访问表数据。",
+        "highlight": [
+          "storage"
+        ]
+      },
+      {
+        "title": "应答返回",
+        "desc": "网络模块把执行结果作为应答发回客户端。",
+        "highlight": [
+          "net",
+          "client"
+        ]
+      }
+    ],
+    "uncertainties": [
+      "架构文档没有端到端时序图；本流程按“MiniOB架构介绍”的模块顺序与“各模块工作原理介绍”的分节描述拼合，返回路径仅由网络模块“收发请求与应答”推出。",
+      "链路中未描述事务、日志、会话管理、元数据管理挂接在哪个环节，它们只出现在模块列表中。"
+    ],
+    "summary": "客户端 → 网络 → 解析 → 语义 → 优化 → 执行 → 存储，再原路返回。"
+  },
+  {
+    "id": "add-sql-statement",
+    "title": "新增一种SQL语句的改动路径",
+    "source": "design/miniob-how-to-add-new-sql.md",
+    "anchor": "新增一种类型的SQL语句",
+    "nodes": [
+      {
+        "id": "lex",
+        "label": "词法规则"
+      },
+      {
+        "id": "yacc",
+        "label": "语法规则"
+      },
+      {
+        "id": "node",
+        "label": "语法树类型"
+      },
+      {
+        "id": "stmt",
+        "label": "Stmt类型"
+      },
+      {
+        "id": "op",
+        "label": "逻辑/物理算子"
+      },
+      {
+        "id": "cmd",
+        "label": "命令执行器"
+      },
+      {
+        "id": "result",
+        "label": "SqlResult"
+      }
+    ],
+    "edges": [
+      [
+        "lex",
+        "yacc",
+        "token"
+      ],
+      [
+        "yacc",
+        "node",
+        "ParsedSqlNode"
+      ],
+      [
+        "node",
+        "stmt",
+        "Resolver"
+      ],
+      [
+        "stmt",
+        "op",
+        "查询类型SQL"
+      ],
+      [
+        "stmt",
+        "cmd",
+        "命令类型SQL"
+      ],
+      [
+        "op",
+        "result",
+        "设置TupleSchema"
+      ],
+      [
+        "cmd",
+        "result",
+        "输出执行结果"
+      ]
+    ],
+    "steps": [
+      {
+        "title": "增加词法规则",
+        "desc": "在 lex_sql.l 中补充新语句需要的词法规则，例如 CALC 需要的数字、运算符和小括号。",
+        "highlight": [
+          "lex"
+        ]
+      },
+      {
+        "title": "增加语法规则",
+        "desc": "在 yacc_sql.y 中增加语句的解析规则，并补齐其涉及的表达式解析规则。",
+        "highlight": [
+          "yacc"
+        ]
+      },
+      {
+        "title": "新增语法树类型",
+        "desc": "在 parse_defs.h 中定义解析输出类型，CALC 对应的是 CalcSqlNode。",
+        "highlight": [
+          "node"
+        ]
+      },
+      {
+        "title": "新增Stmt类型",
+        "desc": "在 stmt.h 中新增 CalcStmt，由 Resolver 把 ParsedSqlNode 转成 Stmt，通常在此校验表是否存在、运算类型是否正确。",
+        "highlight": [
+          "stmt"
+        ]
+      },
+      {
+        "title": "新增算子",
+        "desc": "查询类型 SQL 参考 SELECT，新增 LogicalOperator 与 PhysicalOperator（logical_operator.h、physical_operator.h、optimize_stage.cpp）。",
+        "highlight": [
+          "op"
+        ]
+      },
+      {
+        "title": "新增命令执行器",
+        "desc": "命令执行类型 SQL 在 command_executor.cpp 中新增对应的 CommandExecutor。",
+        "highlight": [
+          "cmd"
+        ]
+      },
+      {
+        "title": "设置TupleSchema",
+        "desc": "有执行计划的 SQL 在 execute_stage.cpp 中为 SqlResult 设置 TupleSchema，参考 handle_request_with_physical_operator。",
+        "highlight": [
+          "result"
+        ]
+      }
+    ],
+    "uncertainties": [
+      "文档以 CALC 为例并说明其已实现；末尾 7 条是“需要修改的地方”的规范清单，不是实际提交顺序。",
+      "第 5 条只写 optimize_stage.cpp，未说明新增算子是否还需要在 cascade 的 RuleSet 中注册（cascade 文档另有注册步骤）。"
+    ],
+    "summary": "从词法/语法规则到 Stmt、算子和结果集的完整改动路径。"
+  },
+  {
+    "id": "cascade-search",
+    "title": "Cascade 优化器搜索",
+    "source": "design/miniob-cascade.md",
+    "anchor": "搜索策略",
+    "nodes": [
+      {
+        "id": "stack",
+        "label": "任务栈"
+      },
+      {
+        "id": "ogroup",
+        "label": "O_GROUP"
+      },
+      {
+        "id": "oexpr",
+        "label": "O_EXPR"
+      },
+      {
+        "id": "egroup",
+        "label": "E_GROUP"
+      },
+      {
+        "id": "rule",
+        "label": "APPLY_RULE"
+      },
+      {
+        "id": "oinputs",
+        "label": "O_INPUTS"
+      }
+    ],
+    "edges": [
+      [
+        "stack",
+        "ogroup",
+        "弹出task"
+      ],
+      [
+        "ogroup",
+        "oexpr",
+        "逻辑M_EXPR"
+      ],
+      [
+        "ogroup",
+        "oinputs",
+        "物理M_EXPR"
+      ],
+      [
+        "oexpr",
+        "rule",
+        "有可应用规则"
+      ],
+      [
+        "oexpr",
+        "egroup",
+        "生成task"
+      ],
+      [
+        "egroup",
+        "oexpr",
+        "枚举logical M_EXPR"
+      ],
+      [
+        "rule",
+        "oexpr",
+        "产生逻辑表达式"
+      ],
+      [
+        "rule",
+        "oinputs",
+        "产生物理表达式"
+      ],
+      [
+        "oinputs",
+        "ogroup",
+        "递归计算子代价"
+      ]
+    ],
+    "steps": [
+      {
+        "title": "任务栈循环",
+        "desc": "优化算法类似 DFS，循环从 task stack 取出 task 执行，执行可能压入新 task，直到栈为空。",
+        "highlight": [
+          "stack"
+        ]
+      },
+      {
+        "title": "O_GROUP分发",
+        "desc": "根据优化目标遍历 Group 中每个 M_EXPR，为 logical M_EXPR 生成 O_EXPR task，为 physical M_EXPR 生成 O_INPUTS task。",
+        "highlight": [
+          "ogroup"
+        ]
+      },
+      {
+        "title": "O_EXPR找规则",
+        "desc": "对一个 logical M_EXPR，如果存在可以应用的规则，则生成一个 APPLY_RULE task。",
+        "highlight": [
+          "oexpr"
+        ]
+      },
+      {
+        "title": "E_GROUP枚举",
+        "desc": "为 Group 中的每一个 logical M_EXPR 生成一个 O_EXPR task。",
+        "highlight": [
+          "egroup"
+        ]
+      },
+      {
+        "title": "APPLY_RULE转换",
+        "desc": "应用规则把逻辑表达式转换为逻辑表达式或物理表达式，前者生成 O_EXPR task，后者生成 O_INPUTS task。",
+        "highlight": [
+          "rule"
+        ]
+      },
+      {
+        "title": "O_INPUTS算代价",
+        "desc": "对物理表达式的代价进行计算，过程中需要递归地计算子节点的代价。",
+        "highlight": [
+          "oinputs"
+        ]
+      },
+      {
+        "title": "得到最优计划",
+        "desc": "任务栈为空后，从根节点即可找到一个最优（最低代价）的物理执行计划。",
+        "highlight": [
+          "oinputs",
+          "ogroup"
+        ]
+      }
+    ],
+    "uncertainties": [
+      "Group 实现路径前后不一致：基本概念节写 src/observer/sql/optimizer/cascade/group.h，开头写实现位于 src/observer/optimizer/cascade。",
+      "E_GROUP“为 Group 中每个 logical M_EXPR 生成 O_EXPR”与 O_GROUP 对 logical M_EXPR 的处理重叠，文档未说明二者何时使用；图中 O_EXPR 与 E_GROUP 双向相连。",
+      "文档称目前只实现了 Implementation Rule，但流程仍保留 APPLY_RULE 产生逻辑表达式（Transformation）的分支。"
+    ],
+    "summary": "任务栈驱动的自顶向下搜索：枚举逻辑/物理表达式，按代价选计划。"
+  },
+  {
+    "id": "trx-lifecycle",
+    "title": "MiniOB 事务生命周期（MVCC）",
+    "source": "design/miniob-transaction.md",
+    "anchor": "MVCC 相关实现",
+    "nodes": [
+      {
+        "id": "begin",
+        "label": "BEGIN"
+      },
+      {
+        "id": "read",
+        "label": "可见性判断"
+      },
+      {
+        "id": "write",
+        "label": "修改记录"
+      },
+      {
+        "id": "commit",
+        "label": "COMMIT"
+      },
+      {
+        "id": "commitid",
+        "label": "提交版本号"
+      },
+      {
+        "id": "backfill",
+        "label": "回填版本号"
+      },
+      {
+        "id": "rollback",
+        "label": "ROLLBACK"
+      }
+    ],
+    "edges": [
+      [
+        "begin",
+        "read",
+        "访问记录"
+      ],
+      [
+        "begin",
+        "write",
+        "修改记录"
+      ],
+      [
+        "read",
+        "write",
+        "版本判断"
+      ],
+      [
+        "write",
+        "commit",
+        "提交"
+      ],
+      [
+        "commit",
+        "commitid",
+        "生成commit_id"
+      ],
+      [
+        "commitid",
+        "backfill",
+        "改写begin/end"
+      ],
+      [
+        "write",
+        "rollback",
+        "回滚"
+      ]
+    ],
+    "steps": [
+      {
+        "title": "开启事务",
+        "desc": "SQL 请求处理过程中通常调用 start_if_need 开启事务，开启时生成事务自己的版本号 trx_id。",
+        "highlight": [
+          "begin"
+        ]
+      },
+      {
+        "title": "判断记录可见性",
+        "desc": "visit_record 访问记录时由事务比较自己的版本号与记录 begin_xid/end_xid 范围，判断数据可见或有访问冲突。",
+        "highlight": [
+          "read"
+        ]
+      },
+      {
+        "title": "修改记录",
+        "desc": "insert_record/delete_record 先对记录做一些修改再调用表接口，提交之前插入的记录通常对其它事务不可见。",
+        "highlight": [
+          "write"
+        ]
+      },
+      {
+        "title": "提交生成新版本号",
+        "desc": "提交时再生成一个 commit_id，这个版本号最终设置在记录上，而不是运行时用于可见性判断的 trx_id。",
+        "highlight": [
+          "commit",
+          "commitid"
+        ]
+      },
+      {
+        "title": "逐行回填",
+        "desc": "提交时遍历更新过的记录，用 commit_id 改写其 begin/end xid；逐行修改会出现部分行已改、部分未改的时刻。",
+        "highlight": [
+          "backfill"
+        ]
+      },
+      {
+        "title": "回滚",
+        "desc": "rollback 回滚一个事务，与 commit、start_if_need 同为 Trx 提供的统一接口。",
+        "highlight": [
+          "rollback"
+        ]
+      }
+    ],
+    "uncertainties": [
+      "“当前扩展实现”称提交改为 TxnStatusTable 一次原子发布、逐行回填可延后，与本流程依据的“提交时逐行修改版本号”原始描述冲突；扩展语义见 UPDATE/MVCC 文档。",
+      "文档未给出 ROLLBACK 的逐记录算法，只说“回滚一个事务”，回滚细节在本节之外。",
+      "隔离级别“没有做特殊的处理，让它顺其自然”，文档以提问形式留白，未声明具体级别。"
+    ],
+    "summary": "BEGIN、MVCC 可见性、提交时分配版本号与逐行回填。"
+  },
+  {
+    "id": "mvcc-update-occ",
+    "title": "UPDATE 的 MVCC/OCC 提交与冲突",
+    "source": "design/miniob-update-mvcc-occ.md",
+    "anchor": "6.2 UPDATE",
+    "nodes": [
+      {
+        "id": "scan",
+        "label": "扫描目标行"
+      },
+      {
+        "id": "delmark",
+        "label": "旧版本标记"
+      },
+      {
+        "id": "newver",
+        "label": "插入新版本"
+      },
+      {
+        "id": "idx",
+        "label": "索引项维护"
+      },
+      {
+        "id": "conflict",
+        "label": "冲突中止回滚"
+      },
+      {
+        "id": "commit",
+        "label": "分配提交序号"
+      },
+      {
+        "id": "wal",
+        "label": "COMMIT日志"
+      },
+      {
+        "id": "publish",
+        "label": "状态表发布"
+      },
+      {
+        "id": "backfill",
+        "label": "回填与GC"
+      }
+    ],
+    "edges": [
+      [
+        "scan",
+        "delmark",
+        "逐行更新"
+      ],
+      [
+        "delmark",
+        "newver",
+        "end_xid=-T"
+      ],
+      [
+        "newver",
+        "idx",
+        "新RID"
+      ],
+      [
+        "idx",
+        "commit",
+        "提交"
+      ],
+      [
+        "delmark",
+        "conflict",
+        "负xid冲突"
+      ],
+      [
+        "commit",
+        "conflict",
+        "OCC读集冲突"
+      ],
+      [
+        "commit",
+        "wal",
+        "等待落盘"
+      ],
+      [
+        "wal",
+        "publish",
+        "提交点"
+      ],
+      [
+        "publish",
+        "backfill",
+        "可延后"
+      ]
+    ],
+    "steps": [
+      {
+        "title": "收集目标行",
+        "desc": "UPDATE 先以 READ_ONLY 扫描收集全部目标行（无 WHERE 同样先全部收集），扫描只判断可见性。",
+        "highlight": [
+          "scan"
+        ]
+      },
+      {
+        "title": "旧版本打删除标记",
+        "desc": "mvcc/occ 下 MvccTrx::update_record 对旧行做删除标记 end_xid=-T，旧索引项保留给老快照。",
+        "highlight": [
+          "delmark"
+        ]
+      },
+      {
+        "title": "插入新版本",
+        "desc": "插入一份新行 begin_xid=-T（字段已由执行器改好），新版本写入新索引项指向新 RID，RID 会变化。",
+        "highlight": [
+          "newver",
+          "idx"
+        ]
+      },
+      {
+        "title": "冲突检测",
+        "desc": "写写冲突由 -T 抢占在 update/delete 执行期判定；OCC 提交时按 RID 重读校验读集，冲突先 rollback 再返回 LOCKED_CONCURRENCY_CONFLICT。",
+        "highlight": [
+          "conflict",
+          "delmark"
+        ]
+      },
+      {
+        "title": "分配提交序号",
+        "desc": "commit_seq = fetch_add(1)+1；分配序号、写 COMMIT 日志、状态发布、序号发布在同一把提交锁内串行化。",
+        "highlight": [
+          "commit"
+        ]
+      },
+      {
+        "title": "写COMMIT日志",
+        "desc": "追加并等待 COMMIT(trx_id, commit_seq) 日志落盘，复用 MvccTrxLogHandler::commit 的 wait_lsn。",
+        "highlight": [
+          "wal"
+        ]
+      },
+      {
+        "title": "原子发布提交点",
+        "desc": "TxnStatusTable.commit 一次原子发布，随后才发布 published_commit_seq，避免同一行两个版本同时可见。",
+        "highlight": [
+          "publish"
+        ]
+      },
+      {
+        "title": "回填与GC",
+        "desc": "逐行把 -T 改写为 commit_seq（可同步或惰性）；回填失败不回滚已发布提交，GC 以最老活跃快照为水位回收旧版本。",
+        "highlight": [
+          "backfill"
+        ]
+      }
+    ],
+    "uncertainties": [
+      "流程跨 6.2 UPDATE、6.3 提交协议（原子提交点）、7 OCC Trx Kit 三节，anchor 只能指向其中一节。",
+      "6.3 称 COMMIT 日志落盘是持久化提交点，而检查点文档指出 wait_lsn 只保证 write、没有 fsync，掉电可能丢 COMMIT；两文档对“落盘”的强度描述不一致。",
+      "第 3 节非目标说 v1 只实现默认 RBO 的 update 计划、cascade 模式 UPDATE 返回 UNSUPPORTED，第 12 节又说已实现“默认 RBO + cascade 物理计划”，前后矛盾。"
+    ],
+    "summary": "旧版本打删除标记、插入新版本、OCC 冲突检查、原子发布提交点。"
+  },
+  {
+    "id": "checkpoint-recovery",
+    "title": "检查点与崩溃恢复",
+    "source": "design/miniob-checkpoint-wal.md",
+    "anchor": "Db::sync() process:",
+    "nodes": [
+      {
+        "id": "gate",
+        "label": "检查点门禁"
+      },
+      {
+        "id": "gc",
+        "label": "GC回填"
+      },
+      {
+        "id": "lsn",
+        "label": "采样LSN"
+      },
+      {
+        "id": "flush",
+        "label": "刷脏页"
+      },
+      {
+        "id": "fsync",
+        "label": "fsync屏障"
+      },
+      {
+        "id": "meta",
+        "label": "更新控制文件"
+      },
+      {
+        "id": "wal",
+        "label": "WAL截断"
+      },
+      {
+        "id": "recover",
+        "label": "崩溃恢复"
+      }
+    ],
+    "edges": [
+      [
+        "gate",
+        "gc",
+        "持unique lock"
+      ],
+      [
+        "gc",
+        "lsn",
+        "回填后采样"
+      ],
+      [
+        "lsn",
+        "flush",
+        "只覆盖target之前"
+      ],
+      [
+        "flush",
+        "fsync",
+        "持久化屏障"
+      ],
+      [
+        "fsync",
+        "meta",
+        "原子替换sys.db"
+      ],
+      [
+        "meta",
+        "wal",
+        "第6步未实现"
+      ],
+      [
+        "meta",
+        "recover",
+        "重启"
+      ],
+      [
+        "recover",
+        "gc",
+        "启动GC修复"
+      ]
+    ],
+    "steps": [
+      {
+        "title": "冻结与水位",
+        "desc": "Db::sync 持 sync_lock_ 与 MVCC checkpoint_gate_ 的 unique lock，检查点期间不启动新事务；只要还有 started() 的 MVCC 事务就只刷页、不推进 checkpoint。",
+        "highlight": [
+          "gate"
+        ]
+      },
+      {
+        "title": "回填与GC",
+        "desc": "MvccGc::collect 把已提交但仍是 -T 的 begin/end 改写为 commit_seq，把 ABORTED 的 end 恢复为 INF，并删除所有活跃快照不可见的版本及索引项。",
+        "highlight": [
+          "gc"
+        ]
+      },
+      {
+        "title": "先采样LSN",
+        "desc": "target_lsn 在刷页之前用 current_lsn 采样，避免把刷页期间提交的事务纳入 checkpoint 而其页尚未刷出。",
+        "highlight": [
+          "lsn"
+        ]
+      },
+      {
+        "title": "刷脏页",
+        "desc": "Table::sync 把数据页和索引页 flush 到全局 double write buffer。",
+        "highlight": [
+          "flush"
+        ]
+      },
+      {
+        "title": "fsync屏障",
+        "desc": "dblwr 先 fsync 再把页写入数据文件，BufferPoolManager::fsync_all 之后再次刷新并 fsync dblwr 的 invalid 标记。",
+        "highlight": [
+          "fsync"
+        ]
+      },
+      {
+        "title": "原子更新元数据",
+        "desc": "flush_meta 写 sys.db.tmp、fsync 文件、rename 为 sys.db、再 fsync 数据库目录，内容为 checkpoint_lsn 与 persisted_commit_seq。",
+        "highlight": [
+          "meta"
+        ]
+      },
+      {
+        "title": "不截断WAL",
+        "desc": "第 6 步截断日志未实现：LogFileManager 没有 remove/truncate，所有 clog 文件保留，检查点只改变恢复起点。",
+        "highlight": [
+          "wal"
+        ]
+      },
+      {
+        "title": "崩溃恢复",
+        "desc": "重启时 Db::init 打开表、恢复 dblwr、从 checkpoint_lsn 重放日志，on_done 回滚没有 COMMIT 的事务，再由启动 GC 修复未回填的 -T。",
+        "highlight": [
+          "recover"
+        ]
+      }
+    ],
+    "uncertainties": [
+      "文档状态为“部分实现”：流程第 6 步截断日志未实现，本流程保留该步并标注。",
+      "第 3 节 Recovery process 代码块之后被插入大段 HTML/CSS 文本（疑似文档污染），恢复细节只能以该代码块与第 3 节文字为据。",
+      "“实现了 1 的一半”指冻结/水位只做了一半：有活跃 MVCC 事务时刷页但不推进 checkpoint；非 MVCC 引擎没有 gate，仍依赖调用方保证 sync 期间无并发写。"
+    ],
+    "summary": "冻结式检查点：回填 GC、采样 LSN、刷脏页、fsync、原子元数据与恢复。"
+  },
+  {
+    "id": "thread-model",
+    "title": "线程模型：连接处理",
+    "source": "design/miniob-thread-model.md",
+    "anchor": "线程模型设计",
+    "nodes": [
+      {
+        "id": "listen",
+        "label": "主线程监听"
+      },
+      {
+        "id": "handler",
+        "label": "ThreadHandler"
+      },
+      {
+        "id": "otpc",
+        "label": "一连接一线程"
+      },
+      {
+        "id": "pool",
+        "label": "线程池监听"
+      },
+      {
+        "id": "queue",
+        "label": "任务队列"
+      },
+      {
+        "id": "worker",
+        "label": "池内线程"
+      },
+      {
+        "id": "close",
+        "label": "关闭连接"
+      }
+    ],
+    "edges": [
+      [
+        "listen",
+        "handler",
+        "new_connection"
+      ],
+      [
+        "handler",
+        "otpc",
+        "每连接一线程"
+      ],
+      [
+        "handler",
+        "pool",
+        "线程池模型"
+      ],
+      [
+        "pool",
+        "queue",
+        "有消息入队"
+      ],
+      [
+        "queue",
+        "worker",
+        "取任务处理"
+      ],
+      [
+        "otpc",
+        "close",
+        "处理完关闭"
+      ],
+      [
+        "worker",
+        "close",
+        "关闭连接"
+      ]
+    ],
+    "steps": [
+      {
+        "title": "选择线程模型",
+        "desc": "启动时用 -T=one-thread-per-connection（默认）或 -T=java-thread-pool 指定，ThreadHandler::create 按传入名字创建对应对象。",
+        "highlight": [
+          "handler"
+        ]
+      },
+      {
+        "title": "主线程接收连接",
+        "desc": "线程模型不负责监听新连接，这是主线程 NetServer::serve 的事；新连接到达时调用 ThreadHandler::new_connection。",
+        "highlight": [
+          "listen"
+        ]
+      },
+      {
+        "title": "一连接一线程",
+        "desc": "OneThreadPerConnectionThreadHandler 为每个连接创建一个线程，负责监听消息、处理SQL请求与应答、关闭连接。",
+        "highlight": [
+          "otpc"
+        ]
+      },
+      {
+        "title": "线程池监听",
+        "desc": "JavaThreadPoolThreadHandler 创建一个线程池，池中一个线程负责监听所有连接是否有消息到达。",
+        "highlight": [
+          "pool"
+        ]
+      },
+      {
+        "title": "入队等待",
+        "desc": "有消息到达就把连接对象放入线程池任务队列等待池内线程处理；该连接任务完成前不会监听它的新消息。",
+        "highlight": [
+          "queue"
+        ]
+      },
+      {
+        "title": "池内线程处理",
+        "desc": "池内线程取任务完成 SQL 请求与应答；ThreadPoolExecutor 在任务多于空闲线程时扩容、线程空闲较久时自动退出。",
+        "highlight": [
+          "worker"
+        ]
+      },
+      {
+        "title": "关闭连接",
+        "desc": "两种模型都由负责该连接的线程完成关闭连接。",
+        "highlight": [
+          "close"
+        ]
+      }
+    ],
+    "uncertainties": [
+      "文档未给出线程池大小、扩容与空闲回收的具体阈值。",
+      "关闭连接只说明由“这个线程”负责，未说明由读事件还是处理流程触发。",
+      "同一文档参数写作 -T=one-thread-per-connection，而事务文档使用 -t mvcc/-t occ，两者是不同参数，不要混用。"
+    ],
+    "summary": "主线程收连接后的一连接一线程与线程池两条处理路径。"
+  },
+  {
+    "id": "buffer-pool-page-lifecycle",
+    "title": "Buffer Pool 页生命周期",
+    "source": "design/miniob-buffer-pool.md",
+    "anchor": "MiniOB Buffer Pool 模块介绍",
+    "nodes": [
+      {
+        "id": "read_page",
+        "label": "按页读取文件"
+      },
+      {
+        "id": "find_frame",
+        "label": "查找空闲页帧"
+      },
+      {
+        "id": "load_frame",
+        "label": "页帧关联并载入"
+      },
+      {
+        "id": "use_page",
+        "label": "业务模块访问数据"
+      },
+      {
+        "id": "evict_page",
+        "label": "淘汰现有页面"
+      },
+      {
+        "id": "rebind_frame",
+        "label": "页帧重新关联"
+      }
+    ],
+    "edges": [
+      [
+        "read_page",
+        "find_frame"
+      ],
+      [
+        "find_frame",
+        "load_frame",
+        "有空闲页帧"
+      ],
+      [
+        "find_frame",
+        "evict_page",
+        "无空闲页帧"
+      ],
+      [
+        "evict_page",
+        "rebind_frame"
+      ],
+      [
+        "rebind_frame",
+        "load_frame"
+      ],
+      [
+        "load_frame",
+        "use_page"
+      ]
+    ],
+    "steps": [
+      {
+        "title": "从页头定位页号",
+        "desc": "文件第一页是页头（page num 为 0），记录 page count、allocated pages 与 Bitmap，普通页的第一个字段则是四字节的 page_num。",
+        "highlight": [
+          "read_page"
+        ]
+      },
+      {
+        "title": "以页为单位读取",
+        "desc": "文件按固定大小的页划分，Buffer Pool 读取文件时总是以页为单位，把磁盘页读到内存中。",
+        "highlight": [
+          "read_page",
+          "find_frame"
+        ]
+      },
+      {
+        "title": "查找空闲页帧",
+        "desc": "一个 DiskBufferPool 对应一个物理文件，所有 DiskBufferPool 共用一个 BPFrameManager，读页时先在其中找一个空闲 frame（例如 frame3）。",
+        "highlight": [
+          "find_frame"
+        ]
+      },
+      {
+        "title": "关联并载入",
+        "desc": "把空闲 frame 与目标页面关联起来，再把该页面的数据读取到 frame 中。",
+        "highlight": [
+          "load_frame"
+        ]
+      },
+      {
+        "title": "交给业务模块使用",
+        "desc": "普通页面对 Buffer Pool 而言只有开头的 page num，其余 page data 由 Record Manager 或 B+Tree 等模块自行定义和组织。",
+        "highlight": [
+          "use_page"
+        ]
+      },
+      {
+        "title": "内存不足时淘汰",
+        "desc": "当所有 frame 都关联了页面且还需要读入新页时，从现有 frame 中淘汰一个页面，例如淘汰 frame1。",
+        "highlight": [
+          "find_frame",
+          "evict_page"
+        ]
+      },
+      {
+        "title": "页帧重新关联",
+        "desc": "把被淘汰的 frame 与新的磁盘页面关联，并把新页面数据读入该 frame，后续访问复用它。",
+        "highlight": [
+          "evict_page",
+          "rebind_frame",
+          "load_frame"
+        ]
+      }
+    ],
+    "uncertainties": [
+      "文档只说明淘汰有“淘汰条件和算法”，并明确“暂时先不深入讨论细节”，未给出具体算法。",
+      "文档未描述脏页写回磁盘的时机；页头 Bitmap 仅描述文件内页面分配状态，未说明其与 frame 分配的关系。",
+      "文档未在本节提到 pin_count/unpin，页帧引用计数与读写锁在《B+ 树并发操作》的“B+树与Buffer Pool”一节描述。",
+      "页头可支持的页面数受页面大小限制是文档明确指出的缺陷，本文未画出扩容方案。"
+    ],
+    "summary": "页帧分配、载入、业务使用与空间不足时的腾退复用。"
+  },
+  {
+    "id": "bplus-tree-insert-split",
+    "title": "B+ 树插入与分裂",
+    "source": "design/miniob-bplus-tree.md",
+    "anchor": "插入",
+    "nodes": [
+      {
+        "id": "locate_leaf",
+        "label": "定位到叶结点"
+      },
+      {
+        "id": "find_slot",
+        "label": "叶内定位插入位置"
+      },
+      {
+        "id": "insert_direct",
+        "label": "未满直接插入"
+      },
+      {
+        "id": "new_brother",
+        "label": "创建新右兄弟"
+      },
+      {
+        "id": "move_half",
+        "label": "迁移一半键值对"
+      },
+      {
+        "id": "fix_links",
+        "label": "修改兄弟页指针"
+      },
+      {
+        "id": "parent_insert",
+        "label": "父结点插入键值对"
+      },
+      {
+        "id": "new_root",
+        "label": "无父结点建新根"
+      },
+      {
+        "id": "recurse_up",
+        "label": "父分裂继续上溯"
+      }
+    ],
+    "edges": [
+      [
+        "locate_leaf",
+        "find_slot"
+      ],
+      [
+        "find_slot",
+        "insert_direct",
+        "结点未满"
+      ],
+      [
+        "find_slot",
+        "new_brother",
+        "结点已满"
+      ],
+      [
+        "new_brother",
+        "move_half"
+      ],
+      [
+        "move_half",
+        "fix_links"
+      ],
+      [
+        "fix_links",
+        "parent_insert"
+      ],
+      [
+        "parent_insert",
+        "new_root",
+        "没有父结点"
+      ],
+      [
+        "parent_insert",
+        "recurse_up",
+        "父结点也分裂"
+      ],
+      [
+        "recurse_up",
+        "parent_insert"
+      ]
+    ],
+    "steps": [
+      {
+        "title": "从根定位叶结点",
+        "desc": "插入和查询一样，从 root page 开始逐层向下定位，直到找到目标叶结点（图中 page2）。",
+        "highlight": [
+          "locate_leaf"
+        ]
+      },
+      {
+        "title": "叶内找插入位置",
+        "desc": "在目标结点内定位一个插入位置，据此决定键值对插入哪个位置。",
+        "highlight": [
+          "find_slot"
+        ]
+      },
+      {
+        "title": "未满直接插入",
+        "desc": "结点未满时，把键值对插入指定位置并把后面的部分数据向后移动即可。",
+        "highlight": [
+          "insert_direct"
+        ]
+      },
+      {
+        "title": "已满则分裂",
+        "desc": "结点已满时先创建一个新的右兄弟结点（图中 page5）。",
+        "highlight": [
+          "new_brother"
+        ]
+      },
+      {
+        "title": "迁移一半键值对",
+        "desc": "原结点保留前一半键值对，剩余的键值对移动到新结点。",
+        "highlight": [
+          "move_half"
+        ]
+      },
+      {
+        "title": "修改兄弟指针",
+        "desc": "修改 page2 的后向 page num、page5 的前后向 page num 以及 page4 的前向 page num，再按定位的插入位置判断插入 page2 还是 page5。",
+        "highlight": [
+          "fix_links",
+          "insert_direct"
+        ]
+      },
+      {
+        "title": "向父结点回插",
+        "desc": "把新结点中的最小键与新结点的 page num 作为键值对插入父结点；若没有父结点，则创建新的根结点，并把原结点的 page num 作为第一个键值对的值插入。",
+        "highlight": [
+          "parent_insert",
+          "new_root"
+        ]
+      },
+      {
+        "title": "递归上溯",
+        "desc": "如果父结点的键值对插入同样触发分裂，就按上述步骤继续向上递归执行。",
+        "highlight": [
+          "recurse_up"
+        ]
+      }
+    ],
+    "uncertainties": [
+      "文档未说明分裂时“前一半”键值对的取整规则。",
+      "无父结点时新根的第一个键值对键值如何构造，文本只说明“还会将原结点的 page num 作为第一个键值对的值进行插入”，细节依赖图片 miniob-bplus-tree-internal-struct2.png。",
+      "文档未描述并发下的插入路径，加锁流程见《B+ 树并发操作》文档。"
+    ],
+    "summary": "叶结点插入、分裂、兄弟指针修复、父结点回插与递归上溯。"
+  },
+  {
+    "id": "bplus-tree-concurrency-latching",
+    "title": "B+ 树并发加锁（蟹行协议）",
+    "source": "design/miniob-bplus-tree-concurrency.md",
+    "anchor": "Crabing Protocol",
+    "nodes": [
+      {
+        "id": "lock_root",
+        "label": "根节点加锁"
+      },
+      {
+        "id": "crab_child",
+        "label": "蟹行取子页"
+      },
+      {
+        "id": "lock_child",
+        "label": "子节点加写锁"
+      },
+      {
+        "id": "is_safe",
+        "label": "判断节点是否安全"
+      },
+      {
+        "id": "release_parent",
+        "label": "安全则释放祖先"
+      },
+      {
+        "id": "descend",
+        "label": "非叶结点继续下探"
+      },
+      {
+        "id": "leaf_insert",
+        "label": "叶结点执行插入"
+      },
+      {
+        "id": "split_parent",
+        "label": "分裂则回插父结点"
+      },
+      {
+        "id": "memo_release",
+        "label": "memo 统一释放"
+      }
+    ],
+    "edges": [
+      [
+        "lock_root",
+        "crab_child"
+      ],
+      [
+        "crab_child",
+        "lock_child"
+      ],
+      [
+        "lock_child",
+        "is_safe"
+      ],
+      [
+        "is_safe",
+        "release_parent",
+        "安全"
+      ],
+      [
+        "is_safe",
+        "descend",
+        "不安全，保留锁"
+      ],
+      [
+        "release_parent",
+        "descend"
+      ],
+      [
+        "descend",
+        "crab_child",
+        "循环向下"
+      ],
+      [
+        "descend",
+        "leaf_insert",
+        "到达叶结点"
+      ],
+      [
+        "leaf_insert",
+        "split_parent",
+        "发生分裂"
+      ],
+      [
+        "leaf_insert",
+        "memo_release"
+      ],
+      [
+        "split_parent",
+        "memo_release"
+      ]
+    ],
+    "steps": [
+      {
+        "title": "初始化 LatchMemo 并锁根",
+        "desc": "find_leaf 是所有操作的基本动作，memo（LatchMemo）先初始化，记录加过的锁与访问过的页面，然后对 root page 加锁。",
+        "highlight": [
+          "lock_root"
+        ]
+      },
+      {
+        "title": "蟹行取子节点并加锁",
+        "desc": "通过 crabing_protocal_fetch_page 取子节点页面（pin_count 加 1），再对 frame 加写锁并取出 node；插入、删除用写锁，查询用读锁。",
+        "highlight": [
+          "crab_child",
+          "lock_child"
+        ]
+      },
+      {
+        "title": "判断节点是否安全",
+        "desc": "节点上的动作不会影响父节点即“安全”：插入不会分裂、删除不会合并，查询对节点永远是安全的。",
+        "highlight": [
+          "is_safe"
+        ]
+      },
+      {
+        "title": "安全则释放祖先锁",
+        "desc": "当前节点安全时调用 release_parent，释放所有父节点和祖先节点的锁与 pin_count，避免资源泄漏。",
+        "highlight": [
+          "release_parent"
+        ]
+      },
+      {
+        "title": "循环下探到叶结点",
+        "desc": "循环条件是 while node is not leaf，不断 get_child 向下，直到拿到叶结点。",
+        "highlight": [
+          "descend"
+        ]
+      },
+      {
+        "title": "叶内插入与分裂",
+        "desc": "在叶结点执行 insert_entry_into_leaf，若 node.size == node.max_size 则先 split。",
+        "highlight": [
+          "leaf_insert"
+        ]
+      },
+      {
+        "title": "父结点回插",
+        "desc": "发生分裂后循环执行 insert_entry_into_parent，父结点插入若再触发分裂则继续向上处理。",
+        "highlight": [
+          "split_parent"
+        ]
+      },
+      {
+        "title": "统一释放资源",
+        "desc": "操作结束由 memo.release_all 释放本次操作记录的所有锁与 pin。",
+        "highlight": [
+          "memo_release"
+        ]
+      }
+    ],
+    "uncertainties": [
+      "文档以问题形式提出“为什么一定要先执行解锁，再执行 unpin”，未给出答案。",
+      "插入/删除伪代码（find_leaf、release_parent、insert_entry_into_parent 等）位于“处理流程”一节，本流程以其为依据，anchor 取协议描述的“Crabing Protocol”。",
+      "根节点数据不被 Frame 的锁保护，需额外加锁并使用独特的“安全”判断，详见“根节点处理”一节。",
+      "扫描/遍历用 try_read_lock，失败即返回 LOCK_WAIT 重试，文档称这种方法很低效；CONCURRENCY=OFF 时所有加解锁为空操作。"
+    ],
+    "summary": "蟹行协议：锁根、取子页加锁、安全则释放祖先、叶内修改。"
+  },
+  {
+    "id": "double-write-buffer-flow",
+    "title": "Double Write Buffer 写入与恢复",
+    "source": "design/miniob-double-write-buffer.md",
+    "anchor": "Double Write Buffer 工作流程",
+    "nodes": [
+      {
+        "id": "flush_dirty",
+        "label": "刷脏页触发"
+      },
+      {
+        "id": "add_dwb",
+        "label": "脏页加入 DWB"
+      },
+      {
+        "id": "write_space",
+        "label": "写入共享表空间"
+      },
+      {
+        "id": "sync_disk",
+        "label": "DWB 满时同步磁盘"
+      },
+      {
+        "id": "write_datafile",
+        "label": "写入数据文件"
+      },
+      {
+        "id": "recover_read",
+        "label": "重启读共享表空间"
+      },
+      {
+        "id": "check_page",
+        "label": "判断页面是否损坏"
+      },
+      {
+        "id": "copy_page",
+        "label": "拷贝至数据页"
+      },
+      {
+        "id": "ignore_page",
+        "label": "损坏页面忽略"
+      }
+    ],
+    "edges": [
+      [
+        "flush_dirty",
+        "add_dwb",
+        "不直接写磁盘"
+      ],
+      [
+        "add_dwb",
+        "write_space"
+      ],
+      [
+        "write_space",
+        "sync_disk",
+        "装满"
+      ],
+      [
+        "sync_disk",
+        "write_datafile"
+      ],
+      [
+        "recover_read",
+        "check_page"
+      ],
+      [
+        "check_page",
+        "copy_page",
+        "未损坏"
+      ],
+      [
+        "check_page",
+        "ignore_page",
+        "已损坏"
+      ],
+      [
+        "copy_page",
+        "write_datafile",
+        "恢复写回"
+      ]
+    ],
+    "steps": [
+      {
+        "title": "刷脏页不直接写盘",
+        "desc": "buffer pool 要刷脏页时先把脏页添加到 double write buffer，而不是直接写磁盘。",
+        "highlight": [
+          "flush_dirty",
+          "add_dwb"
+        ]
+      },
+      {
+        "title": "写入共享表空间",
+        "desc": "double write buffer 再把页面写入共享表空间，形成页的副本。",
+        "highlight": [
+          "add_dwb",
+          "write_space"
+        ]
+      },
+      {
+        "title": "装满后同步磁盘",
+        "desc": "double write buffer 装满时会先同步磁盘，防止缓冲写带来的问题。",
+        "highlight": [
+          "sync_disk"
+        ]
+      },
+      {
+        "title": "写入对应数据文件",
+        "desc": "同步之后再把页面写入对应的数据文件中。",
+        "highlight": [
+          "write_datafile"
+        ]
+      },
+      {
+        "title": "恢复先读共享表空间",
+        "desc": "数据库重启恢复时，先读取共享表空间中的文件。",
+        "highlight": [
+          "recover_read"
+        ]
+      },
+      {
+        "title": "未损坏则拷贝",
+        "desc": "若页面未损坏，则直接拷贝至磁盘中对应的数据页面。",
+        "highlight": [
+          "check_page",
+          "copy_page"
+        ]
+      },
+      {
+        "title": "损坏则忽略",
+        "desc": "若页面已损坏则忽略该页面，从而保证恢复后数据文件中的页面是完好的。",
+        "highlight": [
+          "check_page",
+          "ignore_page"
+        ]
+      }
+    ],
+    "uncertainties": [
+      "文档只说明 DWB 是“物理文件上的一个 buffer，其实也就是 file”，未给出共享表空间的页布局、容量或页大小等参数。",
+      "“装满时先同步磁盘，再将页面写入对应的数据文件中”未说明未被装满的页面何时进入数据文件，也未说明每次刷脏页是否都触发写数据文件。",
+      "工作流程第 2 条还描述了读页面时先查 DWB，本次按任务要求只覆盖写入与恢复，未把该分支画入图。",
+      "文档明确指出额外的 fsync 会影响数据库整体性能，但未给出量化影响或优化方案。"
+    ],
+    "summary": "脏页先写共享表空间再写数据文件；恢复时校验副本并拷贝。"
+  },
+  {
+    "id": "lsm-tree-write-compaction-recovery",
+    "title": "LSM-Tree 写入、Compaction 与恢复",
+    "source": "design/miniob-lsm-tree.md",
+    "anchor": "系统恢复",
+    "nodes": [
+      {
+        "id": "wal_first",
+        "label": "写 WAL 日志"
+      },
+      {
+        "id": "write_memtable",
+        "label": "写入 MemTable"
+      },
+      {
+        "id": "memtable_full",
+        "label": "MemTable 达上限"
+      },
+      {
+        "id": "dump_sstable",
+        "label": "转储为 SSTable"
+      },
+      {
+        "id": "compaction",
+        "label": "Compaction 合并"
+      },
+      {
+        "id": "manifest_write",
+        "label": "写 Manifest 记录"
+      },
+      {
+        "id": "read_manifest",
+        "label": "启动读 CURRENT"
+      },
+      {
+        "id": "replay_order",
+        "label": "按记录恢复"
+      },
+      {
+        "id": "replay_wal",
+        "label": "回放 WAL 恢复"
+      }
+    ],
+    "edges": [
+      [
+        "wal_first",
+        "write_memtable"
+      ],
+      [
+        "write_memtable",
+        "memtable_full"
+      ],
+      [
+        "memtable_full",
+        "dump_sstable"
+      ],
+      [
+        "dump_sstable",
+        "compaction"
+      ],
+      [
+        "compaction",
+        "manifest_write"
+      ],
+      [
+        "dump_sstable",
+        "manifest_write",
+        "minor compaction"
+      ],
+      [
+        "manifest_write",
+        "read_manifest",
+        "重启"
+      ],
+      [
+        "read_manifest",
+        "replay_order"
+      ],
+      [
+        "replay_order",
+        "replay_wal"
+      ]
+    ],
+    "steps": [
+      {
+        "title": "先写 WAL",
+        "desc": "每次向 MemTable 写入数据时，先把数据写入当前 memtable 对应的 WAL 日志文件，WAL 顺序写入以提升写性能。",
+        "highlight": [
+          "wal_first"
+        ]
+      },
+      {
+        "title": "再写 MemTable",
+        "desc": "insert/update/delete 都被视作一条记录插入 MemTable，其中 delete 是 value 为空的记录。",
+        "highlight": [
+          "write_memtable"
+        ]
+      },
+      {
+        "title": "达到大小触发转储",
+        "desc": "MemTable 达到一定大小时会被转储为不可变的 SSTable，转储入口为 ObLsmImpl::try_freeze_memtable。",
+        "highlight": [
+          "memtable_full"
+        ]
+      },
+      {
+        "title": "生成 SSTable",
+        "desc": "转储过程包括排序数据、生成 SSTable 文件并写入磁盘，SSTable 按固定大小划分为 Block。",
+        "highlight": [
+          "dump_sstable"
+        ]
+      },
+      {
+        "title": "Compaction 合并",
+        "desc": "Compaction 将多个 SSTable 合并为一个或多个新的 SSTable，每次合并都产生一个新的版本。",
+        "highlight": [
+          "compaction"
+        ]
+      },
+      {
+        "title": "写 Manifest 记录",
+        "desc": "每次 Compaction 写入 Compaction Record，记录新增/删除的 sstables、最大时间戳(seq)与下一个 sstable id；minor compaction 还会写入 NewMemtable Record。",
+        "highlight": [
+          "manifest_write"
+        ]
+      },
+      {
+        "title": "启动读 Manifest",
+        "desc": "LSM-Tree 启动时读取目录下的 CURRENT 文件得到当前 Manifest 名称，打开并读取其中的所有记录。",
+        "highlight": [
+          "read_manifest"
+        ]
+      },
+      {
+        "title": "按序恢复并回放 WAL",
+        "desc": "先从 Snapshot 恢复，再逐条按 Compaction Record 恢复，最后按最新的 NewMemtable Record 找到 WAL 回放 MemTable，恢复完毕生成新的 Manifest 快照与 NewMemtable Record。",
+        "highlight": [
+          "replay_order",
+          "replay_wal"
+        ]
+      }
+    ],
+    "uncertainties": [
+      "流程跨“写入日志”“MemTable 转储”“Compaction”“系统恢复”多节，anchor 取总述恢复机制的“系统恢复”。",
+      "“当前实现状态”明确说明 SSTable/Block 读写、compaction、ObLsmTransaction 尚未完成，memtable 超过默认 8KB 触发冻结与 -t lsm 事务路径仍返回 UNIMPLEMENTED，因此转储与 Compaction 属文档设计描述而非已验证行为。",
+      "WAL 实现路径写作 `oblsm/wal/ob_lsm_wal.h`，与文档其余 `src/oblsm/...` 的写法不一致。",
+      "文档未说明 Compaction 的分层策略、触发条件与选层规则，只说“定期重新组织数据”。"
+    ],
+    "summary": "WAL → MemTable → SSTable → Compaction → Manifest 与 WAL 恢复。"
+  },
+  {
+    "id": "pax-storage-layout",
+    "title": "PAX 页内存储布局",
+    "source": "design/miniob-pax-storage.md",
+    "anchor": "MiniOB 中 PAX 存储格式",
+    "nodes": [
+      {
+        "id": "create_pax",
+        "label": "建表指定 pax"
+      },
+      {
+        "id": "pax_handler",
+        "label": "PAX 页内管理器"
+      },
+      {
+        "id": "page_layout",
+        "label": "页内垂直分区"
+      },
+      {
+        "id": "page_header",
+        "label": "页头与记录位图"
+      },
+      {
+        "id": "col_index",
+        "label": "列索引数组"
+      },
+      {
+        "id": "col_data",
+        "label": "列数据连续存放"
+      },
+      {
+        "id": "insert_rec",
+        "label": "insert_record"
+      },
+      {
+        "id": "get_rec",
+        "label": "get_record"
+      }
+    ],
+    "edges": [
+      [
+        "create_pax",
+        "pax_handler"
+      ],
+      [
+        "pax_handler",
+        "page_layout"
+      ],
+      [
+        "page_layout",
+        "page_header"
+      ],
+      [
+        "page_layout",
+        "col_index"
+      ],
+      [
+        "col_index",
+        "col_data"
+      ],
+      [
+        "pax_handler",
+        "insert_rec"
+      ],
+      [
+        "pax_handler",
+        "get_rec"
+      ],
+      [
+        "insert_rec",
+        "col_data",
+        "写入列"
+      ],
+      [
+        "get_rec",
+        "col_data",
+        "按列读取"
+      ]
+    ],
+    "steps": [
+      {
+        "title": "建表选择 PAX",
+        "desc": "通过 `storage format=pax` 创建列存格式的表，不指定存储格式时默认创建行存格式的表。",
+        "highlight": [
+          "create_pax"
+        ]
+      },
+      {
+        "title": "页内管理器",
+        "desc": "RecordManager 负责一个文件中表记录的组织管理，PAX 页面由 PaxRecordPageHandler 管理，行存页面由 RowRecordPageHandler 管理。",
+        "highlight": [
+          "pax_handler"
+        ]
+      },
+      {
+        "title": "页内垂直分区",
+        "desc": "PAX 在页面内对属性做垂直分区，页面布局为 PageHeader、record allocate bitmap、column index，然后是 column1 到 columnN。",
+        "highlight": [
+          "page_layout"
+        ]
+      },
+      {
+        "title": "复用页头与位图",
+        "desc": "PageHeader 与 bitmap 在 PAX 页内的作用与行式存储中一致。",
+        "highlight": [
+          "page_header"
+        ]
+      },
+      {
+        "title": "列索引定位",
+        "desc": "column index 是一个连续数组，col_i 表示列 ID 为 i+1 的列在页面内的起始地址，col_n 表示最后一列的结束地址 + 1。",
+        "highlight": [
+          "col_index"
+        ]
+      },
+      {
+        "title": "列数据连续存储",
+        "desc": "每列数据在页面内连续存储，列索引用于定位各列数据的偏移量。",
+        "highlight": [
+          "col_data"
+        ]
+      },
+      {
+        "title": "三个待实现函数",
+        "desc": "实验要求实现 record_manager.cpp 中的 PaxRecordPageHandler::insert_record、get_chunk、get_record，测试为 pax_storage_test 与 pax_storage_concurrency_test（需移除 DISABLED_ 前缀）。",
+        "highlight": [
+          "insert_rec",
+          "get_rec"
+        ]
+      }
+    ],
+    "uncertainties": [
+      "文档未说明 bitmap 的位与记录槽位的具体映射，只说其作用与行式存储一致。",
+      "column index 被描述为 n+1 个元素（col_0..col_n），其中 col_i 对应列 ID i+1，col_n 为结束地址+1，索引位置与列 ID 存在 1 的偏移，文档未进一步解释。",
+      "get_chunk 与 get_record 的职责边界文档未展开，只说明需参考函数注释实现；PAX 在本次实验中属待实现状态。",
+      "文档未给出 PAX 页内列数据是否对齐、变长列如何存放的说明。"
+    ],
+    "summary": "页内垂直分区：页头、位图、列索引与按列读写。"
+  }
+]

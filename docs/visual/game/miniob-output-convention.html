@@ -1,0 +1,133 @@
+<!doctype html>
+<html lang="zh-CN" id="top">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>输出规范 · MiniOB 可视化文档</title>
+<link rel="stylesheet" href="../assets/style.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@highlightjs/cdn-assets@11/styles/atom-one-dark.min.css">
+<script src="../assets/theme.js"></script>
+
+</head>
+<body class="">
+<div class="reading-progress" id="readingProgress" aria-hidden="true"></div>
+<header class="topbar">
+  <button class="menu-btn" id="menuBtn" aria-label="切换侧栏" aria-expanded="false">☰</button>
+  <a class="brand" href="../index.html"><span class="brand-mark">M</span><span>MiniOB <em>可视化文档</em></span></a>
+  <div class="top-actions">
+    <a class="top-link" href="../flows.html">动态流程</a>
+    <button class="theme-btn" id="themeBtn" aria-label="切换明暗主题" title="切换明暗主题">◐</button>
+  </div>
+</header>
+<div class="layout">
+  <aside class="sidebar" id="sidebar"><nav class="site-nav" aria-label="文档目录"><a class="nav-home" href="../index.html"><span class="brand-mark">M</span><span>MiniOB 可视化文档</span></a><details class="nav-group"><summary>快速开始<span>2</span></summary><div class="nav-links"><a href="../how_to_build.html"><span class="nav-link-text">如何编译</span></a><a href="../how_to_run.html"><span class="nav-link-text">如何运行</span></a></div></details><details class="nav-group"><summary>设计文档<span>21</span></summary><div class="nav-links"><a href="../design/miniob-architecture.html"><span class="nav-link-text">MiniOB代码架构框架设计和说明</span><span class="nav-badge" title="含交互流程图或架构图">图</span></a><a href="../design/miniob-buffer-pool.html"><span class="nav-link-text">MiniOB 存储实现</span><span class="nav-badge" title="含交互流程图或架构图">图</span></a><a href="../design/miniob-double-write-buffer.html"><span class="nav-link-text">MiniOB Double Write Buffer 实现</span><span class="nav-badge" title="含交互流程图或架构图">图</span></a><a href="../design/miniob-transaction.html"><span class="nav-link-text">事务模块</span><span class="nav-badge" title="含交互流程图或架构图">图</span></a><a href="../design/miniob-durability.html"><span class="nav-link-text">持久化</span><span class="nav-badge" title="含交互流程图或架构图">图</span></a><a href="../design/miniob-persistence-files.html"><span class="nav-link-text">持久化文件与恢复路径</span><span class="nav-badge" title="含交互流程图或架构图">图</span></a><a href="../design/miniob-checkpoint-wal.html"><span class="nav-link-text">MiniOB 检查点与 WAL 截断</span><span class="nav-badge" title="含交互流程图或架构图">图</span></a><a href="../design/miniob-sql-parser.html"><span class="nav-link-text">SQL 词法语法分析</span></a><a href="../design/miniob-how-to-add-new-sql.html"><span class="nav-link-text">SQL语句执行流程</span><span class="nav-badge" title="含交互流程图或架构图">图</span></a><a href="../design/miniob-sql-expression.html"><span class="nav-link-text">SQL 表达式</span></a><a href="../design/miniob-bplus-tree.html"><span class="nav-link-text">MiniOB B+Tree 实现</span><span class="nav-badge" title="含交互流程图或架构图">图</span></a><a href="../design/miniob-bplus-tree-concurrency.html"><span class="nav-link-text">B+ 树并发操作</span><span class="nav-badge" title="含交互流程图或架构图">图</span></a><a href="../design/miniob-thread-model.html"><span class="nav-link-text">线程模型</span><span class="nav-badge" title="含交互流程图或架构图">图</span></a><a href="../design/miniob-mysql-protocol.html"><span class="nav-link-text">MySQL 通讯协议</span></a><a href="../design/miniob-pax-storage.html"><span class="nav-link-text">MiniOB PAX 存储格式</span><span class="nav-badge" title="含交互流程图或架构图">图</span></a><a href="../design/miniob-aggregation-and-group-by.html"><span class="nav-link-text">MiniOB 向量化执行 aggregation 和 group by 实现</span></a><a href="../design/miniob-lsm-tree.html"><span class="nav-link-text">MiniOB LSM-Tree 存储引擎</span><span class="nav-badge" title="含交互流程图或架构图">图</span></a><a href="../design/introduction.html"><span class="nav-link-text">功能模块设计说明</span></a><a href="../design/miniob-btree-storage-engine.html"><span class="nav-link-text">MiniOB B+Tree 聚簇表存储引擎</span><span class="nav-badge" title="含交互流程图或架构图">图</span></a><a href="../design/miniob-cascade.html"><span class="nav-link-text">Cascade Optimizer(查询优化器)</span><span class="nav-badge" title="含交互流程图或架构图">图</span></a><a href="../design/miniob-update-mvcc-occ.html"><span class="nav-link-text">MiniOB UPDATE、MVCC 与 OCC 方案设计</span><span class="nav-badge" title="含交互流程图或架构图">图</span></a></div></details><details class="nav-group"><summary>课程实验<span>6</span></summary><div class="nav-links"><a href="../db_course_lab/overview.html"><span class="nav-link-text">数据库系统实现原理与实践课程实验</span></a><a href="../db_course_lab/lab0.html"><span class="nav-link-text">LAB#0 C++ 基础</span></a><a href="../db_course_lab/lab1.html"><span class="nav-link-text">LAB#1 LSM-Tree 存储引擎</span></a><a href="../db_course_lab/lab2.html"><span class="nav-link-text">LAB#2 查询引擎</span></a><a href="../db_course_lab/lab3.html"><span class="nav-link-text">LAB#3 事务引擎</span></a><a href="../db_course_lab/lab4.html"><span class="nav-link-text">LAB#4 性能测试</span></a></div></details><details class="nav-group"><summary>简明教程<span>9</span></summary><div class="nav-links"><a href="../lectures/copyright.html"><span class="nav-link-text">版权声明</span></a><a href="../lectures/lecture-1.html"><span class="nav-link-text">第1章 数据库管理系统概述</span></a><a href="../lectures/lecture-2.html"><span class="nav-link-text">第2章 数据库的存储结构</span></a><a href="../lectures/lecture-3.html"><span class="nav-link-text">第3章 索引结构</span></a><a href="../lectures/lecture-4.html"><span class="nav-link-text">第4章 查询处理</span></a><a href="../lectures/lecture-5.html"><span class="nav-link-text">第5章 查询优化</span></a><a href="../lectures/lecture-6.html"><span class="nav-link-text">第6章 事务处理</span></a><a href="../lectures/references.html"><span class="nav-link-text">参考资料</span></a><a href="../lectures/index.html"><span class="nav-link-text">数据库管理系统实现基础讲义</span></a></div></details><details class="nav-group"><summary>开发环境<span>14</span></summary><div class="nav-links"><a href="../dev-env/introduction.html"><span class="nav-link-text">搭建开发环境</span></a><a href="../dev-env/vscode_dev_with_local_virtual_env.html"><span class="nav-link-text">虚拟机+vscode remote开发</span></a><a href="../dev-env/dev_by_online.html"><span class="nav-link-text">使用在线开发环境开发 MiniOB</span></a><a href="../dev-env/how-to-dev-using-docker.html"><span class="nav-link-text">使用Docker开发MiniOB</span></a><a href="../dev-env/how_to_dev_in_docker_container_by_vscode.html"><span class="nav-link-text">使用 Docker 和 VSCode 远程开发 Miniob</span></a><a href="../dev-env/how_to_dev_in_docker_container_by_vscode_on_windows.html"><span class="nav-link-text">在windows上通过docker配置环境并利用vscode调试代码（手把手版）</span></a><a href="../dev-env/how_to_dev_miniob_by_docker_on_windows.html"><span class="nav-link-text">安装Docker</span></a><a href="../dev-env/how_to_dev_miniob_by_vscode.html"><span class="nav-link-text">环境准备</span></a><a href="../dev-env/miniob-how-to-debug.html"><span class="nav-link-text">miniob调试篇</span></a><a href="../dev-env/how_to_submit_for_testing.html"><span class="nav-link-text">训练营平台使用说明</span></a><a href="../dev-env/integration_test.html"><span class="nav-link-text">MiniOB 集成测试使用文档</span></a><a href="../dev-env/cloudlab_setup.html"><span class="nav-link-text">开源学堂在线编程环境开发 MiniOB</span></a><a href="../dev-env/how_to_dev_miniob_by_docker_on_windows_simplified.html"><span class="nav-link-text">在windows上通过docker配置环境并利用vscode编辑、开发、调试代码（简易版）</span></a><a href="../dev-env/how_to_dev_miniob_in_vscodeGUI_by_docker_on_windows.html"><span class="nav-link-text">基于Windows+docker容器在本地利用VSCode编辑、开发及调试miniob</span></a></div></details><details class="nav-group" open><summary>大赛与训练<span>9</span></summary><div class="nav-links"><a href="introduction.html"><span class="nav-link-text">OceanBase 数据库大赛</span></a><a href="miniob-output-convention.html" class="active" aria-current="page"><span class="nav-link-text">输出规范</span></a><a href="debug-output.html"><span class="nav-link-text">输出调试信息</span></a><a href="miniob-memtracer.html"><span class="nav-link-text">MemTracer</span></a><a href="miniob_topics.html"><span class="nav-link-text">OceanBase 数据库大赛2021届题目</span></a><a href="github-introduction.html"><span class="nav-link-text">MiniOB GitHub 在训练营中的使用说明</span></a><a href="gitee-instructions.html"><span class="nav-link-text">MiniOB Gitee 在训练营中的使用说明</span></a><a href="miniob-vectordb.html"><span class="nav-link-text">MiniOB 向量数据库</span></a><a href="git-introduction.html"><span class="nav-link-text">Git 介绍</span></a></div></details><details class="nav-group"><summary>博客<span>2</span></summary><div class="nav-links"><a href="../blog/introduction.html"><span class="nav-link-text">介绍</span></a><a href="../blog/1.html"><span class="nav-link-text">High-Performance Concurrency Control Mechanisms for Main-Memory Databases</span></a></div></details><a class="nav-flows" href="../flows.html"><span class="dot"></span>动态流程<span class="count">13</span></a></nav></aside>
+  <main class="main">
+    
+<nav class="crumbs" aria-label="面包屑导航"><a href="../index.html">首页</a><span>/</span><span>大赛与训练</span><span>/</span><span aria-current="page">输出规范</span></nav>
+<header class="doc-head">
+  <div class="doc-meta-bar">
+    <span class="eyebrow-pill">大赛与训练</span>
+    <span class="doc-meta-item">1 个章节</span>
+    <span class="doc-meta-sep">·</span>
+    <span class="doc-meta-item">约 2 分钟阅读</span>
+    <span class="doc-meta-sep">·</span>
+    <a class="doc-meta-source" href="../../docs/game/miniob-output-convention.md">Markdown 源文件 ↗</a>
+  </div>
+  <h1>输出规范</h1>
+</header>
+<section class="panel map-panel" id="doc-outline-panel">
+  <div class="panel-head">
+    <div>
+      <h2>章节结构导览</h2>
+      <span>点击任意章节直达正文；支持结构卡片与交互思维导图切换</span>
+    </div>
+    <button type="button" class="map-toggle-btn" data-toggle-markmap aria-expanded="false">⊞ 切换思维导图</button>
+  </div>
+  <div class="tree-view"><div class="tree-grid"><div class="tree-branch"><div class="tree-top"><span class="tree-link"><span class="tree-num">1</span><span>语法解析错误，返回 FAILURE（只返回这个字符串，不带任何多余字符）。</span></span></div></div><div class="tree-branch"><div class="tree-top"><span class="tree-link"><span class="tree-num">2</span><span>对于DML和DDL操作，执行成功返回SUCCESS，失败返回FAILURE。更…</span></span></div></div><div class="tree-branch"><div class="tree-top"><span class="tree-link"><span class="tree-num">3</span><span>对于QUERY操作，如果执行失败，返回FAILURE（包括语法错误）。否则按照…</span></span></div></div><div class="tree-branch"><div class="tree-top"><span class="tree-link"><span class="tree-num">4</span><span>所有输出不区分大小写</span></span></div></div><div class="tree-branch"><div class="tree-top"><span class="tree-link"><span class="tree-num">5</span><span>日期(date)输出格式使用：&quot;YYYY-mm-DD&quot;</span></span></div></div><div class="tree-branch"><div class="tree-top"><span class="tree-link"><span class="tree-num">6</span><span>输出的字符串不使用单引号双引号或其它括起来</span></span></div></div><div class="tree-branch"><div class="tree-top"><span class="tree-link"><span class="tree-num">7</span><span>浮点数输出，不要带后面多余的0，四舍五入保留两位小数。参考函数 doublet…</span></span></div></div><div class="tree-branch"><div class="tree-top"><span class="tree-link"><span class="tree-num">8</span><span>某张表或者某个查询结果一行数据都没有，但是依然需要输出表头信息</span></span></div></div></div></div>
+  <div class="markmap-wrap" hidden>
+    <div class="markmap"><script type="text/template"># 输出规范
+  - 语法解析错误，返回 FAILURE（只返回这个字符串，不带任何多余字符）。
+  - 对于DML和DDL操作，执行成功返回SUCCESS，失败返回FAILURE。更…
+  - 对于QUERY操作，如果执行失败，返回FAILURE（包括语法错误）。否则按照…
+  - 所有输出不区分大小写
+  - 日期(date)输出格式使用："YYYY-mm-DD"
+  - 输出的字符串不使用单引号双引号或其它括起来
+  - 浮点数输出，不要带后面多余的0，四舍五入保留两位小数。参考函数 doublet…
+  - 某张表或者某个查询结果一行数据都没有，但是依然需要输出表头信息</script></div>
+  </div>
+</section>
+
+<article class="content"><p>对于比赛和训练营测试后台，需要做一些输出约定，才能正确的进行测试。</p>
+<p>*** 注意： 后台测试环境，依赖本章节的输出要求。如果输出格式不满足要求，有些case将无法通过***</p>
+<p>输出是指服务端返回给客户端的数据。为了可以做测试，需要对输出的格式做约定。
+NOTE：后台测试程序，是将预先编辑好的Case执行后，将执行结果与预期输出结果（预先编写完成）做对比，与mysql test工作原理类似，因此需要严格按照输出约束来输出。</p>
+<blockquote>
+<p>这里虽然列出了很多约束条件，但是同学们并不需要担心，当前的实现已经满足了这些约束条件，或者给出了满足约束的帮助函数，只要按照要求使用即可。</p>
+</blockquote>
+<ol>
+<li>
+<p>语法解析错误，返回 FAILURE（只返回这个字符串，不带任何多余字符）。</p>
+</li>
+<li>
+<p>对于DML和DDL操作，执行成功返回SUCCESS，失败返回FAILURE。更新和删除操作时没有数据变更，只要没有错误，输出也是SUCCESS。</p>
+</li>
+<li>
+<p>对于QUERY操作，如果执行失败，返回FAILURE（包括语法错误）。否则按照下面的格式要求输出：列名显示和顺序说明：</p>
+<ul>
+<li>单表查询，没有指定列名(select * from t) ，按照建表语句的顺序列出列名，列名不需要带表明</li>
+<li>单表查询，指定了列名，按照指定的顺序输出列名，列名不需要带表名</li>
+<li>表查询，没有指定列名(select * from t,t1)，列名需要带表明，使用'.'分开。每张表的列名与建表时顺序保持一致，多张表按照from后指定的顺序依次排列</li>
+<li>多表查询，指定列名，就按照指定的顺序排列</li>
+<li>多表查询，有些指定列名，有些没有指定(select t1.*, t2.id from t1,t2)。没有指定的与建表时保持一致，否则按照指定的顺序排列
+输出格式：
+列名之间使用 ' | '分开，注意 '|'左右各有一个空格。输出列名后，第二行开始输出列值，值之间也使用' | '隔开。
+注意：第一列和最后一列没有分隔符，也没有空格
+如果没有数据，显示列名即可。</li>
+<li>聚合函数字段输出，保留与输入相似的格式。比如select max(age) from t; 那么输出时，列名输出max(age)。注意，圆括号内没有空格。</li>
+</ul>
+</li>
+<li>
+<p>所有输出不区分大小写</p>
+</li>
+<li>
+<p>日期(date)输出格式使用：&quot;YYYY-mm-DD&quot;</p>
+</li>
+<li>
+<p>输出的字符串不使用单引号双引号或其它括起来</p>
+</li>
+<li>
+<p>浮点数输出，不要带后面多余的0，四舍五入保留两位小数。参考函数 double_to_str</p>
+</li>
+</ol>
+<p>FAQ</p>
+<ul>
+<li>某张表或者某个查询结果一行数据都没有，但是依然需要输出表头信息</li>
+<li>查询语句输入的字段名带了表名，比如select t.id from t; ，因为只有一张表，还是仅输出字段名称</li>
+<li>测试不考察大小写，所以输入输出都不区分大小写</li>
+</ul>
+</article>
+<nav class="pager" aria-label="相邻文档导航"><a class="prev" href="introduction.html"><span>← 上一篇</span>OceanBase 数据库大赛</a><a class="next" href="debug-output.html"><span>下一篇 →</span>输出调试信息</a></nav>
+<p class="source-line">源文件：<a href="../../docs/game/miniob-output-convention.md">game/miniob-output-convention.md</a></p>
+
+    <footer class="page-footer">
+      <span>由 <code>docs/visual/build.py</code> &amp; <code>draw_diagrams.py</code> 从 <code>docs/docs</code> 生成</span>
+      <span>MiniOB · 可视化技术文档</span>
+    </footer>
+  </main>
+  
+</div>
+<div class="nav-scrim" id="navScrim"></div>
+<div class="diagram-modal" id="diagramModal" hidden role="dialog" aria-modal="true" aria-label="图表放大检视">
+  <div class="diagram-modal-bar">
+    <span class="diagram-modal-title" id="diagramModalTitle">架构与流程图检视</span>
+    <button type="button" class="diagram-modal-close" id="diagramModalClose" aria-label="关闭">✕ 关闭 (Esc)</button>
+  </div>
+  <div class="diagram-modal-body" id="diagramModalBody"></div>
+</div>
+<script src="../assets/markmap-config.js"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/markmap-autoloader@0.18"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/@highlightjs/cdn-assets@11/highlight.min.js"></script>
+
+<script defer src="../assets/site.js"></script>
+</body>
+</html>

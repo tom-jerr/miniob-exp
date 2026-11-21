@@ -1,0 +1,116 @@
+<?xml version='1.0' encoding='utf-8'?>
+<svg xmlns="http://www.w3.org/2000/svg" width="1060" height="420" viewBox="0 0 1060 420" role="img" aria-labelledby="miniob-btree-clustered-architecture-title miniob-btree-clustered-architecture-desc" class="toolkit-diagram" data-diagram-id="miniob-btree-clustered-architecture">
+  <title id="miniob-btree-clustered-architecture-title">MiniOB B+Tree 聚簇表存储引擎与四种 Key 模式架构图</title>
+  <desc id="miniob-btree-clustered-architecture-desc">对比 ENGINE=btree 聚簇表（COMPOSITE / ROWID 叶子存整行）与二级索引（ATTR_MEMCMP_VALUE / ATTR_RID）的编码及回表路径。</desc>
+  <defs>
+    <marker id="miniob-btree-clustered-architecture-arrow-ink" viewBox="0 0 10 10" refX="8.6" refY="5" markerWidth="6.8" markerHeight="6.8" orient="auto">
+      <path d="M0 0.8 L9.5 5 L0 9.2 Z" fill="#334155" />
+    </marker>
+    <marker id="miniob-btree-clustered-architecture-arrow-blue" viewBox="0 0 10 10" refX="8.6" refY="5" markerWidth="6.8" markerHeight="6.8" orient="auto">
+      <path d="M0 0.8 L9.5 5 L0 9.2 Z" fill="#2554C7" />
+    </marker>
+    <marker id="miniob-btree-clustered-architecture-arrow-amber" viewBox="0 0 10 10" refX="8.6" refY="5" markerWidth="6.8" markerHeight="6.8" orient="auto">
+      <path d="M0 0.8 L9.5 5 L0 9.2 Z" fill="#B45309" />
+    </marker>
+    <marker id="miniob-btree-clustered-architecture-arrow-teal" viewBox="0 0 10 10" refX="8.6" refY="5" markerWidth="6.8" markerHeight="6.8" orient="auto">
+      <path d="M0 0.8 L9.5 5 L0 9.2 Z" fill="#0F766E" />
+    </marker>
+    <marker id="miniob-btree-clustered-architecture-arrow-purple" viewBox="0 0 10 10" refX="8.6" refY="5" markerWidth="6.8" markerHeight="6.8" orient="auto">
+      <path d="M0 0.8 L9.5 5 L0 9.2 Z" fill="#6D28D9" />
+    </marker>
+    <marker id="miniob-btree-clustered-architecture-arrow-rose" viewBox="0 0 10 10" refX="8.6" refY="5" markerWidth="6.8" markerHeight="6.8" orient="auto">
+      <path d="M0 0.8 L9.5 5 L0 9.2 Z" fill="#BE123C" />
+    </marker>
+    <marker id="miniob-btree-clustered-architecture-arrow-muted" viewBox="0 0 10 10" refX="8.6" refY="5" markerWidth="6.8" markerHeight="6.8" orient="auto">
+      <path d="M0 0.8 L9.5 5 L0 9.2 Z" fill="#64748B" />
+    </marker>
+  </defs>
+  <g class="diag-bg">
+    <rect x="0" y="0" width="1060" height="420" rx="12" fill="#FCFDFE" stroke="none" class="diag-canvas-bg" />
+  </g>
+  <g class="diag-lanes">
+    <g class="diag-lane">
+      <rect x="16" y="16" width="514" height="388" rx="10" fill="#F0F5FF" stroke="#2554C7" stroke-width="1.5" class="diag-lane-rect" />
+      <text x="30" y="38" font-family="&quot;Noto Sans SC&quot;, &quot;PingFang SC&quot;, &quot;Microsoft YaHei&quot;, &quot;Segoe UI&quot;, Arial, sans-serif" font-size="12.8" font-weight="700" fill="#1E40AF" class="diag-lane-title">1. B+Tree 聚簇表主存储 (Clustered B+Tree: Leaf Value = Full Record)</text>
+      <text x="516" y="38" font-family="&quot;JetBrains Mono&quot;, &quot;SFMono-Regular&quot;, Consolas, &quot;Liberation Mono&quot;, monospace" font-size="11.2" font-weight="500" text-anchor="end" fill="#7B89A1" class="diag-lane-sub">IndexFileHeader (v2) · 按主键或隐藏 8B RowID 聚簇存放整行</text>
+    </g>
+    <g class="diag-lane">
+      <rect x="544" y="16" width="500" height="388" rx="10" fill="#F0FDFA" stroke="#0F766E" stroke-width="1.5" class="diag-lane-rect" />
+      <text x="558" y="38" font-family="&quot;Noto Sans SC&quot;, &quot;PingFang SC&quot;, &quot;Microsoft YaHei&quot;, &quot;Segoe UI&quot;, Arial, sans-serif" font-size="12.8" font-weight="700" fill="#115E59" class="diag-lane-title">2. 二级索引与回表路径对比 (Secondary Index &amp; Lookup Path)</text>
+      <text x="1030" y="38" font-family="&quot;JetBrains Mono&quot;, &quot;SFMono-Regular&quot;, Consolas, &quot;Liberation Mono&quot;, monospace" font-size="11.2" font-weight="500" text-anchor="end" fill="#7B89A1" class="diag-lane-sub">BtreePkIndex (主键值回表) vs BplusTreeIndex (Heap RID 回表)</text>
+    </g>
+  </g>
+  <g class="diag-edges">
+    <g class="flow-edge">
+      <path d="M 150.0 158.0 L 150.0 192.0" fill="none" stroke="#2554C7" stroke-width="1.9" stroke-linejoin="round" stroke-linecap="round" class="flow-edge-path" marker-end="url(#miniob-btree-clustered-architecture-arrow-blue)" />
+    </g>
+    <g class="flow-edge">
+      <path d="M 396.0 158.0 L 396.0 192.0" fill="none" stroke="#B45309" stroke-width="1.9" stroke-linejoin="round" stroke-linecap="round" class="flow-edge-path" marker-end="url(#miniob-btree-clustered-architecture-arrow-amber)" />
+    </g>
+    <g class="flow-edge">
+      <path d="M 273.0 278.0 L 273.0 306.0" fill="none" stroke="#6D28D9" stroke-width="1.9" stroke-linejoin="round" stroke-linecap="round" class="flow-edge-path" marker-end="url(#miniob-btree-clustered-architecture-arrow-purple)" />
+    </g>
+    <g class="flow-edge">
+      <path d="M 794.0 158.0 L 794.0 192.0" fill="none" stroke="#0F766E" stroke-width="1.9" stroke-linejoin="round" stroke-linecap="round" class="flow-edge-path" marker-end="url(#miniob-btree-clustered-architecture-arrow-teal)" />
+      <rect x="755.1" y="165.5" width="77.9" height="19.0" rx="5.5" fill="#FFFFFF" stroke="#CBD5E1" stroke-width="1.1" class="flow-edge-pill" />
+      <text x="794.0" y="178.8" font-family="&quot;Noto Sans SC&quot;, &quot;PingFang SC&quot;, &quot;Microsoft YaHei&quot;, &quot;Segoe UI&quot;, Arial, sans-serif" font-size="11.2" font-weight="600" text-anchor="middle" fill="#526077" class="flow-edge-label">返回主键编码</text>
+    </g>
+    <g class="flow-edge">
+      <path d="M 564.0 235.0 L 510.0 235.0" fill="none" stroke="#0F766E" stroke-width="1.9" stroke-linejoin="round" stroke-linecap="round" class="flow-edge-path" marker-end="url(#miniob-btree-clustered-architecture-arrow-teal)" />
+      <rect x="501.5" y="165.5" width="70.9" height="19.0" rx="5.5" fill="#FFFFFF" stroke="#CBD5E1" stroke-width="1.1" class="flow-edge-pill" />
+      <text x="537.0" y="178.8" font-family="&quot;Noto Sans SC&quot;, &quot;PingFang SC&quot;, &quot;Microsoft YaHei&quot;, &quot;Segoe UI&quot;, Arial, sans-serif" font-size="11.2" font-weight="600" text-anchor="middle" fill="#526077" class="flow-edge-label">按 PK 点查</text>
+    </g>
+  </g>
+  <g class="diag-nodes">
+    <g class="flow-node role-blue" data-node-id="bt-comp" aria-label="COMPOSITE 模式 (Key: pk_1 | pk_2 ... · Val: 整行 Record)">
+      <rect x="36" y="66" width="228" height="92" rx="9" fill="#E6EFFD" stroke="#2554C7" stroke-width="1.8" class="flow-node-rect" />
+      <rect x="44" y="72" width="91.4" height="16" rx="4.5" fill="#1E40AF" stroke="none" class="flow-node-badge-bg" />
+      <text x="89.7" y="83.5" font-family="&quot;JetBrains Mono&quot;, &quot;SFMono-Regular&quot;, Consolas, &quot;Liberation Mono&quot;, monospace" font-size="10.2" font-weight="700" text-anchor="middle" fill="#FFFFFF" class="flow-node-badge-text">有主键 btree 表</text>
+      <text x="150.0" y="114.0" font-family="&quot;Noto Sans SC&quot;, &quot;PingFang SC&quot;, &quot;Microsoft YaHei&quot;, &quot;Segoe UI&quot;, Arial, sans-serif" font-size="14.2" font-weight="700" text-anchor="middle" fill="#141E30" class="flow-node-title">COMPOSITE 模式</text>
+      <text x="150.0" y="130.5" font-family="&quot;JetBrains Mono&quot;, &quot;SFMono-Regular&quot;, Consolas, &quot;Liberation Mono&quot;, monospace" font-size="11" font-weight="500" text-anchor="middle" fill="#526077" class="flow-node-sub">Key: pk_1 | pk_2 ... · Val: 整行 Record</text>
+    </g>
+    <g class="flow-node role-amber" data-node-id="bt-rowid" aria-label="ROWID 模式 (Key: 8B 自增 rowid · Val: 整行 Record)">
+      <rect x="282" y="66" width="228" height="92" rx="9" fill="#FEF0C7" stroke="#B45309" stroke-width="1.8" class="flow-node-rect" />
+      <rect x="290" y="72" width="91.4" height="16" rx="4.5" fill="#92400E" stroke="none" class="flow-node-badge-bg" />
+      <text x="335.7" y="83.5" font-family="&quot;JetBrains Mono&quot;, &quot;SFMono-Regular&quot;, Consolas, &quot;Liberation Mono&quot;, monospace" font-size="10.2" font-weight="700" text-anchor="middle" fill="#FFFFFF" class="flow-node-badge-text">无主键 btree 表</text>
+      <text x="396.0" y="114.0" font-family="&quot;Noto Sans SC&quot;, &quot;PingFang SC&quot;, &quot;Microsoft YaHei&quot;, &quot;Segoe UI&quot;, Arial, sans-serif" font-size="14.2" font-weight="700" text-anchor="middle" fill="#141E30" class="flow-node-title">ROWID 模式</text>
+      <text x="396.0" y="130.5" font-family="&quot;JetBrains Mono&quot;, &quot;SFMono-Regular&quot;, Consolas, &quot;Liberation Mono&quot;, monospace" font-size="11" font-weight="500" text-anchor="middle" fill="#526077" class="flow-node-sub">Key: 8B 自增 rowid · Val: 整行 Record</text>
+    </g>
+    <g class="flow-node role-blue" data-node-id="bt-leaf" aria-label="B+Tree 聚簇叶子页 (Clustered Leaf Page) (单列主键时直接包装为共享 BtreePkIndex；插入自动校验 RECORD_DUPLICATE_KEY)">
+      <rect x="36" y="192" width="474" height="86" rx="9" fill="#E6EFFD" stroke="#2554C7" stroke-width="1.8" class="flow-node-rect" />
+      <rect x="44" y="198" width="98.7" height="16" rx="4.5" fill="#1E40AF" stroke="none" class="flow-node-badge-bg" />
+      <text x="93.4" y="209.5" font-family="&quot;JetBrains Mono&quot;, &quot;SFMono-Regular&quot;, Consolas, &quot;Liberation Mono&quot;, monospace" font-size="10.2" font-weight="700" text-anchor="middle" fill="#FFFFFF" class="flow-node-badge-text">Leaf Page (8KB)</text>
+      <text x="273.0" y="237.0" font-family="&quot;Noto Sans SC&quot;, &quot;PingFang SC&quot;, &quot;Microsoft YaHei&quot;, &quot;Segoe UI&quot;, Arial, sans-serif" font-size="14.2" font-weight="700" text-anchor="middle" fill="#141E30" class="flow-node-title">B+Tree 聚簇叶子页 (Clustered Leaf Page)</text>
+      <text x="273.0" y="253.5" font-family="&quot;JetBrains Mono&quot;, &quot;SFMono-Regular&quot;, Consolas, &quot;Liberation Mono&quot;, monospace" font-size="11" font-weight="500" text-anchor="middle" fill="#526077" class="flow-node-sub">单列主键时直接包装为共享 BtreePkIndex；插入自动校验 RECORD_DUPLICATE_KEY</text>
+    </g>
+    <g class="flow-node role-purple" data-node-id="bt-rec" aria-label="崩溃一致性与 RowID 恢复 (复用 BplusTreeMiniTransaction (MTR 日志)；重启取 max(header.next_rowid, max_key+1))">
+      <rect x="36" y="306" width="474" height="76" rx="9" fill="#EDE9FE" stroke="#6D28D9" stroke-width="1.8" class="flow-node-rect" />
+      <rect x="44" y="312" width="94.9" height="16" rx="4.5" fill="#5B21B6" stroke="none" class="flow-node-badge-bg" />
+      <text x="91.4" y="323.5" font-family="&quot;JetBrains Mono&quot;, &quot;SFMono-Regular&quot;, Consolas, &quot;Liberation Mono&quot;, monospace" font-size="10.2" font-weight="700" text-anchor="middle" fill="#FFFFFF" class="flow-node-badge-text">MTR &amp; Recovery</text>
+      <text x="273.0" y="346.0" font-family="&quot;Noto Sans SC&quot;, &quot;PingFang SC&quot;, &quot;Microsoft YaHei&quot;, &quot;Segoe UI&quot;, Arial, sans-serif" font-size="14.2" font-weight="700" text-anchor="middle" fill="#141E30" class="flow-node-title">崩溃一致性与 RowID 恢复</text>
+      <text x="273.0" y="362.5" font-family="&quot;JetBrains Mono&quot;, &quot;SFMono-Regular&quot;, Consolas, &quot;Liberation Mono&quot;, monospace" font-size="11" font-weight="500" text-anchor="middle" fill="#526077" class="flow-node-sub">复用 BplusTreeMiniTransaction (MTR 日志)；重启取 max(header.next_rowid, max_key+1)</text>
+    </g>
+    <g class="flow-node role-teal" data-node-id="bt-sec" aria-label="ATTR_MEMCMP_VALUE 模式 (btree/lsm 二级索引) (Key: [索引属性 | 主键编码] · Value: 主键编码 (PK / RowID))">
+      <rect x="564" y="66" width="460" height="92" rx="9" fill="#CCFBF1" stroke="#0F766E" stroke-width="1.8" class="flow-node-rect" />
+      <rect x="572" y="72" width="81.0" height="16" rx="4.5" fill="#115E59" stroke="none" class="flow-node-badge-bg" />
+      <text x="612.5" y="83.5" font-family="&quot;JetBrains Mono&quot;, &quot;SFMono-Regular&quot;, Consolas, &quot;Liberation Mono&quot;, monospace" font-size="10.2" font-weight="700" text-anchor="middle" fill="#FFFFFF" class="flow-node-badge-text">BtreePkIndex</text>
+      <text x="794.0" y="114.0" font-family="&quot;Noto Sans SC&quot;, &quot;PingFang SC&quot;, &quot;Microsoft YaHei&quot;, &quot;Segoe UI&quot;, Arial, sans-serif" font-size="14.2" font-weight="700" text-anchor="middle" fill="#141E30" class="flow-node-title">ATTR_MEMCMP_VALUE 模式 (btree/lsm 二级索引)</text>
+      <text x="794.0" y="130.5" font-family="&quot;JetBrains Mono&quot;, &quot;SFMono-Regular&quot;, Consolas, &quot;Liberation Mono&quot;, monospace" font-size="11" font-weight="500" text-anchor="middle" fill="#526077" class="flow-node-sub">Key: [索引属性 | 主键编码] · Value: 主键编码 (PK / RowID)</text>
+    </g>
+    <g class="flow-node role-teal" data-node-id="bt-lookup" aria-label="聚簇表回表：Table::get_record_by_key(pk) (二级索引扫出主键编码 → 到聚簇 B+Tree 点查取出整行 Record Bytes)">
+      <rect x="564" y="192" width="460" height="86" rx="9" fill="#CCFBF1" stroke="#0F766E" stroke-width="1.8" class="flow-node-rect" />
+      <rect x="572" y="198" width="63.2" height="16" rx="4.5" fill="#115E59" stroke="none" class="flow-node-badge-bg" />
+      <text x="603.6" y="209.5" font-family="&quot;JetBrains Mono&quot;, &quot;SFMono-Regular&quot;, Consolas, &quot;Liberation Mono&quot;, monospace" font-size="10.2" font-weight="700" text-anchor="middle" fill="#FFFFFF" class="flow-node-badge-text">PK Lookup</text>
+      <text x="794.0" y="237.0" font-family="&quot;Noto Sans SC&quot;, &quot;PingFang SC&quot;, &quot;Microsoft YaHei&quot;, &quot;Segoe UI&quot;, Arial, sans-serif" font-size="14.2" font-weight="700" text-anchor="middle" fill="#141E30" class="flow-node-title">聚簇表回表：Table::get_record_by_key(pk)</text>
+      <text x="794.0" y="253.5" font-family="&quot;JetBrains Mono&quot;, &quot;SFMono-Regular&quot;, Consolas, &quot;Liberation Mono&quot;, monospace" font-size="11" font-weight="500" text-anchor="middle" fill="#526077" class="flow-node-sub">二级索引扫出主键编码 → 到聚簇 B+Tree 点查取出整行 Record Bytes</text>
+    </g>
+    <g class="flow-node role-gray" data-node-id="bt-heap" aria-label="对照：ATTR_RID 模式 (heap 二级索引，v0 兼容) (Key: [索引属性 | RID(page,slot)] · Value: RID → 直接定位 Heap 数据页槽位)">
+      <rect x="564" y="306" width="460" height="76" rx="9" fill="#F1F5F9" stroke="#475569" stroke-width="1.8" class="flow-node-rect" />
+      <rect x="572" y="312" width="98.7" height="16" rx="4.5" fill="#334155" stroke="none" class="flow-node-badge-bg" />
+      <text x="621.4" y="323.5" font-family="&quot;JetBrains Mono&quot;, &quot;SFMono-Regular&quot;, Consolas, &quot;Liberation Mono&quot;, monospace" font-size="10.2" font-weight="700" text-anchor="middle" fill="#FFFFFF" class="flow-node-badge-text">Heap RID Lookup</text>
+      <text x="794.0" y="346.0" font-family="&quot;Noto Sans SC&quot;, &quot;PingFang SC&quot;, &quot;Microsoft YaHei&quot;, &quot;Segoe UI&quot;, Arial, sans-serif" font-size="14.2" font-weight="700" text-anchor="middle" fill="#141E30" class="flow-node-title">对照：ATTR_RID 模式 (heap 二级索引，v0 兼容)</text>
+      <text x="794.0" y="362.5" font-family="&quot;JetBrains Mono&quot;, &quot;SFMono-Regular&quot;, Consolas, &quot;Liberation Mono&quot;, monospace" font-size="11" font-weight="500" text-anchor="middle" fill="#526077" class="flow-node-sub">Key: [索引属性 | RID(page,slot)] · Value: RID → 直接定位 Heap 数据页槽位</text>
+    </g>
+  </g>
+  <g class="diag-labels" />
+</svg>

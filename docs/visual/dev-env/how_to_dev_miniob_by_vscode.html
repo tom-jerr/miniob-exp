@@ -1,0 +1,244 @@
+<!doctype html>
+<html lang="zh-CN" id="top">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>环境准备 · MiniOB 可视化文档</title>
+<link rel="stylesheet" href="../assets/style.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@highlightjs/cdn-assets@11/styles/atom-one-dark.min.css">
+<script src="../assets/theme.js"></script>
+
+</head>
+<body class="">
+<div class="reading-progress" id="readingProgress" aria-hidden="true"></div>
+<header class="topbar">
+  <button class="menu-btn" id="menuBtn" aria-label="切换侧栏" aria-expanded="false">☰</button>
+  <a class="brand" href="../index.html"><span class="brand-mark">M</span><span>MiniOB <em>可视化文档</em></span></a>
+  <div class="top-actions">
+    <a class="top-link" href="../flows.html">动态流程</a>
+    <button class="theme-btn" id="themeBtn" aria-label="切换明暗主题" title="切换明暗主题">◐</button>
+  </div>
+</header>
+<div class="layout has-toc">
+  <aside class="sidebar" id="sidebar"><nav class="site-nav" aria-label="文档目录"><a class="nav-home" href="../index.html"><span class="brand-mark">M</span><span>MiniOB 可视化文档</span></a><details class="nav-group"><summary>快速开始<span>2</span></summary><div class="nav-links"><a href="../how_to_build.html"><span class="nav-link-text">如何编译</span></a><a href="../how_to_run.html"><span class="nav-link-text">如何运行</span></a></div></details><details class="nav-group"><summary>设计文档<span>21</span></summary><div class="nav-links"><a href="../design/miniob-architecture.html"><span class="nav-link-text">MiniOB代码架构框架设计和说明</span><span class="nav-badge" title="含交互流程图或架构图">图</span></a><a href="../design/miniob-buffer-pool.html"><span class="nav-link-text">MiniOB 存储实现</span><span class="nav-badge" title="含交互流程图或架构图">图</span></a><a href="../design/miniob-double-write-buffer.html"><span class="nav-link-text">MiniOB Double Write Buffer 实现</span><span class="nav-badge" title="含交互流程图或架构图">图</span></a><a href="../design/miniob-transaction.html"><span class="nav-link-text">事务模块</span><span class="nav-badge" title="含交互流程图或架构图">图</span></a><a href="../design/miniob-durability.html"><span class="nav-link-text">持久化</span><span class="nav-badge" title="含交互流程图或架构图">图</span></a><a href="../design/miniob-persistence-files.html"><span class="nav-link-text">持久化文件与恢复路径</span><span class="nav-badge" title="含交互流程图或架构图">图</span></a><a href="../design/miniob-checkpoint-wal.html"><span class="nav-link-text">MiniOB 检查点与 WAL 截断</span><span class="nav-badge" title="含交互流程图或架构图">图</span></a><a href="../design/miniob-sql-parser.html"><span class="nav-link-text">SQL 词法语法分析</span></a><a href="../design/miniob-how-to-add-new-sql.html"><span class="nav-link-text">SQL语句执行流程</span><span class="nav-badge" title="含交互流程图或架构图">图</span></a><a href="../design/miniob-sql-expression.html"><span class="nav-link-text">SQL 表达式</span></a><a href="../design/miniob-bplus-tree.html"><span class="nav-link-text">MiniOB B+Tree 实现</span><span class="nav-badge" title="含交互流程图或架构图">图</span></a><a href="../design/miniob-bplus-tree-concurrency.html"><span class="nav-link-text">B+ 树并发操作</span><span class="nav-badge" title="含交互流程图或架构图">图</span></a><a href="../design/miniob-thread-model.html"><span class="nav-link-text">线程模型</span><span class="nav-badge" title="含交互流程图或架构图">图</span></a><a href="../design/miniob-mysql-protocol.html"><span class="nav-link-text">MySQL 通讯协议</span></a><a href="../design/miniob-pax-storage.html"><span class="nav-link-text">MiniOB PAX 存储格式</span><span class="nav-badge" title="含交互流程图或架构图">图</span></a><a href="../design/miniob-aggregation-and-group-by.html"><span class="nav-link-text">MiniOB 向量化执行 aggregation 和 group by 实现</span></a><a href="../design/miniob-lsm-tree.html"><span class="nav-link-text">MiniOB LSM-Tree 存储引擎</span><span class="nav-badge" title="含交互流程图或架构图">图</span></a><a href="../design/introduction.html"><span class="nav-link-text">功能模块设计说明</span></a><a href="../design/miniob-btree-storage-engine.html"><span class="nav-link-text">MiniOB B+Tree 聚簇表存储引擎</span><span class="nav-badge" title="含交互流程图或架构图">图</span></a><a href="../design/miniob-cascade.html"><span class="nav-link-text">Cascade Optimizer(查询优化器)</span><span class="nav-badge" title="含交互流程图或架构图">图</span></a><a href="../design/miniob-update-mvcc-occ.html"><span class="nav-link-text">MiniOB UPDATE、MVCC 与 OCC 方案设计</span><span class="nav-badge" title="含交互流程图或架构图">图</span></a></div></details><details class="nav-group"><summary>课程实验<span>6</span></summary><div class="nav-links"><a href="../db_course_lab/overview.html"><span class="nav-link-text">数据库系统实现原理与实践课程实验</span></a><a href="../db_course_lab/lab0.html"><span class="nav-link-text">LAB#0 C++ 基础</span></a><a href="../db_course_lab/lab1.html"><span class="nav-link-text">LAB#1 LSM-Tree 存储引擎</span></a><a href="../db_course_lab/lab2.html"><span class="nav-link-text">LAB#2 查询引擎</span></a><a href="../db_course_lab/lab3.html"><span class="nav-link-text">LAB#3 事务引擎</span></a><a href="../db_course_lab/lab4.html"><span class="nav-link-text">LAB#4 性能测试</span></a></div></details><details class="nav-group"><summary>简明教程<span>9</span></summary><div class="nav-links"><a href="../lectures/copyright.html"><span class="nav-link-text">版权声明</span></a><a href="../lectures/lecture-1.html"><span class="nav-link-text">第1章 数据库管理系统概述</span></a><a href="../lectures/lecture-2.html"><span class="nav-link-text">第2章 数据库的存储结构</span></a><a href="../lectures/lecture-3.html"><span class="nav-link-text">第3章 索引结构</span></a><a href="../lectures/lecture-4.html"><span class="nav-link-text">第4章 查询处理</span></a><a href="../lectures/lecture-5.html"><span class="nav-link-text">第5章 查询优化</span></a><a href="../lectures/lecture-6.html"><span class="nav-link-text">第6章 事务处理</span></a><a href="../lectures/references.html"><span class="nav-link-text">参考资料</span></a><a href="../lectures/index.html"><span class="nav-link-text">数据库管理系统实现基础讲义</span></a></div></details><details class="nav-group" open><summary>开发环境<span>14</span></summary><div class="nav-links"><a href="introduction.html"><span class="nav-link-text">搭建开发环境</span></a><a href="vscode_dev_with_local_virtual_env.html"><span class="nav-link-text">虚拟机+vscode remote开发</span></a><a href="dev_by_online.html"><span class="nav-link-text">使用在线开发环境开发 MiniOB</span></a><a href="how-to-dev-using-docker.html"><span class="nav-link-text">使用Docker开发MiniOB</span></a><a href="how_to_dev_in_docker_container_by_vscode.html"><span class="nav-link-text">使用 Docker 和 VSCode 远程开发 Miniob</span></a><a href="how_to_dev_in_docker_container_by_vscode_on_windows.html"><span class="nav-link-text">在windows上通过docker配置环境并利用vscode调试代码（手把手版）</span></a><a href="how_to_dev_miniob_by_docker_on_windows.html"><span class="nav-link-text">安装Docker</span></a><a href="how_to_dev_miniob_by_vscode.html" class="active" aria-current="page"><span class="nav-link-text">环境准备</span></a><a href="miniob-how-to-debug.html"><span class="nav-link-text">miniob调试篇</span></a><a href="how_to_submit_for_testing.html"><span class="nav-link-text">训练营平台使用说明</span></a><a href="integration_test.html"><span class="nav-link-text">MiniOB 集成测试使用文档</span></a><a href="cloudlab_setup.html"><span class="nav-link-text">开源学堂在线编程环境开发 MiniOB</span></a><a href="how_to_dev_miniob_by_docker_on_windows_simplified.html"><span class="nav-link-text">在windows上通过docker配置环境并利用vscode编辑、开发、调试代码（简易版）</span></a><a href="how_to_dev_miniob_in_vscodeGUI_by_docker_on_windows.html"><span class="nav-link-text">基于Windows+docker容器在本地利用VSCode编辑、开发及调试miniob</span></a></div></details><details class="nav-group"><summary>大赛与训练<span>9</span></summary><div class="nav-links"><a href="../game/introduction.html"><span class="nav-link-text">OceanBase 数据库大赛</span></a><a href="../game/miniob-output-convention.html"><span class="nav-link-text">输出规范</span></a><a href="../game/debug-output.html"><span class="nav-link-text">输出调试信息</span></a><a href="../game/miniob-memtracer.html"><span class="nav-link-text">MemTracer</span></a><a href="../game/miniob_topics.html"><span class="nav-link-text">OceanBase 数据库大赛2021届题目</span></a><a href="../game/github-introduction.html"><span class="nav-link-text">MiniOB GitHub 在训练营中的使用说明</span></a><a href="../game/gitee-instructions.html"><span class="nav-link-text">MiniOB Gitee 在训练营中的使用说明</span></a><a href="../game/miniob-vectordb.html"><span class="nav-link-text">MiniOB 向量数据库</span></a><a href="../game/git-introduction.html"><span class="nav-link-text">Git 介绍</span></a></div></details><details class="nav-group"><summary>博客<span>2</span></summary><div class="nav-links"><a href="../blog/introduction.html"><span class="nav-link-text">介绍</span></a><a href="../blog/1.html"><span class="nav-link-text">High-Performance Concurrency Control Mechanisms for Main-Memory Databases</span></a></div></details><a class="nav-flows" href="../flows.html"><span class="dot"></span>动态流程<span class="count">13</span></a></nav></aside>
+  <main class="main">
+    
+<nav class="crumbs" aria-label="面包屑导航"><a href="../index.html">首页</a><span>/</span><span>开发环境</span><span>/</span><span aria-current="page">环境准备</span></nav>
+<header class="doc-head">
+  <div class="doc-meta-bar">
+    <span class="eyebrow-pill">开发环境</span>
+    <span class="doc-meta-item">10 个章节</span>
+    <span class="doc-meta-sep">·</span>
+    <span class="doc-meta-item">约 4 分钟阅读</span>
+    <span class="doc-meta-sep">·</span>
+    <a class="doc-meta-source" href="../../docs/dev-env/how_to_dev_miniob_by_vscode.md">Markdown 源文件 ↗</a>
+  </div>
+  <h1>环境准备</h1>
+</header>
+<section class="panel map-panel" id="doc-outline-panel">
+  <div class="panel-head">
+    <div>
+      <h2>章节结构导览</h2>
+      <span>点击任意章节直达正文；支持结构卡片与交互思维导图切换</span>
+    </div>
+    <button type="button" class="map-toggle-btn" data-toggle-markmap aria-expanded="false">⊞ 切换思维导图</button>
+  </div>
+  <div class="tree-view"><div class="tree-grid"><div class="tree-branch"><div class="tree-top"><a class="tree-link" href="#运行环境"><span class="tree-num">1</span><span>运行环境</span></a></div></div><div class="tree-branch"><div class="tree-top"><a class="tree-link" href="#软件要求"><span class="tree-num">2</span><span>软件要求</span></a></div></div><div class="tree-branch"><div class="tree-top"><a class="tree-link" href="#获取代码"><span class="tree-num">3</span><span>获取代码</span></a></div></div><div class="tree-branch"><div class="tree-top"><a class="tree-link" href="#安装软件"><span class="tree-num">4</span><span>安装软件</span></a></div></div><div class="tree-branch"><div class="tree-top"><a class="tree-link" href="#vscode配置"><span class="tree-num">5</span><span>vscode配置</span></a></div><ul class="tree-sub"><li><a class="tree-link" href="#安装插件"><span class="tree-num">5.1</span><span>安装插件</span></a></li><li><a class="tree-link" href="#配置编译tasksjson"><span class="tree-num">5.2</span><span>配置编译tasks.json</span></a></li><li><a class="tree-link" href="#配置调试launchjson"><span class="tree-num">5.3</span><span>配置调试launch.json</span></a></li></ul></div><div class="tree-branch"><div class="tree-top"><a class="tree-link" href="#演示"><span class="tree-num">6</span><span>演示</span></a></div></div></div></div>
+  <div class="markmap-wrap" hidden>
+    <div class="markmap"><script type="text/template"># 环境准备
+  - [运行环境](#运行环境)
+  - [软件要求](#软件要求)
+  - [获取代码](#获取代码)
+  - [安装软件](#安装软件)
+  - [vscode配置](#vscode配置)
+    - [安装插件](#安装插件)
+    - [配置编译tasks.json](#配置编译tasksjson)
+    - [配置调试launch.json](#配置调试launchjson)
+  - [演示](#演示)</script></div>
+  </div>
+</section>
+
+<article class="content"><h1 id="环境准备">环境准备</h1>
+<h2 id="运行环境">运行环境</h2>
+<ul>
+<li>操作系统</li>
+</ul>
+<pre><code class="language-bash">frank@DESKTOP-6NF3B9K:~/git/miniob$ cat /etc/os-release
+NAME=&quot;Ubuntu&quot;
+VERSION=&quot;20.04.5 LTS (Focal Fossa)&quot;
+ID=ubuntu
+ID_LIKE=debian
+PRETTY_NAME=&quot;Ubuntu 20.04.5 LTS&quot;
+VERSION_ID=&quot;20.04&quot;
+HOME_URL=&quot;https://www.ubuntu.com/&quot;
+SUPPORT_URL=&quot;https://help.ubuntu.com/&quot;
+BUG_REPORT_URL=&quot;https://bugs.launchpad.net/ubuntu/&quot;
+PRIVACY_POLICY_URL=&quot;https://www.ubuntu.com/legal/terms-and-policies/privacy-policy&quot;
+VERSION_CODENAME=focal
+UBUNTU_CODENAME=focal
+</code></pre>
+<p>注：这里直接用的windows的WSL，</p>
+<h2 id="软件要求">软件要求</h2>
+<ol>
+<li>vscode</li>
+<li>cmake</li>
+<li>make</li>
+<li>gcc/g++</li>
+<li>libevent</li>
+<li>googletest</li>
+<li>jsoncpp</li>
+<li>git</li>
+</ol>
+<h2 id="获取代码">获取代码</h2>
+<pre><code class="language-bash">git clone https://github.com/oceanbase/miniob.git
+</code></pre>
+<h2 id="安装软件">安装软件</h2>
+<p>可以参考miniob/docs/how_to_build.md。</p>
+<h1 id="vscode配置">vscode配置</h1>
+<p>使用vscode打开miniob工程目录。</p>
+<pre><code class="language-bash">cd miniob
+code .
+</code></pre>
+<h2 id="安装插件">安装插件</h2>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th><img loading="lazy" src="../../docs/dev-env/images/vscode_search_plugs.png" alt="image" /></th>
+<th><img loading="lazy" src="../../docs/dev-env/images/vscode_C++_plugs_detail.png" alt="image" /><br></th>
+</tr>
+</thead>
+</table></div>
+<h2 id="配置编译tasksjson">配置编译tasks.json</h2>
+<blockquote>
+<p>在工程的.vscode目录下新建tasks.json</p>
+</blockquote>
+<pre><code class="language-json">{
+    &quot;options&quot;: {
+        &quot;cwd&quot;: &quot;${workspaceFolder}/build&quot;
+    },
+    &quot;tasks&quot;: [
+        {
+            &quot;label&quot;: &quot;cmake&quot;,
+            &quot;command&quot;: &quot;cmake&quot;,
+            &quot;args&quot;: [
+                &quot;-DDEBUG=ON&quot;,
+                &quot;..&quot;
+            ]
+        },
+        {
+            &quot;label&quot;: &quot;make&quot;,
+            &quot;command&quot;: &quot;make&quot;
+        },
+        {
+            &quot;label&quot;: &quot;CMake Build&quot;,
+            &quot;dependsOn&quot;: [
+                &quot;cmake&quot;,
+                &quot;make&quot;
+            ]
+        }
+    ],
+    &quot;version&quot;: &quot;2.0.0&quot;
+}
+</code></pre>
+<p>注意：</p>
+<ul>
+<li>options：cmake临时文件的目录</li>
+<li>args：cmake需要的参数</li>
+</ul>
+<h2 id="配置调试launchjson">配置调试launch.json</h2>
+<blockquote>
+<p>在工程的.vscode目录下新建launch.json</p>
+</blockquote>
+<pre><code class="language-json">{
+    // 使用 IntelliSense 了解相关属性。 
+    // 悬停以查看现有属性的描述。
+    // 欲了解更多信息，请访问: https://go.microsoft.com/fwlink/?linkid=830387
+    &quot;version&quot;: &quot;0.2.0&quot;,
+    &quot;configurations&quot;: [
+        {
+            &quot;name&quot;: &quot;(gdb) 启动&quot;,
+            &quot;type&quot;: &quot;cppdbg&quot;,
+            &quot;request&quot;: &quot;launch&quot;,
+            &quot;program&quot;: &quot;${workspaceFolder}/build/bin/observer&quot;,
+            &quot;args&quot;: [&quot;-f&quot;, &quot;../../etc/observer.ini&quot;],
+            &quot;stopAtEntry&quot;: false,
+            &quot;cwd&quot;: &quot;${fileDirname}&quot;,
+            &quot;environment&quot;: [],
+            &quot;externalConsole&quot;: false,
+            &quot;MIMode&quot;: &quot;gdb&quot;,
+            &quot;setupCommands&quot;: [
+                {
+                    &quot;description&quot;: &quot;为 gdb 启用整齐打印&quot;,
+                    &quot;text&quot;: &quot;-enable-pretty-printing&quot;,
+                    &quot;ignoreFailures&quot;: true
+                },
+                {
+                    &quot;description&quot;:  &quot;将反汇编风格设置为 Intel&quot;,
+                    &quot;text&quot;: &quot;-gdb-set disassembly-flavor intel&quot;,
+                    &quot;ignoreFailures&quot;: true
+                }
+            ],
+            &quot;preLaunchTask&quot;: &quot;CMake Build&quot;
+        }
+    ]
+}
+</code></pre>
+<p>注意：</p>
+<ul>
+<li>program：编译出来的可执行文件</li>
+<li>args：运行参数</li>
+<li>preLaunchTask：<code>&quot;label&quot;: &quot;CMake Build&quot;</code> 对应</li>
+</ul>
+<h1 id="演示">演示</h1>
+<ul>
+<li>重新使用vscode打开，打开后会自动运行tasks的cmake。</li>
+</ul>
+<p><img loading="lazy" src="../../docs/dev-env/images/vscode_cmake.png" alt="image" /></p>
+<ul>
+<li>设置断点、启动调试</li>
+</ul>
+<p><img loading="lazy" src="../../docs/dev-env/images/vscode_break_point.png" alt="image" /></p>
+<p>注意：启动是会触发make，对工程进行编译。因为是单线程编译，所以第一次惦记启动gdb时需要时间较长，后续如果没有修改源码的操作，则直接踢动gdb进行调试。如果想使用多线程编译可以在tasks.json中配置make参数。</p>
+<pre><code class="language-json">        {
+            &quot;label&quot;: &quot;make&quot;,
+            &quot;command&quot;: &quot;make&quot;,
+            &quot;args&quot;: [
+                &quot;-j&quot;,
+                &quot;4&quot;
+            ]
+        },
+</code></pre>
+<p>args中配置相当于make -j 4</p>
+<p>终端输出如下：</p>
+<p><img loading="lazy" src="../../docs/dev-env/images/vscode_build_ouput.png" alt="image" /></p>
+<ul>
+<li>调试</li>
+</ul>
+<p><img loading="lazy" src="../../docs/dev-env/images/vscode_debug_miniob.png" alt="image" /></p>
+<p>注意：同种标记部分包括调试常用的功能，如：查看变量、调用栈、断点，以及n, s, finish, r等命令。</p>
+</article>
+<nav class="pager" aria-label="相邻文档导航"><a class="prev" href="how_to_dev_miniob_by_docker_on_windows.html"><span>← 上一篇</span>安装Docker</a><a class="next" href="miniob-how-to-debug.html"><span>下一篇 →</span>miniob调试篇</a></nav>
+<p class="source-line">源文件：<a href="../../docs/dev-env/how_to_dev_miniob_by_vscode.md">dev-env/how_to_dev_miniob_by_vscode.md</a></p>
+
+    <footer class="page-footer">
+      <span>由 <code>docs/visual/build.py</code> &amp; <code>draw_diagrams.py</code> 从 <code>docs/docs</code> 生成</span>
+      <span>MiniOB · 可视化技术文档</span>
+    </footer>
+  </main>
+  <aside class="page-toc" aria-label="本页目录"><div class="toc-inner"><p class="toc-title">本页导览</p><ul class="toc-list"><li class="toc-item toc-l2"><a href="#运行环境">运行环境</a></li><li class="toc-item toc-l2"><a href="#软件要求">软件要求</a></li><li class="toc-item toc-l2"><a href="#获取代码">获取代码</a></li><li class="toc-item toc-l2"><a href="#安装软件">安装软件</a></li><li class="toc-item toc-l1"><a href="#vscode配置">vscode配置</a></li><li class="toc-item toc-l2"><a href="#安装插件">安装插件</a></li><li class="toc-item toc-l2"><a href="#配置编译tasksjson">配置编译tasks.json</a></li><li class="toc-item toc-l2"><a href="#配置调试launchjson">配置调试launch.json</a></li><li class="toc-item toc-l1"><a href="#演示">演示</a></li></ul><a class="toc-top" href="#top">↑ 回到顶部</a></div></aside>
+</div>
+<div class="nav-scrim" id="navScrim"></div>
+<div class="diagram-modal" id="diagramModal" hidden role="dialog" aria-modal="true" aria-label="图表放大检视">
+  <div class="diagram-modal-bar">
+    <span class="diagram-modal-title" id="diagramModalTitle">架构与流程图检视</span>
+    <button type="button" class="diagram-modal-close" id="diagramModalClose" aria-label="关闭">✕ 关闭 (Esc)</button>
+  </div>
+  <div class="diagram-modal-body" id="diagramModalBody"></div>
+</div>
+<script src="../assets/markmap-config.js"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/markmap-autoloader@0.18"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/@highlightjs/cdn-assets@11/highlight.min.js"></script>
+
+<script defer src="../assets/site.js"></script>
+</body>
+</html>

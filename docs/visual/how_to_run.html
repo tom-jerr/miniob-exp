@@ -1,0 +1,171 @@
+<!doctype html>
+<html lang="zh-CN" id="top">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>如何运行 · MiniOB 可视化文档</title>
+<link rel="stylesheet" href="assets/style.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@highlightjs/cdn-assets@11/styles/atom-one-dark.min.css">
+<script src="assets/theme.js"></script>
+
+</head>
+<body class="">
+<div class="reading-progress" id="readingProgress" aria-hidden="true"></div>
+<header class="topbar">
+  <button class="menu-btn" id="menuBtn" aria-label="切换侧栏" aria-expanded="false">☰</button>
+  <a class="brand" href="index.html"><span class="brand-mark">M</span><span>MiniOB <em>可视化文档</em></span></a>
+  <div class="top-actions">
+    <a class="top-link" href="flows.html">动态流程</a>
+    <button class="theme-btn" id="themeBtn" aria-label="切换明暗主题" title="切换明暗主题">◐</button>
+  </div>
+</header>
+<div class="layout">
+  <aside class="sidebar" id="sidebar"><nav class="site-nav" aria-label="文档目录"><a class="nav-home" href="index.html"><span class="brand-mark">M</span><span>MiniOB 可视化文档</span></a><details class="nav-group" open><summary>快速开始<span>2</span></summary><div class="nav-links"><a href="how_to_build.html"><span class="nav-link-text">如何编译</span></a><a href="how_to_run.html" class="active" aria-current="page"><span class="nav-link-text">如何运行</span></a></div></details><details class="nav-group"><summary>设计文档<span>21</span></summary><div class="nav-links"><a href="design/miniob-architecture.html"><span class="nav-link-text">MiniOB代码架构框架设计和说明</span><span class="nav-badge" title="含交互流程图或架构图">图</span></a><a href="design/miniob-buffer-pool.html"><span class="nav-link-text">MiniOB 存储实现</span><span class="nav-badge" title="含交互流程图或架构图">图</span></a><a href="design/miniob-double-write-buffer.html"><span class="nav-link-text">MiniOB Double Write Buffer 实现</span><span class="nav-badge" title="含交互流程图或架构图">图</span></a><a href="design/miniob-transaction.html"><span class="nav-link-text">事务模块</span><span class="nav-badge" title="含交互流程图或架构图">图</span></a><a href="design/miniob-durability.html"><span class="nav-link-text">持久化</span><span class="nav-badge" title="含交互流程图或架构图">图</span></a><a href="design/miniob-persistence-files.html"><span class="nav-link-text">持久化文件与恢复路径</span><span class="nav-badge" title="含交互流程图或架构图">图</span></a><a href="design/miniob-checkpoint-wal.html"><span class="nav-link-text">MiniOB 检查点与 WAL 截断</span><span class="nav-badge" title="含交互流程图或架构图">图</span></a><a href="design/miniob-sql-parser.html"><span class="nav-link-text">SQL 词法语法分析</span></a><a href="design/miniob-how-to-add-new-sql.html"><span class="nav-link-text">SQL语句执行流程</span><span class="nav-badge" title="含交互流程图或架构图">图</span></a><a href="design/miniob-sql-expression.html"><span class="nav-link-text">SQL 表达式</span></a><a href="design/miniob-bplus-tree.html"><span class="nav-link-text">MiniOB B+Tree 实现</span><span class="nav-badge" title="含交互流程图或架构图">图</span></a><a href="design/miniob-bplus-tree-concurrency.html"><span class="nav-link-text">B+ 树并发操作</span><span class="nav-badge" title="含交互流程图或架构图">图</span></a><a href="design/miniob-thread-model.html"><span class="nav-link-text">线程模型</span><span class="nav-badge" title="含交互流程图或架构图">图</span></a><a href="design/miniob-mysql-protocol.html"><span class="nav-link-text">MySQL 通讯协议</span></a><a href="design/miniob-pax-storage.html"><span class="nav-link-text">MiniOB PAX 存储格式</span><span class="nav-badge" title="含交互流程图或架构图">图</span></a><a href="design/miniob-aggregation-and-group-by.html"><span class="nav-link-text">MiniOB 向量化执行 aggregation 和 group by 实现</span></a><a href="design/miniob-lsm-tree.html"><span class="nav-link-text">MiniOB LSM-Tree 存储引擎</span><span class="nav-badge" title="含交互流程图或架构图">图</span></a><a href="design/introduction.html"><span class="nav-link-text">功能模块设计说明</span></a><a href="design/miniob-btree-storage-engine.html"><span class="nav-link-text">MiniOB B+Tree 聚簇表存储引擎</span><span class="nav-badge" title="含交互流程图或架构图">图</span></a><a href="design/miniob-cascade.html"><span class="nav-link-text">Cascade Optimizer(查询优化器)</span><span class="nav-badge" title="含交互流程图或架构图">图</span></a><a href="design/miniob-update-mvcc-occ.html"><span class="nav-link-text">MiniOB UPDATE、MVCC 与 OCC 方案设计</span><span class="nav-badge" title="含交互流程图或架构图">图</span></a></div></details><details class="nav-group"><summary>课程实验<span>6</span></summary><div class="nav-links"><a href="db_course_lab/overview.html"><span class="nav-link-text">数据库系统实现原理与实践课程实验</span></a><a href="db_course_lab/lab0.html"><span class="nav-link-text">LAB#0 C++ 基础</span></a><a href="db_course_lab/lab1.html"><span class="nav-link-text">LAB#1 LSM-Tree 存储引擎</span></a><a href="db_course_lab/lab2.html"><span class="nav-link-text">LAB#2 查询引擎</span></a><a href="db_course_lab/lab3.html"><span class="nav-link-text">LAB#3 事务引擎</span></a><a href="db_course_lab/lab4.html"><span class="nav-link-text">LAB#4 性能测试</span></a></div></details><details class="nav-group"><summary>简明教程<span>9</span></summary><div class="nav-links"><a href="lectures/copyright.html"><span class="nav-link-text">版权声明</span></a><a href="lectures/lecture-1.html"><span class="nav-link-text">第1章 数据库管理系统概述</span></a><a href="lectures/lecture-2.html"><span class="nav-link-text">第2章 数据库的存储结构</span></a><a href="lectures/lecture-3.html"><span class="nav-link-text">第3章 索引结构</span></a><a href="lectures/lecture-4.html"><span class="nav-link-text">第4章 查询处理</span></a><a href="lectures/lecture-5.html"><span class="nav-link-text">第5章 查询优化</span></a><a href="lectures/lecture-6.html"><span class="nav-link-text">第6章 事务处理</span></a><a href="lectures/references.html"><span class="nav-link-text">参考资料</span></a><a href="lectures/index.html"><span class="nav-link-text">数据库管理系统实现基础讲义</span></a></div></details><details class="nav-group"><summary>开发环境<span>14</span></summary><div class="nav-links"><a href="dev-env/introduction.html"><span class="nav-link-text">搭建开发环境</span></a><a href="dev-env/vscode_dev_with_local_virtual_env.html"><span class="nav-link-text">虚拟机+vscode remote开发</span></a><a href="dev-env/dev_by_online.html"><span class="nav-link-text">使用在线开发环境开发 MiniOB</span></a><a href="dev-env/how-to-dev-using-docker.html"><span class="nav-link-text">使用Docker开发MiniOB</span></a><a href="dev-env/how_to_dev_in_docker_container_by_vscode.html"><span class="nav-link-text">使用 Docker 和 VSCode 远程开发 Miniob</span></a><a href="dev-env/how_to_dev_in_docker_container_by_vscode_on_windows.html"><span class="nav-link-text">在windows上通过docker配置环境并利用vscode调试代码（手把手版）</span></a><a href="dev-env/how_to_dev_miniob_by_docker_on_windows.html"><span class="nav-link-text">安装Docker</span></a><a href="dev-env/how_to_dev_miniob_by_vscode.html"><span class="nav-link-text">环境准备</span></a><a href="dev-env/miniob-how-to-debug.html"><span class="nav-link-text">miniob调试篇</span></a><a href="dev-env/how_to_submit_for_testing.html"><span class="nav-link-text">训练营平台使用说明</span></a><a href="dev-env/integration_test.html"><span class="nav-link-text">MiniOB 集成测试使用文档</span></a><a href="dev-env/cloudlab_setup.html"><span class="nav-link-text">开源学堂在线编程环境开发 MiniOB</span></a><a href="dev-env/how_to_dev_miniob_by_docker_on_windows_simplified.html"><span class="nav-link-text">在windows上通过docker配置环境并利用vscode编辑、开发、调试代码（简易版）</span></a><a href="dev-env/how_to_dev_miniob_in_vscodeGUI_by_docker_on_windows.html"><span class="nav-link-text">基于Windows+docker容器在本地利用VSCode编辑、开发及调试miniob</span></a></div></details><details class="nav-group"><summary>大赛与训练<span>9</span></summary><div class="nav-links"><a href="game/introduction.html"><span class="nav-link-text">OceanBase 数据库大赛</span></a><a href="game/miniob-output-convention.html"><span class="nav-link-text">输出规范</span></a><a href="game/debug-output.html"><span class="nav-link-text">输出调试信息</span></a><a href="game/miniob-memtracer.html"><span class="nav-link-text">MemTracer</span></a><a href="game/miniob_topics.html"><span class="nav-link-text">OceanBase 数据库大赛2021届题目</span></a><a href="game/github-introduction.html"><span class="nav-link-text">MiniOB GitHub 在训练营中的使用说明</span></a><a href="game/gitee-instructions.html"><span class="nav-link-text">MiniOB Gitee 在训练营中的使用说明</span></a><a href="game/miniob-vectordb.html"><span class="nav-link-text">MiniOB 向量数据库</span></a><a href="game/git-introduction.html"><span class="nav-link-text">Git 介绍</span></a></div></details><details class="nav-group"><summary>博客<span>2</span></summary><div class="nav-links"><a href="blog/introduction.html"><span class="nav-link-text">介绍</span></a><a href="blog/1.html"><span class="nav-link-text">High-Performance Concurrency Control Mechanisms for Main-Memory Databases</span></a></div></details><a class="nav-flows" href="flows.html"><span class="dot"></span>动态流程<span class="count">13</span></a></nav></aside>
+  <main class="main">
+    
+<nav class="crumbs" aria-label="面包屑导航"><a href="index.html">首页</a><span>/</span><span>快速开始</span><span>/</span><span aria-current="page">如何运行</span></nav>
+<header class="doc-head">
+  <div class="doc-meta-bar">
+    <span class="eyebrow-pill">快速开始</span>
+    <span class="doc-meta-item">1 个章节</span>
+    <span class="doc-meta-sep">·</span>
+    <span class="doc-meta-item">约 3 分钟阅读</span>
+    <span class="doc-meta-sep">·</span>
+    <a class="doc-meta-source" href="../docs/how_to_run.md">Markdown 源文件 ↗</a>
+  </div>
+  <h1>如何运行</h1>
+</header>
+<section class="panel map-panel" id="doc-outline-panel">
+  <div class="panel-head">
+    <div>
+      <h2>章节结构导览</h2>
+      <span>点击任意章节直达正文；支持结构卡片与交互思维导图切换</span>
+    </div>
+    <button type="button" class="map-toggle-btn" data-toggle-markmap aria-expanded="false">⊞ 切换思维导图</button>
+  </div>
+  <div class="tree-view"><div class="tree-grid"><div class="tree-branch"><div class="tree-top"><span class="tree-link"><span class="tree-num">1</span><span>以直接执行命令的方式启动服务端程序</span></span></div></div><div class="tree-branch"><div class="tree-top"><span class="tree-link"><span class="tree-num">2</span><span>以监听TCP端口的方式启动服务端程序</span></span></div></div><div class="tree-branch"><div class="tree-top"><span class="tree-link"><span class="tree-num">3</span><span>以监听unix socket的方式启动服务端程序</span></span></div></div><div class="tree-branch"><div class="tree-top"><span class="tree-link"><span class="tree-num">4</span><span>并发模式</span></span></div></div><div class="tree-branch"><div class="tree-top"><span class="tree-link"><span class="tree-num">5</span><span>启动参数介绍</span></span></div></div><div class="tree-branch"><div class="tree-top"><span class="tree-link"><span class="tree-num">6</span><span>更多</span></span></div></div><div class="tree-branch"><div class="tree-top"><span class="tree-link"><span class="tree-num">7</span><span>FAQ</span></span></div></div></div></div>
+  <div class="markmap-wrap" hidden>
+    <div class="markmap"><script type="text/template"># 如何运行
+  - 以直接执行命令的方式启动服务端程序
+  - 以监听TCP端口的方式启动服务端程序
+  - 以监听unix socket的方式启动服务端程序
+  - 并发模式
+  - 启动参数介绍
+  - 更多
+  - FAQ</script></div>
+  </div>
+</section>
+
+<article class="content"><h1 id="如何运行">如何运行</h1>
+<p>编译完成后，可以在build目录（可能是build_debug或build_release）下找到bin/observer，就是我们的服务端程序，bin/obclient是自带的客户端程序。
+当前服务端程序启动已经支持了多种模式，可以以TCP、unix socket方式启动，这时需要启动客户端以发起命令。observer还支持直接执行命令的模式，这时不需要启动客户端，直接在命令行输入命令即可。</p>
+<p><strong>以直接执行命令的方式启动服务端程序</strong></p>
+<pre><code class="language-bash">./bin/observer -f ../etc/observer.ini -P cli
+</code></pre>
+<p>这会以直接执行命令的方式启动服务端程序，可以直接输入命令，不需要客户端。所有的请求都会以单线程的方式运行，配置项中的线程数不再有实际意义。</p>
+<p><strong>以监听TCP端口的方式启动服务端程序</strong></p>
+<pre><code class="language-bash">./bin/observer -f ../etc/observer.ini -p 6789
+</code></pre>
+<p>这会以监听6789端口的方式启动服务端程序。
+启动客户端程序：</p>
+<pre><code class="language-bash">./bin/obclient -p 6789
+</code></pre>
+<p>这会连接到服务端的6789端口。</p>
+<p><strong>以监听unix socket的方式启动服务端程序</strong></p>
+<pre><code class="language-bash">./bin/observer -f ../etc/observer.ini -s miniob.sock
+</code></pre>
+<p>这会以监听unix socket的方式启动服务端程序。
+启动客户端程序：</p>
+<pre><code class="language-bash">./bin/obclient -s miniob.sock
+</code></pre>
+<p>这会连接到服务端的miniob.sock文件。</p>
+<p><strong>并发模式</strong></p>
+<p>默认情况下，编译出的程序是不支持并发的。如果需要支持并发，需要在编译时增加选项 <code>-DCONCURRENCY=ON</code>:</p>
+<pre><code class="language-bash">cmake -DCONCURRENCY=ON ..
+</code></pre>
+<p>或者</p>
+<pre><code class="language-bash">bash build.sh -DCONCURRENCY=ON
+</code></pre>
+<p>然后使用上面的命令启动服务端程序，就可以支持并发了。</p>
+<p><strong>启动参数介绍</strong></p>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>参数</th>
+<th>说明</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>-h</td>
+<td>帮助说明</td>
+</tr>
+<tr>
+<td>-f</td>
+<td>配置文件路径。如果不指定，就会使用默认值 ../etc/observer.ini。</td>
+</tr>
+<tr>
+<td>-p</td>
+<td>服务端监听的端口号。如果不指定，并且没有使用unix socket或cli的方式启动，就会使用配置文件中的值，或者使用默认值。</td>
+</tr>
+<tr>
+<td>-s</td>
+<td>服务端监听的unix socket文件。如果不指定，并且没有使用TCP或cli的方式启动，就会使用TCP的方式启动服务端。</td>
+</tr>
+<tr>
+<td>-P</td>
+<td>使用的通讯协议。当前支持文本协议(plain，也是默认值)，MySQL协议(mysql)，直接交互(cli)。<br/>使用plain协议时，请使用自带的obclient连接服务端。<br/>使用mysql协议时，使用mariadb或mysql客户端连接。<br/>直接交互模式(cli)不需要使用客户端连接，因此无法开启多个连接。</td>
+</tr>
+<tr>
+<td>-t</td>
+<td>事务模型。没有事务(vacuous，默认值)和MVCC(mvcc)。 使用mvcc时一定要编译支持并发模式的代码。</td>
+</tr>
+<tr>
+<td>-T</td>
+<td>线程模型。一个连接一个线程(one-thread-per-connection，默认值)和一个线程池处理所有连接(java-thread-pool)。</td>
+</tr>
+<tr>
+<td>-n</td>
+<td>buffer pool 的内存大小，单位字节。</td>
+</tr>
+</tbody>
+</table></div>
+<p><strong>更多</strong></p>
+<p>observer还提供了一些其它参数，可以通过<code>./bin/observer -h</code>查看。</p>
+<p><strong>FAQ</strong></p>
+<ol>
+<li>运行observer出现找不到链接库
+A: 由于安装依赖时，默认安装在 <code>/usr/local/</code> 目录下，而环境变量中没有将这个目录包含到动态链接库查找路径。可以将下面的命令添加到 HOME 目录的 <code>.bashrc</code> 中：</li>
+</ol>
+<pre><code class="language-bash">export LD_LIBRARY_PATH=/usr/local/lib64:$LD_LIBRARY_PATH
+</code></pre>
+<p>然后执行 <code>source ~/.bashrc</code> 加载环境变量后重新启动程序。</p>
+<p>LD_LIBRARY_PATH 是Linux环境中，运行时查找动态链接库的路径，路径之间以冒号':'分隔。</p>
+<p>将数据写入 bashrc 或其它文件，可以在下次启动程序时，会自动加载，而不需要再次执行 source 命令加载。</p>
+<div class="callout callout-note" role="note"><div class="callout-title">补充说明 · NOTE</div><div class="callout-body"><p>NOTE: 如果你的终端脚本使用的不是bash，而是zsh，那么就需要修改 .zshrc。</p></div></div>
+</article>
+<nav class="pager" aria-label="相邻文档导航"><a class="prev" href="how_to_build.html"><span>← 上一篇</span>如何编译</a><span></span></nav>
+<p class="source-line">源文件：<a href="../docs/how_to_run.md">how_to_run.md</a></p>
+
+    <footer class="page-footer">
+      <span>由 <code>docs/visual/build.py</code> &amp; <code>draw_diagrams.py</code> 从 <code>docs/docs</code> 生成</span>
+      <span>MiniOB · 可视化技术文档</span>
+    </footer>
+  </main>
+  
+</div>
+<div class="nav-scrim" id="navScrim"></div>
+<div class="diagram-modal" id="diagramModal" hidden role="dialog" aria-modal="true" aria-label="图表放大检视">
+  <div class="diagram-modal-bar">
+    <span class="diagram-modal-title" id="diagramModalTitle">架构与流程图检视</span>
+    <button type="button" class="diagram-modal-close" id="diagramModalClose" aria-label="关闭">✕ 关闭 (Esc)</button>
+  </div>
+  <div class="diagram-modal-body" id="diagramModalBody"></div>
+</div>
+<script src="assets/markmap-config.js"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/markmap-autoloader@0.18"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/@highlightjs/cdn-assets@11/highlight.min.js"></script>
+
+<script defer src="assets/site.js"></script>
+</body>
+</html>

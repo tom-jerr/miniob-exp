@@ -1,0 +1,114 @@
+<!doctype html>
+<html lang="zh-CN" id="top">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>训练营平台使用说明 · MiniOB 可视化文档</title>
+<link rel="stylesheet" href="../assets/style.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@highlightjs/cdn-assets@11/styles/atom-one-dark.min.css">
+<script src="../assets/theme.js"></script>
+
+</head>
+<body class="">
+<div class="reading-progress" id="readingProgress" aria-hidden="true"></div>
+<header class="topbar">
+  <button class="menu-btn" id="menuBtn" aria-label="切换侧栏" aria-expanded="false">☰</button>
+  <a class="brand" href="../index.html"><span class="brand-mark">M</span><span>MiniOB <em>可视化文档</em></span></a>
+  <div class="top-actions">
+    <a class="top-link" href="../flows.html">动态流程</a>
+    <button class="theme-btn" id="themeBtn" aria-label="切换明暗主题" title="切换明暗主题">◐</button>
+  </div>
+</header>
+<div class="layout has-toc">
+  <aside class="sidebar" id="sidebar"><nav class="site-nav" aria-label="文档目录"><a class="nav-home" href="../index.html"><span class="brand-mark">M</span><span>MiniOB 可视化文档</span></a><details class="nav-group"><summary>快速开始<span>2</span></summary><div class="nav-links"><a href="../how_to_build.html"><span class="nav-link-text">如何编译</span></a><a href="../how_to_run.html"><span class="nav-link-text">如何运行</span></a></div></details><details class="nav-group"><summary>设计文档<span>21</span></summary><div class="nav-links"><a href="../design/miniob-architecture.html"><span class="nav-link-text">MiniOB代码架构框架设计和说明</span><span class="nav-badge" title="含交互流程图或架构图">图</span></a><a href="../design/miniob-buffer-pool.html"><span class="nav-link-text">MiniOB 存储实现</span><span class="nav-badge" title="含交互流程图或架构图">图</span></a><a href="../design/miniob-double-write-buffer.html"><span class="nav-link-text">MiniOB Double Write Buffer 实现</span><span class="nav-badge" title="含交互流程图或架构图">图</span></a><a href="../design/miniob-transaction.html"><span class="nav-link-text">事务模块</span><span class="nav-badge" title="含交互流程图或架构图">图</span></a><a href="../design/miniob-durability.html"><span class="nav-link-text">持久化</span><span class="nav-badge" title="含交互流程图或架构图">图</span></a><a href="../design/miniob-persistence-files.html"><span class="nav-link-text">持久化文件与恢复路径</span><span class="nav-badge" title="含交互流程图或架构图">图</span></a><a href="../design/miniob-checkpoint-wal.html"><span class="nav-link-text">MiniOB 检查点与 WAL 截断</span><span class="nav-badge" title="含交互流程图或架构图">图</span></a><a href="../design/miniob-sql-parser.html"><span class="nav-link-text">SQL 词法语法分析</span></a><a href="../design/miniob-how-to-add-new-sql.html"><span class="nav-link-text">SQL语句执行流程</span><span class="nav-badge" title="含交互流程图或架构图">图</span></a><a href="../design/miniob-sql-expression.html"><span class="nav-link-text">SQL 表达式</span></a><a href="../design/miniob-bplus-tree.html"><span class="nav-link-text">MiniOB B+Tree 实现</span><span class="nav-badge" title="含交互流程图或架构图">图</span></a><a href="../design/miniob-bplus-tree-concurrency.html"><span class="nav-link-text">B+ 树并发操作</span><span class="nav-badge" title="含交互流程图或架构图">图</span></a><a href="../design/miniob-thread-model.html"><span class="nav-link-text">线程模型</span><span class="nav-badge" title="含交互流程图或架构图">图</span></a><a href="../design/miniob-mysql-protocol.html"><span class="nav-link-text">MySQL 通讯协议</span></a><a href="../design/miniob-pax-storage.html"><span class="nav-link-text">MiniOB PAX 存储格式</span><span class="nav-badge" title="含交互流程图或架构图">图</span></a><a href="../design/miniob-aggregation-and-group-by.html"><span class="nav-link-text">MiniOB 向量化执行 aggregation 和 group by 实现</span></a><a href="../design/miniob-lsm-tree.html"><span class="nav-link-text">MiniOB LSM-Tree 存储引擎</span><span class="nav-badge" title="含交互流程图或架构图">图</span></a><a href="../design/introduction.html"><span class="nav-link-text">功能模块设计说明</span></a><a href="../design/miniob-btree-storage-engine.html"><span class="nav-link-text">MiniOB B+Tree 聚簇表存储引擎</span><span class="nav-badge" title="含交互流程图或架构图">图</span></a><a href="../design/miniob-cascade.html"><span class="nav-link-text">Cascade Optimizer(查询优化器)</span><span class="nav-badge" title="含交互流程图或架构图">图</span></a><a href="../design/miniob-update-mvcc-occ.html"><span class="nav-link-text">MiniOB UPDATE、MVCC 与 OCC 方案设计</span><span class="nav-badge" title="含交互流程图或架构图">图</span></a></div></details><details class="nav-group"><summary>课程实验<span>6</span></summary><div class="nav-links"><a href="../db_course_lab/overview.html"><span class="nav-link-text">数据库系统实现原理与实践课程实验</span></a><a href="../db_course_lab/lab0.html"><span class="nav-link-text">LAB#0 C++ 基础</span></a><a href="../db_course_lab/lab1.html"><span class="nav-link-text">LAB#1 LSM-Tree 存储引擎</span></a><a href="../db_course_lab/lab2.html"><span class="nav-link-text">LAB#2 查询引擎</span></a><a href="../db_course_lab/lab3.html"><span class="nav-link-text">LAB#3 事务引擎</span></a><a href="../db_course_lab/lab4.html"><span class="nav-link-text">LAB#4 性能测试</span></a></div></details><details class="nav-group"><summary>简明教程<span>9</span></summary><div class="nav-links"><a href="../lectures/copyright.html"><span class="nav-link-text">版权声明</span></a><a href="../lectures/lecture-1.html"><span class="nav-link-text">第1章 数据库管理系统概述</span></a><a href="../lectures/lecture-2.html"><span class="nav-link-text">第2章 数据库的存储结构</span></a><a href="../lectures/lecture-3.html"><span class="nav-link-text">第3章 索引结构</span></a><a href="../lectures/lecture-4.html"><span class="nav-link-text">第4章 查询处理</span></a><a href="../lectures/lecture-5.html"><span class="nav-link-text">第5章 查询优化</span></a><a href="../lectures/lecture-6.html"><span class="nav-link-text">第6章 事务处理</span></a><a href="../lectures/references.html"><span class="nav-link-text">参考资料</span></a><a href="../lectures/index.html"><span class="nav-link-text">数据库管理系统实现基础讲义</span></a></div></details><details class="nav-group" open><summary>开发环境<span>14</span></summary><div class="nav-links"><a href="introduction.html"><span class="nav-link-text">搭建开发环境</span></a><a href="vscode_dev_with_local_virtual_env.html"><span class="nav-link-text">虚拟机+vscode remote开发</span></a><a href="dev_by_online.html"><span class="nav-link-text">使用在线开发环境开发 MiniOB</span></a><a href="how-to-dev-using-docker.html"><span class="nav-link-text">使用Docker开发MiniOB</span></a><a href="how_to_dev_in_docker_container_by_vscode.html"><span class="nav-link-text">使用 Docker 和 VSCode 远程开发 Miniob</span></a><a href="how_to_dev_in_docker_container_by_vscode_on_windows.html"><span class="nav-link-text">在windows上通过docker配置环境并利用vscode调试代码（手把手版）</span></a><a href="how_to_dev_miniob_by_docker_on_windows.html"><span class="nav-link-text">安装Docker</span></a><a href="how_to_dev_miniob_by_vscode.html"><span class="nav-link-text">环境准备</span></a><a href="miniob-how-to-debug.html"><span class="nav-link-text">miniob调试篇</span></a><a href="how_to_submit_for_testing.html" class="active" aria-current="page"><span class="nav-link-text">训练营平台使用说明</span></a><a href="integration_test.html"><span class="nav-link-text">MiniOB 集成测试使用文档</span></a><a href="cloudlab_setup.html"><span class="nav-link-text">开源学堂在线编程环境开发 MiniOB</span></a><a href="how_to_dev_miniob_by_docker_on_windows_simplified.html"><span class="nav-link-text">在windows上通过docker配置环境并利用vscode编辑、开发、调试代码（简易版）</span></a><a href="how_to_dev_miniob_in_vscodeGUI_by_docker_on_windows.html"><span class="nav-link-text">基于Windows+docker容器在本地利用VSCode编辑、开发及调试miniob</span></a></div></details><details class="nav-group"><summary>大赛与训练<span>9</span></summary><div class="nav-links"><a href="../game/introduction.html"><span class="nav-link-text">OceanBase 数据库大赛</span></a><a href="../game/miniob-output-convention.html"><span class="nav-link-text">输出规范</span></a><a href="../game/debug-output.html"><span class="nav-link-text">输出调试信息</span></a><a href="../game/miniob-memtracer.html"><span class="nav-link-text">MemTracer</span></a><a href="../game/miniob_topics.html"><span class="nav-link-text">OceanBase 数据库大赛2021届题目</span></a><a href="../game/github-introduction.html"><span class="nav-link-text">MiniOB GitHub 在训练营中的使用说明</span></a><a href="../game/gitee-instructions.html"><span class="nav-link-text">MiniOB Gitee 在训练营中的使用说明</span></a><a href="../game/miniob-vectordb.html"><span class="nav-link-text">MiniOB 向量数据库</span></a><a href="../game/git-introduction.html"><span class="nav-link-text">Git 介绍</span></a></div></details><details class="nav-group"><summary>博客<span>2</span></summary><div class="nav-links"><a href="../blog/introduction.html"><span class="nav-link-text">介绍</span></a><a href="../blog/1.html"><span class="nav-link-text">High-Performance Concurrency Control Mechanisms for Main-Memory Databases</span></a></div></details><a class="nav-flows" href="../flows.html"><span class="dot"></span>动态流程<span class="count">13</span></a></nav></aside>
+  <main class="main">
+    
+<nav class="crumbs" aria-label="面包屑导航"><a href="../index.html">首页</a><span>/</span><span>开发环境</span><span>/</span><span aria-current="page">训练营平台使用说明</span></nav>
+<header class="doc-head">
+  <div class="doc-meta-bar">
+    <span class="eyebrow-pill">开发环境</span>
+    <span class="doc-meta-item">7 个章节</span>
+    <span class="doc-meta-sep">·</span>
+    <span class="doc-meta-item">约 2 分钟阅读</span>
+    <span class="doc-meta-sep">·</span>
+    <a class="doc-meta-source" href="../../docs/dev-env/how_to_submit_for_testing.md">Markdown 源文件 ↗</a>
+  </div>
+  <h1>训练营平台使用说明</h1>
+</header>
+<section class="panel map-panel" id="doc-outline-panel">
+  <div class="panel-head">
+    <div>
+      <h2>章节结构导览</h2>
+      <span>点击任意章节直达正文；支持结构卡片与交互思维导图切换</span>
+    </div>
+    <button type="button" class="map-toggle-btn" data-toggle-markmap aria-expanded="false">⊞ 切换思维导图</button>
+  </div>
+  <div class="tree-view"><div class="tree-grid"><div class="tree-branch"><div class="tree-top"><a class="tree-link" href="#如何使用训练营提交代码测试"><span class="tree-num">1</span><span>如何使用训练营提交代码测试</span></a></div><ul class="tree-sub"><li><a class="tree-link" href="#1-进入训练营平台并登陆训练营平台"><span class="tree-num">1.1</span><span>1. 进入训练营平台并登陆训练营平台</span></a></li><li><a class="tree-link" href="#2-报名具体的训练营课题进行提测"><span class="tree-num">1.2</span><span>2. 报名具体的训练营课题进行提测</span></a></li><li><a class="tree-link" href="#3-查看训练营课题的具体题目"><span class="tree-num">1.3</span><span>3. 查看训练营课题的具体题目</span></a></li><li><a class="tree-link" href="#4-提交代码测试"><span class="tree-num">1.4</span><span>4. 提交代码测试</span></a></li><li><a class="tree-link" href="#5-查看提测结果"><span class="tree-num">1.5</span><span>5. 查看提测结果</span></a></li></ul></div></div></div>
+  <div class="markmap-wrap" hidden>
+    <div class="markmap"><script type="text/template"># 训练营平台使用说明
+  - [如何使用训练营提交代码测试](#如何使用训练营提交代码测试)
+    - [1. 进入训练营平台并登陆训练营平台](#1-进入训练营平台并登陆训练营平台)
+    - [2. 报名具体的训练营课题进行提测](#2-报名具体的训练营课题进行提测)
+    - [3. 查看训练营课题的具体题目](#3-查看训练营课题的具体题目)
+    - [4. 提交代码测试](#4-提交代码测试)
+    - [5. 查看提测结果](#5-查看提测结果)</script></div>
+  </div>
+</section>
+
+<article class="content"><h1 id="训练营平台使用说明">训练营平台使用说明</h1>
+<p><a target="_blank" rel="noopener" href="https://open.oceanbase.com/train">训练营平台</a> 是 OceanBase 为学生和数据库开发者设计的数据库学习与练习平台，旨在帮助用户更高效地掌握数据库基础知识。通过该平台，开发者可以从零开始逐步理解数据库的底层原理和实现方式，参与数据库实践与开发练习。训练营平台支持为 MiniOB/OceanBase 代码提交测试，通过运行自动化测试用例，反馈用户提交代码的运行结果和问题。</p>
+<h2 id="如何使用训练营提交代码测试">如何使用训练营提交代码测试</h2>
+<p>用户可根据下面的流程进行提测。</p>
+<h3 id="1-进入训练营平台并登陆训练营平台">1. 进入训练营平台并登陆训练营平台</h3>
+<p>打开训练营网站：https://open.oceanbase.com/train</p>
+<p>你会看到训练营主页。</p>
+<p><img loading="lazy" src="../../docs/dev-env/images/train_mainpage.png" alt="" /></p>
+<p>点击训练营主页上方的登陆/注册按钮登陆训练营平台。</p>
+<h3 id="2-报名具体的训练营课题进行提测">2. 报名具体的训练营课题进行提测</h3>
+<p>登陆后再点击 <code>广场</code> 中的训练营课题的 <code>报名参加</code> 按钮报名具体的训练营课题。目前公开的训练营课题包含 <code>MiniOB</code> 对应 2021 年大赛题目；<code>MiniOB 2022</code> 对应 2022 年大赛题目；<code>MiniOB 2023</code> 对应 2023 年大赛题目；<code>MiniOB 2024</code> 对应 2024 年大赛题目。后续会增加更多的训练营课题。</p>
+<p><img loading="lazy" src="../../docs/dev-env/images/train_miniob_2024.png" alt="" /></p>
+<p>对于不需要报名的训练营课题，在点击 <code>报名参加</code> 后，会自动跳转到训练营课题的题目页面。
+对于需要报名的训练营课题，需要在点击 <code>报名参加</code> 后，填写自己的报名信息，再进入训练营课题的题目页面。（<strong>注意</strong>：如果找不到自己已报名的训练营课题，可以点击 <code>我加入的</code> 页面进行查看。）</p>
+<h3 id="3-查看训练营课题的具体题目">3. 查看训练营课题的具体题目</h3>
+<p>进入到训练营课题你会看到如下页面。用户可以在题目列表查看该训练营课题对应的所有题目。如果要查看此题目排行榜，可点击「排行榜」按钮，目前只显示前 10 名及个人成绩，根据总分降序排列。
+<img loading="lazy" src="../../docs/dev-env/images/train_miniob_2024_question.png" alt="" /></p>
+<p>通过点击题目可以查看题目的详细描述，请参考题目的详细描述进行代码编写，和自测。
+<img loading="lazy" src="../../docs/dev-env/images/train_miniob_2024_question_detail1.png" alt="" />
+<img loading="lazy" src="../../docs/dev-env/images/train_miniob_2024_question_detail2.png" alt="" /></p>
+<h3 id="4-提交代码测试">4. 提交代码测试</h3>
+<p>在完成本地代码编写和自测后，请将代码提交到 Github/Gitee 仓库中。
+代码提交方法请参考<a target="_blank" rel="noopener" href="https://oceanbase.github.io/miniob/game/github-introduction/">Github 代码提交</a>，<a target="_blank" rel="noopener" href="https://oceanbase.github.io/miniob/game/gitee-instructions/">Gitee 代码提交</a>。</p>
+<p>点击「立即提测」按钮后，会弹出代码提交窗口。请填写仓库地址，commit id 和 branch 等必要信息并点击提交按钮。</p>
+<p><img loading="lazy" src="../../docs/dev-env/images/train_miniob_2024_submit_code.png" alt="" /></p>
+<h3 id="5-查看提测结果">5. 查看提测结果</h3>
+<p>提交代码后，训练营平台会运行自动化测试用例，并反馈用户提交代码的运行结果和问题（如果等待时间过长(miniob 相关课题等待超过 1 小时，oceanbase 相关题目超过 6 小时)可联系相关工作人员）。</p>
+<p><img loading="lazy" src="../../docs/dev-env/images/train_contact_us.png" alt="" /></p>
+<p>可以点击 「查看提测记录」按钮查看提测结果。对于失败的测试用例，请点击下图中的按钮，即可查看失败的详细原因。</p>
+<p><img loading="lazy" src="../../docs/dev-env/images/train_miniob_result.png" alt="" /></p>
+<p>如果在使用训练营平台的过程中有问题可以在 https://ask.oceanbase.com/ 提问，问题分类请选择 &quot;训练营&quot;。</p>
+</article>
+<nav class="pager" aria-label="相邻文档导航"><a class="prev" href="miniob-how-to-debug.html"><span>← 上一篇</span>miniob调试篇</a><a class="next" href="integration_test.html"><span>下一篇 →</span>MiniOB 集成测试使用文档</a></nav>
+<p class="source-line">源文件：<a href="../../docs/dev-env/how_to_submit_for_testing.md">dev-env/how_to_submit_for_testing.md</a></p>
+
+    <footer class="page-footer">
+      <span>由 <code>docs/visual/build.py</code> &amp; <code>draw_diagrams.py</code> 从 <code>docs/docs</code> 生成</span>
+      <span>MiniOB · 可视化技术文档</span>
+    </footer>
+  </main>
+  <aside class="page-toc" aria-label="本页目录"><div class="toc-inner"><p class="toc-title">本页导览</p><ul class="toc-list"><li class="toc-item toc-l2"><a href="#如何使用训练营提交代码测试">如何使用训练营提交代码测试</a></li><li class="toc-item toc-l3"><a href="#1-进入训练营平台并登陆训练营平台">1. 进入训练营平台并登陆训练营平台</a></li><li class="toc-item toc-l3"><a href="#2-报名具体的训练营课题进行提测">2. 报名具体的训练营课题进行提测</a></li><li class="toc-item toc-l3"><a href="#3-查看训练营课题的具体题目">3. 查看训练营课题的具体题目</a></li><li class="toc-item toc-l3"><a href="#4-提交代码测试">4. 提交代码测试</a></li><li class="toc-item toc-l3"><a href="#5-查看提测结果">5. 查看提测结果</a></li></ul><a class="toc-top" href="#top">↑ 回到顶部</a></div></aside>
+</div>
+<div class="nav-scrim" id="navScrim"></div>
+<div class="diagram-modal" id="diagramModal" hidden role="dialog" aria-modal="true" aria-label="图表放大检视">
+  <div class="diagram-modal-bar">
+    <span class="diagram-modal-title" id="diagramModalTitle">架构与流程图检视</span>
+    <button type="button" class="diagram-modal-close" id="diagramModalClose" aria-label="关闭">✕ 关闭 (Esc)</button>
+  </div>
+  <div class="diagram-modal-body" id="diagramModalBody"></div>
+</div>
+<script src="../assets/markmap-config.js"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/markmap-autoloader@0.18"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/@highlightjs/cdn-assets@11/highlight.min.js"></script>
+
+<script defer src="../assets/site.js"></script>
+</body>
+</html>

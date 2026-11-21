@@ -1,0 +1,275 @@
+<!doctype html>
+<html lang="zh-CN" id="top">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>使用 Docker 和 VSCode 远程开发 Miniob · MiniOB 可视化文档</title>
+<link rel="stylesheet" href="../assets/style.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@highlightjs/cdn-assets@11/styles/atom-one-dark.min.css">
+<script src="../assets/theme.js"></script>
+
+</head>
+<body class="">
+<div class="reading-progress" id="readingProgress" aria-hidden="true"></div>
+<header class="topbar">
+  <button class="menu-btn" id="menuBtn" aria-label="切换侧栏" aria-expanded="false">☰</button>
+  <a class="brand" href="../index.html"><span class="brand-mark">M</span><span>MiniOB <em>可视化文档</em></span></a>
+  <div class="top-actions">
+    <a class="top-link" href="../flows.html">动态流程</a>
+    <button class="theme-btn" id="themeBtn" aria-label="切换明暗主题" title="切换明暗主题">◐</button>
+  </div>
+</header>
+<div class="layout has-toc">
+  <aside class="sidebar" id="sidebar"><nav class="site-nav" aria-label="文档目录"><a class="nav-home" href="../index.html"><span class="brand-mark">M</span><span>MiniOB 可视化文档</span></a><details class="nav-group"><summary>快速开始<span>2</span></summary><div class="nav-links"><a href="../how_to_build.html"><span class="nav-link-text">如何编译</span></a><a href="../how_to_run.html"><span class="nav-link-text">如何运行</span></a></div></details><details class="nav-group"><summary>设计文档<span>21</span></summary><div class="nav-links"><a href="../design/miniob-architecture.html"><span class="nav-link-text">MiniOB代码架构框架设计和说明</span><span class="nav-badge" title="含交互流程图或架构图">图</span></a><a href="../design/miniob-buffer-pool.html"><span class="nav-link-text">MiniOB 存储实现</span><span class="nav-badge" title="含交互流程图或架构图">图</span></a><a href="../design/miniob-double-write-buffer.html"><span class="nav-link-text">MiniOB Double Write Buffer 实现</span><span class="nav-badge" title="含交互流程图或架构图">图</span></a><a href="../design/miniob-transaction.html"><span class="nav-link-text">事务模块</span><span class="nav-badge" title="含交互流程图或架构图">图</span></a><a href="../design/miniob-durability.html"><span class="nav-link-text">持久化</span><span class="nav-badge" title="含交互流程图或架构图">图</span></a><a href="../design/miniob-persistence-files.html"><span class="nav-link-text">持久化文件与恢复路径</span><span class="nav-badge" title="含交互流程图或架构图">图</span></a><a href="../design/miniob-checkpoint-wal.html"><span class="nav-link-text">MiniOB 检查点与 WAL 截断</span><span class="nav-badge" title="含交互流程图或架构图">图</span></a><a href="../design/miniob-sql-parser.html"><span class="nav-link-text">SQL 词法语法分析</span></a><a href="../design/miniob-how-to-add-new-sql.html"><span class="nav-link-text">SQL语句执行流程</span><span class="nav-badge" title="含交互流程图或架构图">图</span></a><a href="../design/miniob-sql-expression.html"><span class="nav-link-text">SQL 表达式</span></a><a href="../design/miniob-bplus-tree.html"><span class="nav-link-text">MiniOB B+Tree 实现</span><span class="nav-badge" title="含交互流程图或架构图">图</span></a><a href="../design/miniob-bplus-tree-concurrency.html"><span class="nav-link-text">B+ 树并发操作</span><span class="nav-badge" title="含交互流程图或架构图">图</span></a><a href="../design/miniob-thread-model.html"><span class="nav-link-text">线程模型</span><span class="nav-badge" title="含交互流程图或架构图">图</span></a><a href="../design/miniob-mysql-protocol.html"><span class="nav-link-text">MySQL 通讯协议</span></a><a href="../design/miniob-pax-storage.html"><span class="nav-link-text">MiniOB PAX 存储格式</span><span class="nav-badge" title="含交互流程图或架构图">图</span></a><a href="../design/miniob-aggregation-and-group-by.html"><span class="nav-link-text">MiniOB 向量化执行 aggregation 和 group by 实现</span></a><a href="../design/miniob-lsm-tree.html"><span class="nav-link-text">MiniOB LSM-Tree 存储引擎</span><span class="nav-badge" title="含交互流程图或架构图">图</span></a><a href="../design/introduction.html"><span class="nav-link-text">功能模块设计说明</span></a><a href="../design/miniob-btree-storage-engine.html"><span class="nav-link-text">MiniOB B+Tree 聚簇表存储引擎</span><span class="nav-badge" title="含交互流程图或架构图">图</span></a><a href="../design/miniob-cascade.html"><span class="nav-link-text">Cascade Optimizer(查询优化器)</span><span class="nav-badge" title="含交互流程图或架构图">图</span></a><a href="../design/miniob-update-mvcc-occ.html"><span class="nav-link-text">MiniOB UPDATE、MVCC 与 OCC 方案设计</span><span class="nav-badge" title="含交互流程图或架构图">图</span></a></div></details><details class="nav-group"><summary>课程实验<span>6</span></summary><div class="nav-links"><a href="../db_course_lab/overview.html"><span class="nav-link-text">数据库系统实现原理与实践课程实验</span></a><a href="../db_course_lab/lab0.html"><span class="nav-link-text">LAB#0 C++ 基础</span></a><a href="../db_course_lab/lab1.html"><span class="nav-link-text">LAB#1 LSM-Tree 存储引擎</span></a><a href="../db_course_lab/lab2.html"><span class="nav-link-text">LAB#2 查询引擎</span></a><a href="../db_course_lab/lab3.html"><span class="nav-link-text">LAB#3 事务引擎</span></a><a href="../db_course_lab/lab4.html"><span class="nav-link-text">LAB#4 性能测试</span></a></div></details><details class="nav-group"><summary>简明教程<span>9</span></summary><div class="nav-links"><a href="../lectures/copyright.html"><span class="nav-link-text">版权声明</span></a><a href="../lectures/lecture-1.html"><span class="nav-link-text">第1章 数据库管理系统概述</span></a><a href="../lectures/lecture-2.html"><span class="nav-link-text">第2章 数据库的存储结构</span></a><a href="../lectures/lecture-3.html"><span class="nav-link-text">第3章 索引结构</span></a><a href="../lectures/lecture-4.html"><span class="nav-link-text">第4章 查询处理</span></a><a href="../lectures/lecture-5.html"><span class="nav-link-text">第5章 查询优化</span></a><a href="../lectures/lecture-6.html"><span class="nav-link-text">第6章 事务处理</span></a><a href="../lectures/references.html"><span class="nav-link-text">参考资料</span></a><a href="../lectures/index.html"><span class="nav-link-text">数据库管理系统实现基础讲义</span></a></div></details><details class="nav-group" open><summary>开发环境<span>14</span></summary><div class="nav-links"><a href="introduction.html"><span class="nav-link-text">搭建开发环境</span></a><a href="vscode_dev_with_local_virtual_env.html"><span class="nav-link-text">虚拟机+vscode remote开发</span></a><a href="dev_by_online.html"><span class="nav-link-text">使用在线开发环境开发 MiniOB</span></a><a href="how-to-dev-using-docker.html"><span class="nav-link-text">使用Docker开发MiniOB</span></a><a href="how_to_dev_in_docker_container_by_vscode.html" class="active" aria-current="page"><span class="nav-link-text">使用 Docker 和 VSCode 远程开发 Miniob</span></a><a href="how_to_dev_in_docker_container_by_vscode_on_windows.html"><span class="nav-link-text">在windows上通过docker配置环境并利用vscode调试代码（手把手版）</span></a><a href="how_to_dev_miniob_by_docker_on_windows.html"><span class="nav-link-text">安装Docker</span></a><a href="how_to_dev_miniob_by_vscode.html"><span class="nav-link-text">环境准备</span></a><a href="miniob-how-to-debug.html"><span class="nav-link-text">miniob调试篇</span></a><a href="how_to_submit_for_testing.html"><span class="nav-link-text">训练营平台使用说明</span></a><a href="integration_test.html"><span class="nav-link-text">MiniOB 集成测试使用文档</span></a><a href="cloudlab_setup.html"><span class="nav-link-text">开源学堂在线编程环境开发 MiniOB</span></a><a href="how_to_dev_miniob_by_docker_on_windows_simplified.html"><span class="nav-link-text">在windows上通过docker配置环境并利用vscode编辑、开发、调试代码（简易版）</span></a><a href="how_to_dev_miniob_in_vscodeGUI_by_docker_on_windows.html"><span class="nav-link-text">基于Windows+docker容器在本地利用VSCode编辑、开发及调试miniob</span></a></div></details><details class="nav-group"><summary>大赛与训练<span>9</span></summary><div class="nav-links"><a href="../game/introduction.html"><span class="nav-link-text">OceanBase 数据库大赛</span></a><a href="../game/miniob-output-convention.html"><span class="nav-link-text">输出规范</span></a><a href="../game/debug-output.html"><span class="nav-link-text">输出调试信息</span></a><a href="../game/miniob-memtracer.html"><span class="nav-link-text">MemTracer</span></a><a href="../game/miniob_topics.html"><span class="nav-link-text">OceanBase 数据库大赛2021届题目</span></a><a href="../game/github-introduction.html"><span class="nav-link-text">MiniOB GitHub 在训练营中的使用说明</span></a><a href="../game/gitee-instructions.html"><span class="nav-link-text">MiniOB Gitee 在训练营中的使用说明</span></a><a href="../game/miniob-vectordb.html"><span class="nav-link-text">MiniOB 向量数据库</span></a><a href="../game/git-introduction.html"><span class="nav-link-text">Git 介绍</span></a></div></details><details class="nav-group"><summary>博客<span>2</span></summary><div class="nav-links"><a href="../blog/introduction.html"><span class="nav-link-text">介绍</span></a><a href="../blog/1.html"><span class="nav-link-text">High-Performance Concurrency Control Mechanisms for Main-Memory Databases</span></a></div></details><a class="nav-flows" href="../flows.html"><span class="dot"></span>动态流程<span class="count">13</span></a></nav></aside>
+  <main class="main">
+    
+<nav class="crumbs" aria-label="面包屑导航"><a href="../index.html">首页</a><span>/</span><span>开发环境</span><span>/</span><span aria-current="page">使用 Docker 和 VSCode 远程开发 Miniob</span></nav>
+<header class="doc-head">
+  <div class="doc-meta-bar">
+    <span class="eyebrow-pill">开发环境</span>
+    <span class="doc-meta-item">31 个章节</span>
+    <span class="doc-meta-sep">·</span>
+    <span class="doc-meta-item">约 6 分钟阅读</span>
+    <span class="doc-meta-sep">·</span>
+    <a class="doc-meta-source" href="../../docs/dev-env/how_to_dev_in_docker_container_by_vscode.md">Markdown 源文件 ↗</a>
+  </div>
+  <h1>使用 Docker 和 VSCode 远程开发 Miniob</h1>
+</header>
+<section class="panel map-panel" id="doc-outline-panel">
+  <div class="panel-head">
+    <div>
+      <h2>章节结构导览</h2>
+      <span>点击任意章节直达正文；支持结构卡片与交互思维导图切换</span>
+    </div>
+    <button type="button" class="map-toggle-btn" data-toggle-markmap aria-expanded="false">⊞ 切换思维导图</button>
+  </div>
+  <div class="tree-view"><div class="tree-grid"><div class="tree-branch"><div class="tree-top"><a class="tree-link" href="#安装-docker-和-docker-compose"><span class="tree-num">1</span><span>安装 Docker 和 Docker-compose</span></a></div><ul class="tree-sub"><li><a class="tree-link" href="#windows"><span class="tree-num">1.1</span><span>Windows</span></a></li><li><a class="tree-link" href="#linux"><span class="tree-num">1.2</span><span>Linux</span></a></li></ul></div><div class="tree-branch"><div class="tree-top"><a class="tree-link" href="#安装-vscode"><span class="tree-num">2</span><span>安装 VSCode</span></a></div></div><div class="tree-branch"><div class="tree-top"><a class="tree-link" href="#配置-dockerfile"><span class="tree-num">3</span><span>配置 Dockerfile</span></a></div><ul class="tree-sub"><li><a class="tree-link" href="#配置-root-密码"><span class="tree-num">3.1</span><span>配置 Root 密码</span></a></li></ul></div><div class="tree-branch"><div class="tree-top"><a class="tree-link" href="#配置-docker-compose"><span class="tree-num">4</span><span>配置 Docker Compose</span></a></div><ul class="tree-sub"><li><a class="tree-link" href="#fork-仓库"><span class="tree-num">4.1</span><span>Fork 仓库</span></a></li><li><a class="tree-link" href="#clone-by-ssh"><span class="tree-num">4.2</span><span>Clone by SSH</span></a></li><li><a class="tree-link" href="#clone-by-https"><span class="tree-num">4.3</span><span>Clone by HTTPS</span></a></li><li><a class="tree-link" href="#配置映射端口"><span class="tree-num">4.4</span><span>配置映射端口</span></a></li></ul></div><div class="tree-branch"><div class="tree-top"><a class="tree-link" href="#启动容器"><span class="tree-num">5</span><span>启动容器</span></a></div><ul class="tree-sub"><li><a class="tree-link" href="#clone-by-ssh-1"><span class="tree-num">5.1</span><span>Clone by SSH</span></a></li><li><a class="tree-link" href="#clone-by-https-1"><span class="tree-num">5.2</span><span>Clone by HTTPS</span></a></li><li><a class="tree-link" href="#管理容器"><span class="tree-num">5.3</span><span>管理容器</span></a></li></ul></div><div class="tree-branch"><div class="tree-top"><a class="tree-link" href="#使用-vscode-远程开发"><span class="tree-num">6</span><span>使用 VSCode 远程开发</span></a></div><ul class="tree-sub"><li><a class="tree-link" href="#安装-remote-ssh-插件"><span class="tree-num">6.1</span><span>安装 Remote-SSH 插件</span></a></li><li><a class="tree-link" href="#连接-docker-容器"><span class="tree-num">6.2</span><span>连接 Docker 容器</span></a></li><li><a class="tree-link" href="#打开代码目录"><span class="tree-num">6.3</span><span>打开代码目录</span></a></li><li><a class="tree-link" href="#安装开发插件"><span class="tree-num">6.4</span><span>安装开发插件</span></a></li><li><a class="tree-link" href="#进行-debug"><span class="tree-num">6.5</span><span>进行 Debug</span></a></li></ul></div></div></div>
+  <div class="markmap-wrap" hidden>
+    <div class="markmap"><script type="text/template"># 使用 Docker 和 VSCode 远程开发 Miniob
+  - [安装 Docker 和 Docker-compose](#安装-docker-和-docker-compose)
+    - [Windows](#windows)
+    - [Linux](#linux)
+  - [安装 VSCode](#安装-vscode)
+  - [配置 Dockerfile](#配置-dockerfile)
+    - [配置 Root 密码](#配置-root-密码)
+  - [配置 Docker Compose](#配置-docker-compose)
+    - [Fork 仓库](#fork-仓库)
+    - [Clone by SSH](#clone-by-ssh)
+    - [Clone by HTTPS](#clone-by-https)
+    - [配置映射端口](#配置映射端口)
+  - [启动容器](#启动容器)
+    - [Clone by SSH](#clone-by-ssh-1)
+    - [Clone by HTTPS](#clone-by-https-1)
+    - [管理容器](#管理容器)
+  - [使用 VSCode 远程开发](#使用-vscode-远程开发)
+    - [安装 Remote-SSH 插件](#安装-remote-ssh-插件)
+    - [连接 Docker 容器](#连接-docker-容器)
+    - [打开代码目录](#打开代码目录)
+    - [安装开发插件](#安装开发插件)
+    - [进行 Debug](#进行-debug)</script></div>
+  </div>
+</section>
+
+<article class="content"><h1 id="使用-docker-和-vscode-远程开发-miniob">使用 Docker 和 VSCode 远程开发 Miniob</h1>
+<p>本文档阐述如何使用 Docker 构建一个具备 Miniob 开发环境的容器，并且通过 VSCode 的 Remote-SSH 插件 SSH 到容器中进行远程开发。Docker 和 VSCode 可以安装在不同机器上。</p>
+<p>方法简单易行，仅需配置 2 个 环境变量（仓库 URL、SSH秘钥）及安装必要的 VSCode 开发插件即可。</p>
+<ul>
+<li><a href="#%E4%BD%BF%E7%94%A8-docker-%E5%92%8C-vscode-%E8%BF%9C%E7%A8%8B%E5%BC%80%E5%8F%91-miniob">使用 Docker 和 VSCode 远程开发 Miniob</a>
+<ul>
+<li><a href="#%E5%AE%89%E8%A3%85-docker-%E5%92%8C-docker-compose">安装 Docker 和 Docker-compose</a>
+<ul>
+<li><a href="#windows">Windows</a></li>
+<li><a href="#linux">Linux</a></li>
+</ul>
+</li>
+<li><a href="#%E5%AE%89%E8%A3%85-vscode">安装 VSCode</a></li>
+<li><a href="#%E9%85%8D%E7%BD%AE-dockerfile">配置 Dockerfile</a>
+<ul>
+<li><a href="#%E9%85%8D%E7%BD%AE-root-%E5%AF%86%E7%A0%81">配置 Root 密码</a></li>
+</ul>
+</li>
+<li><a href="#%E9%85%8D%E7%BD%AE-docker-compose">配置 Docker Compose</a>
+<ul>
+<li><a href="#fork-%E4%BB%93%E5%BA%93">Fork 仓库</a></li>
+<li><a href="#clone-by-ssh">Clone by SSH</a></li>
+<li><a href="#clone-by-https">Clone by HTTPS</a>
+<ul>
+<li><a href="#%E7%A7%81%E6%9C%89%E4%BB%93%E5%BA%93">私有仓库</a></li>
+<li><a href="#%E5%85%AC%E6%9C%89%E4%BB%93%E5%BA%93">公有仓库</a></li>
+</ul>
+</li>
+<li><a href="#%E9%85%8D%E7%BD%AE%E6%98%A0%E5%B0%84%E7%AB%AF%E5%8F%A3">配置映射端口</a></li>
+</ul>
+</li>
+<li><a href="#%E5%90%AF%E5%8A%A8%E5%AE%B9%E5%99%A8">启动容器</a>
+<ul>
+<li><a href="#clone-by-ssh-1">Clone by SSH</a>
+<ul>
+<li><a href="#linux-shell">Linux Shell</a></li>
+<li><a href="#windows-powershell">Windows Powershell</a></li>
+</ul>
+</li>
+<li><a href="#clone-by-https-1">Clone by HTTPS</a></li>
+<li><a href="#%E7%AE%A1%E7%90%86%E5%AE%B9%E5%99%A8">管理容器</a></li>
+</ul>
+</li>
+<li><a href="#%E4%BD%BF%E7%94%A8-vscode-%E8%BF%9C%E7%A8%8B%E5%BC%80%E5%8F%91">使用 VSCode 远程开发</a>
+<ul>
+<li><a href="#%E5%AE%89%E8%A3%85-remote-ssh-%E6%8F%92%E4%BB%B6">安装 Remote-SSH 插件</a></li>
+<li><a href="#%E8%BF%9E%E6%8E%A5-docker-%E5%AE%B9%E5%99%A8">连接 Docker 容器</a>
+<ul>
+<li><a href="#%E9%85%8D%E7%BD%AE-ssh-host">配置 SSH Host</a></li>
+<li><a href="#%E8%BF%9E%E6%8E%A5%E5%AE%B9%E5%99%A8">连接容器</a></li>
+</ul>
+</li>
+<li><a href="#%E6%89%93%E5%BC%80%E4%BB%A3%E7%A0%81%E7%9B%AE%E5%BD%95">打开代码目录</a></li>
+<li><a href="#%E5%AE%89%E8%A3%85%E5%BC%80%E5%8F%91%E6%8F%92%E4%BB%B6">安装开发插件</a></li>
+<li><a href="#%E8%BF%9B%E8%A1%8C-debug">进行 Debug</a>
+<ul>
+<li><a href="#%E5%90%AF%E5%8A%A8-server">启动 Server</a></li>
+<li><a href="#%E5%90%AF%E5%8A%A8-client">启动 Client</a></li>
+<li><a href="#%E6%89%A7%E8%A1%8C-sql">执行 SQL</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+<h2 id="安装-docker-和-docker-compose">安装 Docker 和 Docker-compose</h2>
+<h3 id="windows">Windows</h3>
+<p>参考本仓库文档 <a href="how_to_dev_miniob_by_docker_on_windows.html">在 Windows 上使用 Docker</a> 安装 Docker Desktop 即可。只需执行 <strong>安装 Docker</strong> 这一小节。</p>
+<h3 id="linux">Linux</h3>
+<p>如果你选择在远程建议参考官方文档安装 <a target="_blank" rel="noopener" href="https://docs.docker.com/engine/install/">Docker Engine</a> 和 <a target="_blank" rel="noopener" href="https://docs.docker.com/compose/install/linux/">Docker Compose</a>.</p>
+<h2 id="安装-vscode">安装 VSCode</h2>
+<p>前往官网下载 <a target="_blank" rel="noopener" href="https://code.visualstudio.com/">Visual Studio Code</a>，正常安装即可。</p>
+<h2 id="配置-dockerfile">配置 Dockerfile</h2>
+<p>文件在 docker/Dockerfile.</p>
+<h3 id="配置-root-密码">配置 Root 密码</h3>
+<p>默认密码 root，可在 docker/bin/starter-sshd.sh 的第 6 行自行修改。不需修改可跳过。</p>
+<p>若镜像于服务器运行建议使用强密码，并在第一次登录后关闭密码登录，改用秘钥登录。</p>
+<h2 id="配置-docker-compose">配置 Docker Compose</h2>
+<h3 id="fork-仓库">Fork 仓库</h3>
+<p>Fork 本仓库，复制 Fork 后仓库的 HTTPS 地址，如 https://github.com/oceanbase/miniob.git.</p>
+<p>也可以不 Fork，用本仓库 Git HTTPS 地址，后续自行进行 <code>git remote add</code>.</p>
+<p>下面配置镜像中的仓库 URL 及克隆方式。</p>
+<p>修改 <strong>docker/docker-compose.yml</strong> 文件的最后两行。注意等号前后不要有空格。</p>
+<h3 id="clone-by-ssh">Clone by SSH</h3>
+<p><code>REPO_ADDR</code> 设置为 SSH URL, 如：git@github.com:oceanbase/miniob.git</p>
+<h3 id="clone-by-https">Clone by HTTPS</h3>
+<h4 id="私有仓库">私有仓库</h4>
+<p>如果 fork 出来的是私有仓库。</p>
+<p>假设仓库 HTTPS 地址为：https://github.com/oceanbase/miniob.git.</p>
+<p><strong>REPO_ADDR 格式</strong>：https://&lt;username&gt;:&lt;password&gt;@github.com/oceanbase/miniob.git</p>
+<p><code>username</code> 和 <code>password</code> GitHub / Gitee(GitHub 不支持 password，需要创建 token，见<a target="_blank" rel="noopener" href="https://docs.github.com/en/authentication/keeping-your-account-and-data-secure/creating-a-personal-access-token">链接</a>)。</p>
+<p><strong>用户名如果是邮箱，字符 '@' 需要转义为 '%40'</strong>.</p>
+<pre><code class="language-docker"># example
+REPO_ADDR=https://oceanbase%40email.com:mypassword@github.com/oceanbase/miniob.git
+</code></pre>
+<h4 id="公有仓库">公有仓库</h4>
+<p>如果 fork 出的是公有仓库，直接将 <code>REPO_ADDR</code> 设置为仓库地址即可。</p>
+<pre><code class="language-Docker">REPO_ADDR=https://github.com/oceanbase/miniob.git
+</code></pre>
+<h3 id="配置映射端口">配置映射端口</h3>
+<p>默认映射本机端口 10000 到容器端口 22. 可在 docker-compose.yml 中自行修改。不许修改可跳过此步骤。</p>
+<h2 id="启动容器">启动容器</h2>
+<h3 id="clone-by-ssh-1">Clone by SSH</h3>
+<p>如果用 SSH 的方式 clone，需要将 Github/Gitee 对应的 SSH 私钥设置到环境变量内再启动 Container.</p>
+<p><strong>假设 Github/Gitee 上传的公钥对应的秘钥位于 ~/.ssh/id_rsa.</strong></p>
+<p>terminal 进入本仓库 docker 目录，在 docker 目录下执行命令启动容器。</p>
+<h4 id="linux-shell">Linux Shell</h4>
+<pre><code class="language-bash">export PRIVATE_KEY=$(cat ~/.ssh/id_rsa) &amp;&amp; docker-compose up -d --build
+</code></pre>
+<h4 id="windows-powershell">Windows Powershell</h4>
+<pre><code class="language-bash">$env:PRIVATE_KEY=$(cat ~/.ssh/id_rsa) &amp;&amp; docker-compose up -d --build
+</code></pre>
+<h3 id="clone-by-https-1">Clone by HTTPS</h3>
+<p>不需要 PRIVATE_KEY 环境变量。</p>
+<pre><code class="language-bash">docker-compose up -d --build
+</code></pre>
+<p>此输出表示容器启动成功。</p>
+<p><img loading="lazy" src="../../docs/dev-env/images/vsc_container_started.png" alt="container started" /></p>
+<h3 id="管理容器">管理容器</h3>
+<p>一些管理容器的命令。</p>
+<pre><code class="language-bash"># 停止容器
+docker stop miniob-dev
+
+# 启动容器
+docker start miniob-dev
+
+# 重启容器
+docker restart miniob-dev
+</code></pre>
+<h2 id="使用-vscode-远程开发">使用 VSCode 远程开发</h2>
+<p>打开 VSCode，设置远程开发及调试。</p>
+<h3 id="安装-remote-ssh-插件">安装 Remote-SSH 插件</h3>
+<p>一般会默认安装。快捷键组合 Ctrl + Shift + x 打开 VSCode 插件面板，检查 Remote - SSH 插件是否安装，如果没有安装就安装此插件。</p>
+<p><img loading="lazy" src="../../docs/dev-env/images/vsc_remote_ssh_extension.png" alt="remote ssh" /></p>
+<h3 id="连接-docker-容器">连接 Docker 容器</h3>
+<h4 id="配置-ssh-host">配置 SSH Host</h4>
+<p>按快捷键 Ctrl + p, 输入 <code>remote-ssh: connect to host</code> 连接远程主机。</p>
+<p><img loading="lazy" src="../../docs/dev-env/images/vsc_remote_ssh_connect_cmd.png" alt="connect to host" /></p>
+<p>选择 <code>Add new ssh host</code>.</p>
+<p><img loading="lazy" src="../../docs/dev-env/images/vsc_add_new_ssh_host.png" alt="add ssh host" /></p>
+<p>输入命令.</p>
+<pre><code class="language-bash">ssh root@localhost -p 10000
+</code></pre>
+<p>以 root 用户连接容器的 10000 端口.</p>
+<p><img loading="lazy" src="../../docs/dev-env/images/vsc_ssh_connect.png" alt="ssh cmd" /></p>
+<p>选择写入哪个配置文件，默认第一个就行。</p>
+<p><img loading="lazy" src="../../docs/dev-env/images/vsc_config_file.png" alt="ssh config ifle" /></p>
+<h4 id="连接容器">连接容器</h4>
+<p>按快捷键 Ctrl + p, 输入 <code>remote-ssh: connect to host</code> 连接远程主机。</p>
+<p>主机选 localhost 并回车，跳出密码输入页面。若在之前步骤没有修改，密码默认为 root.</p>
+<p><img loading="lazy" src="../../docs/dev-env/images/vsc_pwd.png" alt="password" /></p>
+<h3 id="打开代码目录">打开代码目录</h3>
+<p>代码位于 /root/source/miniob. 点击左侧 <code>open folder</code>，进入该目录。需要再输入一次密码。</p>
+<p><img loading="lazy" src="../../docs/dev-env/images/vsc_open_folder.png" alt="open folder" /></p>
+<h3 id="安装开发插件">安装开发插件</h3>
+<p>Ctrl + Shift + x 打开 VSCode 插件面板, 安装如下插件. 注意要安装在 Docker 容器中，点击 <code>install in SSH:localhost</code>.</p>
+<p>C/C++ 和 C/C++ Extension Pack.</p>
+<p><img loading="lazy" src="../../docs/dev-env/images/vsc_cpp_extensions.png" alt="ext1" /></p>
+<p>C/C++ Extension Pack 安装好后会让你选择 kits, 选 GCC 8.5 这个。</p>
+<p><img loading="lazy" src="../../docs/dev-env/images/vsc_kit_for_miniob.png" alt="kits" /></p>
+<p>CMake 和 CMake Tools.</p>
+<p><img loading="lazy" src="../../docs/dev-env/images/vscode_search_plugs.png" alt="ext2" /></p>
+<h3 id="进行-debug">进行 Debug</h3>
+<h4 id="启动-server">启动 Server</h4>
+<p>在 src/observer/sql/parser/parse_stage.cpp 的 handle_event 函数开头打个断点, 也就是第 90 行。</p>
+<p>按 F5 开始调试。出现如下界面表示 miniob 的 server 端启动成功。</p>
+<p><img loading="lazy" src="../../docs/dev-env/images/vsc_server_started.png" alt="server started" /></p>
+<h4 id="启动-client">启动 Client</h4>
+<p>Ctrl + Shift + ` 新启动一个 shell.</p>
+<p>执行 <code>./build/bin/obclient</code> 启动客户端.</p>
+<h4 id="执行-sql">执行 SQL</h4>
+<p>执行一句 SQL 测试断点是否正常工作。</p>
+<pre><code class="language-sql">show tables;
+</code></pre>
+<p><img loading="lazy" src="../../docs/dev-env/images/vsc_debug.png" alt="debug" /></p>
+<p>正常进入断点。后续可以配置 Git 进行开发了。</p>
+</article>
+<nav class="pager" aria-label="相邻文档导航"><a class="prev" href="how-to-dev-using-docker.html"><span>← 上一篇</span>使用Docker开发MiniOB</a><a class="next" href="how_to_dev_in_docker_container_by_vscode_on_windows.html"><span>下一篇 →</span>在windows上通过docker配置环境并利用vscode调试代码（手把手版）</a></nav>
+<p class="source-line">源文件：<a href="../../docs/dev-env/how_to_dev_in_docker_container_by_vscode.md">dev-env/how_to_dev_in_docker_container_by_vscode.md</a></p>
+
+    <footer class="page-footer">
+      <span>由 <code>docs/visual/build.py</code> &amp; <code>draw_diagrams.py</code> 从 <code>docs/docs</code> 生成</span>
+      <span>MiniOB · 可视化技术文档</span>
+    </footer>
+  </main>
+  <aside class="page-toc" aria-label="本页目录"><div class="toc-inner"><p class="toc-title">本页导览</p><ul class="toc-list"><li class="toc-item toc-l2"><a href="#安装-docker-和-docker-compose">安装 Docker 和 Docker-compose</a></li><li class="toc-item toc-l3"><a href="#windows">Windows</a></li><li class="toc-item toc-l3"><a href="#linux">Linux</a></li><li class="toc-item toc-l2"><a href="#安装-vscode">安装 VSCode</a></li><li class="toc-item toc-l2"><a href="#配置-dockerfile">配置 Dockerfile</a></li><li class="toc-item toc-l3"><a href="#配置-root-密码">配置 Root 密码</a></li><li class="toc-item toc-l2"><a href="#配置-docker-compose">配置 Docker Compose</a></li><li class="toc-item toc-l3"><a href="#fork-仓库">Fork 仓库</a></li><li class="toc-item toc-l3"><a href="#clone-by-ssh">Clone by SSH</a></li><li class="toc-item toc-l3"><a href="#clone-by-https">Clone by HTTPS</a></li><li class="toc-item toc-l3"><a href="#配置映射端口">配置映射端口</a></li><li class="toc-item toc-l2"><a href="#启动容器">启动容器</a></li><li class="toc-item toc-l3"><a href="#clone-by-ssh-1">Clone by SSH</a></li><li class="toc-item toc-l3"><a href="#clone-by-https-1">Clone by HTTPS</a></li><li class="toc-item toc-l3"><a href="#管理容器">管理容器</a></li><li class="toc-item toc-l2"><a href="#使用-vscode-远程开发">使用 VSCode 远程开发</a></li><li class="toc-item toc-l3"><a href="#安装-remote-ssh-插件">安装 Remote-SSH 插件</a></li><li class="toc-item toc-l3"><a href="#连接-docker-容器">连接 Docker 容器</a></li><li class="toc-item toc-l3"><a href="#打开代码目录">打开代码目录</a></li><li class="toc-item toc-l3"><a href="#安装开发插件">安装开发插件</a></li><li class="toc-item toc-l3"><a href="#进行-debug">进行 Debug</a></li></ul><a class="toc-top" href="#top">↑ 回到顶部</a></div></aside>
+</div>
+<div class="nav-scrim" id="navScrim"></div>
+<div class="diagram-modal" id="diagramModal" hidden role="dialog" aria-modal="true" aria-label="图表放大检视">
+  <div class="diagram-modal-bar">
+    <span class="diagram-modal-title" id="diagramModalTitle">架构与流程图检视</span>
+    <button type="button" class="diagram-modal-close" id="diagramModalClose" aria-label="关闭">✕ 关闭 (Esc)</button>
+  </div>
+  <div class="diagram-modal-body" id="diagramModalBody"></div>
+</div>
+<script src="../assets/markmap-config.js"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/markmap-autoloader@0.18"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/@highlightjs/cdn-assets@11/highlight.min.js"></script>
+
+<script defer src="../assets/site.js"></script>
+</body>
+</html>

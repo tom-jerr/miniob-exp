@@ -1,0 +1,159 @@
+<?xml version='1.0' encoding='utf-8'?>
+<svg xmlns="http://www.w3.org/2000/svg" width="1060" height="360" viewBox="0 0 1060 360" role="img" aria-labelledby="flow-bplus-tree-concurrency-latching-title flow-bplus-tree-concurrency-latching-desc" class="toolkit-diagram" data-diagram-id="flow-bplus-tree-concurrency-latching">
+  <title id="flow-bplus-tree-concurrency-latching-title">B+ 树并发加锁（蟹行协议） — 交互式机制流程图</title>
+  <desc id="flow-bplus-tree-concurrency-latching-desc">蟹行协议：锁根、取子页加锁、安全则释放祖先、叶内修改。</desc>
+  <defs>
+    <marker id="flow-bplus-tree-concurrency-latching-arrow-ink" viewBox="0 0 10 10" refX="8.6" refY="5" markerWidth="6.8" markerHeight="6.8" orient="auto">
+      <path d="M0 0.8 L9.5 5 L0 9.2 Z" fill="#334155" />
+    </marker>
+    <marker id="flow-bplus-tree-concurrency-latching-arrow-blue" viewBox="0 0 10 10" refX="8.6" refY="5" markerWidth="6.8" markerHeight="6.8" orient="auto">
+      <path d="M0 0.8 L9.5 5 L0 9.2 Z" fill="#2554C7" />
+    </marker>
+    <marker id="flow-bplus-tree-concurrency-latching-arrow-amber" viewBox="0 0 10 10" refX="8.6" refY="5" markerWidth="6.8" markerHeight="6.8" orient="auto">
+      <path d="M0 0.8 L9.5 5 L0 9.2 Z" fill="#B45309" />
+    </marker>
+    <marker id="flow-bplus-tree-concurrency-latching-arrow-teal" viewBox="0 0 10 10" refX="8.6" refY="5" markerWidth="6.8" markerHeight="6.8" orient="auto">
+      <path d="M0 0.8 L9.5 5 L0 9.2 Z" fill="#0F766E" />
+    </marker>
+    <marker id="flow-bplus-tree-concurrency-latching-arrow-purple" viewBox="0 0 10 10" refX="8.6" refY="5" markerWidth="6.8" markerHeight="6.8" orient="auto">
+      <path d="M0 0.8 L9.5 5 L0 9.2 Z" fill="#6D28D9" />
+    </marker>
+    <marker id="flow-bplus-tree-concurrency-latching-arrow-rose" viewBox="0 0 10 10" refX="8.6" refY="5" markerWidth="6.8" markerHeight="6.8" orient="auto">
+      <path d="M0 0.8 L9.5 5 L0 9.2 Z" fill="#BE123C" />
+    </marker>
+    <marker id="flow-bplus-tree-concurrency-latching-arrow-muted" viewBox="0 0 10 10" refX="8.6" refY="5" markerWidth="6.8" markerHeight="6.8" orient="auto">
+      <path d="M0 0.8 L9.5 5 L0 9.2 Z" fill="#64748B" />
+    </marker>
+  </defs>
+  <g class="diag-bg">
+    <rect x="0" y="0" width="1060" height="360" rx="12" fill="#FCFDFE" stroke="none" class="diag-canvas-bg" />
+  </g>
+  <g class="diag-lanes">
+    <g class="diag-lane">
+      <rect x="16" y="16" width="184" height="328" rx="10" fill="#F4F7FB" stroke="#CBD5E1" stroke-width="1.5" class="diag-lane-rect" />
+      <text x="30" y="38" font-family="&quot;Noto Sans SC&quot;, &quot;PingFang SC&quot;, &quot;Microsoft YaHei&quot;, &quot;Segoe UI&quot;, Arial, sans-serif" font-size="12.8" font-weight="700" fill="#526077" class="diag-lane-title">1. 入口初始化</text>
+      <text x="186" y="38" font-family="&quot;JetBrains Mono&quot;, &quot;SFMono-Regular&quot;, Consolas, &quot;Liberation Mono&quot;, monospace" font-size="11.2" font-weight="500" text-anchor="end" fill="#7B89A1" class="diag-lane-sub">LatchMemo &amp; Root</text>
+    </g>
+    <g class="diag-lane">
+      <rect x="214" y="16" width="488" height="328" rx="10" fill="#F0F5FF" stroke="#2554C7" stroke-width="1.5" class="diag-lane-rect" />
+      <text x="228" y="38" font-family="&quot;Noto Sans SC&quot;, &quot;PingFang SC&quot;, &quot;Microsoft YaHei&quot;, &quot;Segoe UI&quot;, Arial, sans-serif" font-size="12.8" font-weight="700" fill="#1E40AF" class="diag-lane-title">2. 蟹行下探循环 (Crabbing Descent Loop)</text>
+      <text x="688" y="38" font-family="&quot;JetBrains Mono&quot;, &quot;SFMono-Regular&quot;, Consolas, &quot;Liberation Mono&quot;, monospace" font-size="11.2" font-weight="500" text-anchor="end" fill="#7B89A1" class="diag-lane-sub">取子页 pin+1 → 加锁 → 安全则释放祖先</text>
+    </g>
+    <g class="diag-lane">
+      <rect x="716" y="16" width="328" height="328" rx="10" fill="#F0FDFA" stroke="#0F766E" stroke-width="1.5" class="diag-lane-rect" />
+      <text x="730" y="38" font-family="&quot;Noto Sans SC&quot;, &quot;PingFang SC&quot;, &quot;Microsoft YaHei&quot;, &quot;Segoe UI&quot;, Arial, sans-serif" font-size="12.8" font-weight="700" fill="#115E59" class="diag-lane-title">3. 叶内更新与 Memo 统一释放</text>
+      <text x="1030" y="38" font-family="&quot;JetBrains Mono&quot;, &quot;SFMono-Regular&quot;, Consolas, &quot;Liberation Mono&quot;, monospace" font-size="11.2" font-weight="500" text-anchor="end" fill="#7B89A1" class="diag-lane-sub">叶插入/分裂回插 → release_all()</text>
+    </g>
+  </g>
+  <g class="diag-edges">
+    <g class="flow-edge" data-from="lock_root" data-to="crab_child">
+      <path d="M 184.0 112.0 L 234.0 112.0" fill="none" stroke="#2554C7" stroke-width="1.9" stroke-linejoin="round" stroke-linecap="round" class="flow-edge-path" marker-end="url(#flow-bplus-tree-concurrency-latching-arrow-blue)" />
+    </g>
+    <g class="flow-edge" data-from="crab_child" data-to="lock_child">
+      <path d="M 380.0 112.0 L 402.0 112.0" fill="none" stroke="#2554C7" stroke-width="1.9" stroke-linejoin="round" stroke-linecap="round" class="flow-edge-path" marker-end="url(#flow-bplus-tree-concurrency-latching-arrow-blue)" />
+    </g>
+    <g class="flow-edge" data-from="lock_child" data-to="is_safe">
+      <path d="M 546.0 112.0 L 566.0 112.0" fill="none" stroke="#B45309" stroke-width="1.9" stroke-linejoin="round" stroke-linecap="round" class="flow-edge-path" marker-end="url(#flow-bplus-tree-concurrency-latching-arrow-amber)" />
+    </g>
+    <g class="flow-edge" data-from="is_safe" data-to="release_parent">
+      <path d="M 627.0 148.0 L 627.0 224.0" fill="none" stroke="#0F766E" stroke-width="1.9" stroke-linejoin="round" stroke-linecap="round" class="flow-edge-path" marker-end="url(#flow-bplus-tree-concurrency-latching-arrow-teal)" />
+      <rect x="638.0" y="176.5" width="34.0" height="19.0" rx="5.5" fill="#FFFFFF" stroke="#CBD5E1" stroke-width="1.1" class="flow-edge-pill" />
+      <text x="655.0" y="189.8" font-family="&quot;Noto Sans SC&quot;, &quot;PingFang SC&quot;, &quot;Microsoft YaHei&quot;, &quot;Segoe UI&quot;, Arial, sans-serif" font-size="11.2" font-weight="600" text-anchor="middle" fill="#526077" class="flow-edge-label">安全</text>
+    </g>
+    <g class="flow-edge" data-from="is_safe" data-to="descend">
+      <path d="M 585.0 148.0 L 585.0 186.0 L 381.0 186.0 L 381.0 224.0" fill="none" stroke="#B45309" stroke-width="1.9" stroke-linejoin="round" stroke-linecap="round" class="flow-edge-path" marker-end="url(#flow-bplus-tree-concurrency-latching-arrow-amber)" />
+      <rect x="438.6" y="162.5" width="88.8" height="19.0" rx="5.5" fill="#FFFFFF" stroke="#CBD5E1" stroke-width="1.1" class="flow-edge-pill" />
+      <text x="483.0" y="175.8" font-family="&quot;Noto Sans SC&quot;, &quot;PingFang SC&quot;, &quot;Microsoft YaHei&quot;, &quot;Segoe UI&quot;, Arial, sans-serif" font-size="11.2" font-weight="600" text-anchor="middle" fill="#526077" class="flow-edge-label">不安全，保留锁</text>
+    </g>
+    <g class="flow-edge" data-from="release_parent" data-to="descend">
+      <path d="M 542.0 260.0 L 468.0 260.0" fill="none" stroke="#0F766E" stroke-width="1.9" stroke-linejoin="round" stroke-linecap="round" class="flow-edge-path" marker-end="url(#flow-bplus-tree-concurrency-latching-arrow-teal)" />
+    </g>
+    <g class="flow-edge" data-from="descend" data-to="crab_child">
+      <path d="M 294.0 260.0 L 264.0 260.0 L 264.0 148.0" fill="none" stroke="#2554C7" stroke-width="1.9" stroke-linejoin="round" stroke-linecap="round" class="flow-edge-path" marker-end="url(#flow-bplus-tree-concurrency-latching-arrow-blue)" />
+      <rect x="198.0" y="194.5" width="55.9" height="19.0" rx="5.5" fill="#FFFFFF" stroke="#CBD5E1" stroke-width="1.1" class="flow-edge-pill" />
+      <text x="226.0" y="207.8" font-family="&quot;Noto Sans SC&quot;, &quot;PingFang SC&quot;, &quot;Microsoft YaHei&quot;, &quot;Segoe UI&quot;, Arial, sans-serif" font-size="11.2" font-weight="600" text-anchor="middle" fill="#526077" class="flow-edge-label">循环向下</text>
+    </g>
+    <g class="flow-edge" data-from="descend" data-to="leaf_insert">
+      <path d="M 381.0 296.0 L 381.0 322.0 L 710.0 322.0 L 710.0 112.0 L 736.0 112.0" fill="none" stroke="#0F766E" stroke-width="1.9" stroke-linejoin="round" stroke-linecap="round" class="flow-edge-path" marker-end="url(#flow-bplus-tree-concurrency-latching-arrow-teal)" />
+      <rect x="412.1" y="300.5" width="66.9" height="19.0" rx="5.5" fill="#FFFFFF" stroke="#CBD5E1" stroke-width="1.1" class="flow-edge-pill" />
+      <text x="445.5" y="313.8" font-family="&quot;Noto Sans SC&quot;, &quot;PingFang SC&quot;, &quot;Microsoft YaHei&quot;, &quot;Segoe UI&quot;, Arial, sans-serif" font-size="11.2" font-weight="600" text-anchor="middle" fill="#526077" class="flow-edge-label">到达叶结点</text>
+    </g>
+    <g class="flow-edge" data-from="leaf_insert" data-to="split_parent">
+      <path d="M 876.0 112.0 L 894.0 112.0" fill="none" stroke="#B45309" stroke-width="1.9" stroke-linejoin="round" stroke-linecap="round" class="flow-edge-path" marker-end="url(#flow-bplus-tree-concurrency-latching-arrow-amber)" />
+      <rect x="857.0" y="52.5" width="55.9" height="19.0" rx="5.5" fill="#FFFFFF" stroke="#CBD5E1" stroke-width="1.1" class="flow-edge-pill" />
+      <text x="885.0" y="65.8" font-family="&quot;Noto Sans SC&quot;, &quot;PingFang SC&quot;, &quot;Microsoft YaHei&quot;, &quot;Segoe UI&quot;, Arial, sans-serif" font-size="11.2" font-weight="600" text-anchor="middle" fill="#526077" class="flow-edge-label">发生分裂</text>
+    </g>
+    <g class="flow-edge" data-from="leaf_insert" data-to="memo_release">
+      <path d="M 806.0 148.0 L 806.0 224.0" fill="none" stroke="#0F766E" stroke-width="1.9" stroke-linejoin="round" stroke-linecap="round" class="flow-edge-path" marker-end="url(#flow-bplus-tree-concurrency-latching-arrow-teal)" />
+    </g>
+    <g class="flow-edge" data-from="split_parent" data-to="memo_release">
+      <path d="M 962.0 148.0 L 962.0 224.0" fill="none" stroke="#B45309" stroke-width="1.9" stroke-linejoin="round" stroke-linecap="round" class="flow-edge-path" marker-end="url(#flow-bplus-tree-concurrency-latching-arrow-amber)" />
+    </g>
+  </g>
+  <g class="diag-nodes">
+    <g class="flow-node role-gray" data-node-id="lock_root" data-steps="0" tabindex="0" role="button" aria-label="根节点加锁 (LatchMemo 锁根页)">
+      <rect x="32" y="76" width="152" height="72" rx="9" fill="#F1F5F9" stroke="#475569" stroke-width="1.8" class="flow-node-rect" />
+      <rect x="40" y="82" width="22.0" height="16" rx="4.5" fill="#334155" stroke="none" class="flow-node-badge-bg" />
+      <text x="51.0" y="93.5" font-family="&quot;JetBrains Mono&quot;, &quot;SFMono-Regular&quot;, Consolas, &quot;Liberation Mono&quot;, monospace" font-size="10.2" font-weight="700" text-anchor="middle" fill="#FFFFFF" class="flow-node-badge-text">S1</text>
+      <text x="108.0" y="114.0" font-family="&quot;Noto Sans SC&quot;, &quot;PingFang SC&quot;, &quot;Microsoft YaHei&quot;, &quot;Segoe UI&quot;, Arial, sans-serif" font-size="14.2" font-weight="700" text-anchor="middle" fill="#141E30" class="flow-node-title">根节点加锁</text>
+      <text x="108.0" y="130.5" font-family="&quot;JetBrains Mono&quot;, &quot;SFMono-Regular&quot;, Consolas, &quot;Liberation Mono&quot;, monospace" font-size="11" font-weight="500" text-anchor="middle" fill="#526077" class="flow-node-sub">LatchMemo 锁根页</text>
+    </g>
+    <g class="flow-node role-blue" data-node-id="crab_child" data-steps="1" tabindex="0" role="button" aria-label="蟹行取子页 (fetch_page (pin+1))">
+      <rect x="234" y="76" width="146" height="72" rx="9" fill="#E6EFFD" stroke="#2554C7" stroke-width="1.8" class="flow-node-rect" />
+      <rect x="242" y="82" width="22.0" height="16" rx="4.5" fill="#1E40AF" stroke="none" class="flow-node-badge-bg" />
+      <text x="253.0" y="93.5" font-family="&quot;JetBrains Mono&quot;, &quot;SFMono-Regular&quot;, Consolas, &quot;Liberation Mono&quot;, monospace" font-size="10.2" font-weight="700" text-anchor="middle" fill="#FFFFFF" class="flow-node-badge-text">S2</text>
+      <text x="307.0" y="114.0" font-family="&quot;Noto Sans SC&quot;, &quot;PingFang SC&quot;, &quot;Microsoft YaHei&quot;, &quot;Segoe UI&quot;, Arial, sans-serif" font-size="14.2" font-weight="700" text-anchor="middle" fill="#141E30" class="flow-node-title">蟹行取子页</text>
+      <text x="307.0" y="130.5" font-family="&quot;JetBrains Mono&quot;, &quot;SFMono-Regular&quot;, Consolas, &quot;Liberation Mono&quot;, monospace" font-size="11" font-weight="500" text-anchor="middle" fill="#526077" class="flow-node-sub">fetch_page (pin+1)</text>
+    </g>
+    <g class="flow-node role-blue" data-node-id="lock_child" data-steps="1" tabindex="0" role="button" aria-label="子节点加写锁 (frame 加读/写锁)">
+      <rect x="402" y="76" width="144" height="72" rx="9" fill="#E6EFFD" stroke="#2554C7" stroke-width="1.8" class="flow-node-rect" />
+      <rect x="410" y="82" width="22.0" height="16" rx="4.5" fill="#1E40AF" stroke="none" class="flow-node-badge-bg" />
+      <text x="421.0" y="93.5" font-family="&quot;JetBrains Mono&quot;, &quot;SFMono-Regular&quot;, Consolas, &quot;Liberation Mono&quot;, monospace" font-size="10.2" font-weight="700" text-anchor="middle" fill="#FFFFFF" class="flow-node-badge-text">S2</text>
+      <text x="474.0" y="114.0" font-family="&quot;Noto Sans SC&quot;, &quot;PingFang SC&quot;, &quot;Microsoft YaHei&quot;, &quot;Segoe UI&quot;, Arial, sans-serif" font-size="14.2" font-weight="700" text-anchor="middle" fill="#141E30" class="flow-node-title">子节点加写锁</text>
+      <text x="474.0" y="130.5" font-family="&quot;JetBrains Mono&quot;, &quot;SFMono-Regular&quot;, Consolas, &quot;Liberation Mono&quot;, monospace" font-size="11" font-weight="500" text-anchor="middle" fill="#526077" class="flow-node-sub">frame 加读/写锁</text>
+    </g>
+    <g class="flow-node role-amber" data-node-id="is_safe" data-steps="2" tabindex="0" role="button" aria-label="判断节点是否安全 (不会分裂/合并?)">
+      <rect x="566" y="76" width="122" height="72" rx="9" fill="#FEF0C7" stroke="#B45309" stroke-width="1.8" class="flow-node-rect" />
+      <rect x="574" y="82" width="22.0" height="16" rx="4.5" fill="#92400E" stroke="none" class="flow-node-badge-bg" />
+      <text x="585.0" y="93.5" font-family="&quot;JetBrains Mono&quot;, &quot;SFMono-Regular&quot;, Consolas, &quot;Liberation Mono&quot;, monospace" font-size="10.2" font-weight="700" text-anchor="middle" fill="#FFFFFF" class="flow-node-badge-text">S3</text>
+      <text x="627.0" y="114.0" font-family="&quot;Noto Sans SC&quot;, &quot;PingFang SC&quot;, &quot;Microsoft YaHei&quot;, &quot;Segoe UI&quot;, Arial, sans-serif" font-size="14.2" font-weight="700" text-anchor="middle" fill="#141E30" class="flow-node-title">判断节点是否安全</text>
+      <text x="627.0" y="130.5" font-family="&quot;JetBrains Mono&quot;, &quot;SFMono-Regular&quot;, Consolas, &quot;Liberation Mono&quot;, monospace" font-size="11" font-weight="500" text-anchor="middle" fill="#526077" class="flow-node-sub">不会分裂/合并?</text>
+    </g>
+    <g class="flow-node role-teal" data-node-id="release_parent" data-steps="3" tabindex="0" role="button" aria-label="安全则释放祖先 (release_parent())">
+      <rect x="542" y="224" width="146" height="72" rx="9" fill="#CCFBF1" stroke="#0F766E" stroke-width="1.8" class="flow-node-rect" />
+      <rect x="550" y="230" width="22.0" height="16" rx="4.5" fill="#115E59" stroke="none" class="flow-node-badge-bg" />
+      <text x="561.0" y="241.5" font-family="&quot;JetBrains Mono&quot;, &quot;SFMono-Regular&quot;, Consolas, &quot;Liberation Mono&quot;, monospace" font-size="10.2" font-weight="700" text-anchor="middle" fill="#FFFFFF" class="flow-node-badge-text">S4</text>
+      <text x="615.0" y="262.0" font-family="&quot;Noto Sans SC&quot;, &quot;PingFang SC&quot;, &quot;Microsoft YaHei&quot;, &quot;Segoe UI&quot;, Arial, sans-serif" font-size="14.2" font-weight="700" text-anchor="middle" fill="#141E30" class="flow-node-title">安全则释放祖先</text>
+      <text x="615.0" y="278.5" font-family="&quot;JetBrains Mono&quot;, &quot;SFMono-Regular&quot;, Consolas, &quot;Liberation Mono&quot;, monospace" font-size="11" font-weight="500" text-anchor="middle" fill="#526077" class="flow-node-sub">release_parent()</text>
+    </g>
+    <g class="flow-node role-blue" data-node-id="descend" data-steps="4" tabindex="0" role="button" aria-label="非叶结点继续下探 (while (!node.is_leaf))">
+      <rect x="294" y="224" width="174" height="72" rx="9" fill="#E6EFFD" stroke="#2554C7" stroke-width="1.8" class="flow-node-rect" />
+      <rect x="302" y="230" width="22.0" height="16" rx="4.5" fill="#1E40AF" stroke="none" class="flow-node-badge-bg" />
+      <text x="313.0" y="241.5" font-family="&quot;JetBrains Mono&quot;, &quot;SFMono-Regular&quot;, Consolas, &quot;Liberation Mono&quot;, monospace" font-size="10.2" font-weight="700" text-anchor="middle" fill="#FFFFFF" class="flow-node-badge-text">S5</text>
+      <text x="381.0" y="262.0" font-family="&quot;Noto Sans SC&quot;, &quot;PingFang SC&quot;, &quot;Microsoft YaHei&quot;, &quot;Segoe UI&quot;, Arial, sans-serif" font-size="14.2" font-weight="700" text-anchor="middle" fill="#141E30" class="flow-node-title">非叶结点继续下探</text>
+      <text x="381.0" y="278.5" font-family="&quot;JetBrains Mono&quot;, &quot;SFMono-Regular&quot;, Consolas, &quot;Liberation Mono&quot;, monospace" font-size="11" font-weight="500" text-anchor="middle" fill="#526077" class="flow-node-sub">while (!node.is_leaf)</text>
+    </g>
+    <g class="flow-node role-teal" data-node-id="leaf_insert" data-steps="5" tabindex="0" role="button" aria-label="叶结点执行插入 (insert_into_leaf)">
+      <rect x="736" y="76" width="140" height="72" rx="9" fill="#CCFBF1" stroke="#0F766E" stroke-width="1.8" class="flow-node-rect" />
+      <rect x="744" y="82" width="22.0" height="16" rx="4.5" fill="#115E59" stroke="none" class="flow-node-badge-bg" />
+      <text x="755.0" y="93.5" font-family="&quot;JetBrains Mono&quot;, &quot;SFMono-Regular&quot;, Consolas, &quot;Liberation Mono&quot;, monospace" font-size="10.2" font-weight="700" text-anchor="middle" fill="#FFFFFF" class="flow-node-badge-text">S6</text>
+      <text x="806.0" y="114.0" font-family="&quot;Noto Sans SC&quot;, &quot;PingFang SC&quot;, &quot;Microsoft YaHei&quot;, &quot;Segoe UI&quot;, Arial, sans-serif" font-size="14.2" font-weight="700" text-anchor="middle" fill="#141E30" class="flow-node-title">叶结点执行插入</text>
+      <text x="806.0" y="130.5" font-family="&quot;JetBrains Mono&quot;, &quot;SFMono-Regular&quot;, Consolas, &quot;Liberation Mono&quot;, monospace" font-size="11" font-weight="500" text-anchor="middle" fill="#526077" class="flow-node-sub">insert_into_leaf</text>
+    </g>
+    <g class="flow-node role-amber" data-node-id="split_parent" data-steps="6" tabindex="0" role="button" aria-label="分裂则回插父结点 (insert_into_parent)">
+      <rect x="894" y="76" width="136" height="72" rx="9" fill="#FEF0C7" stroke="#B45309" stroke-width="1.8" class="flow-node-rect" />
+      <rect x="902" y="82" width="22.0" height="16" rx="4.5" fill="#92400E" stroke="none" class="flow-node-badge-bg" />
+      <text x="913.0" y="93.5" font-family="&quot;JetBrains Mono&quot;, &quot;SFMono-Regular&quot;, Consolas, &quot;Liberation Mono&quot;, monospace" font-size="10.2" font-weight="700" text-anchor="middle" fill="#FFFFFF" class="flow-node-badge-text">S7</text>
+      <text x="962.0" y="114.0" font-family="&quot;Noto Sans SC&quot;, &quot;PingFang SC&quot;, &quot;Microsoft YaHei&quot;, &quot;Segoe UI&quot;, Arial, sans-serif" font-size="14.2" font-weight="700" text-anchor="middle" fill="#141E30" class="flow-node-title">分裂则回插父结点</text>
+      <text x="962.0" y="130.5" font-family="&quot;JetBrains Mono&quot;, &quot;SFMono-Regular&quot;, Consolas, &quot;Liberation Mono&quot;, monospace" font-size="11" font-weight="500" text-anchor="middle" fill="#526077" class="flow-node-sub">insert_into_parent</text>
+    </g>
+    <g class="flow-node role-purple" data-node-id="memo_release" data-steps="7" tabindex="0" role="button" aria-label="memo 统一释放 (memo.release_all())">
+      <rect x="788" y="224" width="190" height="72" rx="9" fill="#EDE9FE" stroke="#6D28D9" stroke-width="1.8" class="flow-node-rect" />
+      <rect x="796" y="230" width="22.0" height="16" rx="4.5" fill="#5B21B6" stroke="none" class="flow-node-badge-bg" />
+      <text x="807.0" y="241.5" font-family="&quot;JetBrains Mono&quot;, &quot;SFMono-Regular&quot;, Consolas, &quot;Liberation Mono&quot;, monospace" font-size="10.2" font-weight="700" text-anchor="middle" fill="#FFFFFF" class="flow-node-badge-text">S8</text>
+      <text x="883.0" y="262.0" font-family="&quot;Noto Sans SC&quot;, &quot;PingFang SC&quot;, &quot;Microsoft YaHei&quot;, &quot;Segoe UI&quot;, Arial, sans-serif" font-size="14.2" font-weight="700" text-anchor="middle" fill="#141E30" class="flow-node-title">memo 统一释放</text>
+      <text x="883.0" y="278.5" font-family="&quot;JetBrains Mono&quot;, &quot;SFMono-Regular&quot;, Consolas, &quot;Liberation Mono&quot;, monospace" font-size="11" font-weight="500" text-anchor="middle" fill="#526077" class="flow-node-sub">memo.release_all()</text>
+    </g>
+  </g>
+  <g class="diag-labels" />
+</svg>

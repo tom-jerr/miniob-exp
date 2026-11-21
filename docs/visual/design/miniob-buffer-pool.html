@@ -1,0 +1,312 @@
+<!doctype html>
+<html lang="zh-CN" id="top">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>MiniOB 存储实现 · MiniOB 可视化文档</title>
+<link rel="stylesheet" href="../assets/style.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@highlightjs/cdn-assets@11/styles/atom-one-dark.min.css">
+<script src="../assets/theme.js"></script>
+
+</head>
+<body class="">
+<div class="reading-progress" id="readingProgress" aria-hidden="true"></div>
+<header class="topbar">
+  <button class="menu-btn" id="menuBtn" aria-label="切换侧栏" aria-expanded="false">☰</button>
+  <a class="brand" href="../index.html"><span class="brand-mark">M</span><span>MiniOB <em>可视化文档</em></span></a>
+  <div class="top-actions">
+    <a class="top-link" href="../flows.html">动态流程</a>
+    <button class="theme-btn" id="themeBtn" aria-label="切换明暗主题" title="切换明暗主题">◐</button>
+  </div>
+</header>
+<div class="layout has-toc">
+  <aside class="sidebar" id="sidebar"><nav class="site-nav" aria-label="文档目录"><a class="nav-home" href="../index.html"><span class="brand-mark">M</span><span>MiniOB 可视化文档</span></a><details class="nav-group"><summary>快速开始<span>2</span></summary><div class="nav-links"><a href="../how_to_build.html"><span class="nav-link-text">如何编译</span></a><a href="../how_to_run.html"><span class="nav-link-text">如何运行</span></a></div></details><details class="nav-group" open><summary>设计文档<span>21</span></summary><div class="nav-links"><a href="miniob-architecture.html"><span class="nav-link-text">MiniOB代码架构框架设计和说明</span><span class="nav-badge" title="含交互流程图或架构图">图</span></a><a href="miniob-buffer-pool.html" class="active" aria-current="page"><span class="nav-link-text">MiniOB 存储实现</span><span class="nav-badge" title="含交互流程图或架构图">图</span></a><a href="miniob-double-write-buffer.html"><span class="nav-link-text">MiniOB Double Write Buffer 实现</span><span class="nav-badge" title="含交互流程图或架构图">图</span></a><a href="miniob-transaction.html"><span class="nav-link-text">事务模块</span><span class="nav-badge" title="含交互流程图或架构图">图</span></a><a href="miniob-durability.html"><span class="nav-link-text">持久化</span><span class="nav-badge" title="含交互流程图或架构图">图</span></a><a href="miniob-persistence-files.html"><span class="nav-link-text">持久化文件与恢复路径</span><span class="nav-badge" title="含交互流程图或架构图">图</span></a><a href="miniob-checkpoint-wal.html"><span class="nav-link-text">MiniOB 检查点与 WAL 截断</span><span class="nav-badge" title="含交互流程图或架构图">图</span></a><a href="miniob-sql-parser.html"><span class="nav-link-text">SQL 词法语法分析</span></a><a href="miniob-how-to-add-new-sql.html"><span class="nav-link-text">SQL语句执行流程</span><span class="nav-badge" title="含交互流程图或架构图">图</span></a><a href="miniob-sql-expression.html"><span class="nav-link-text">SQL 表达式</span></a><a href="miniob-bplus-tree.html"><span class="nav-link-text">MiniOB B+Tree 实现</span><span class="nav-badge" title="含交互流程图或架构图">图</span></a><a href="miniob-bplus-tree-concurrency.html"><span class="nav-link-text">B+ 树并发操作</span><span class="nav-badge" title="含交互流程图或架构图">图</span></a><a href="miniob-thread-model.html"><span class="nav-link-text">线程模型</span><span class="nav-badge" title="含交互流程图或架构图">图</span></a><a href="miniob-mysql-protocol.html"><span class="nav-link-text">MySQL 通讯协议</span></a><a href="miniob-pax-storage.html"><span class="nav-link-text">MiniOB PAX 存储格式</span><span class="nav-badge" title="含交互流程图或架构图">图</span></a><a href="miniob-aggregation-and-group-by.html"><span class="nav-link-text">MiniOB 向量化执行 aggregation 和 group by 实现</span></a><a href="miniob-lsm-tree.html"><span class="nav-link-text">MiniOB LSM-Tree 存储引擎</span><span class="nav-badge" title="含交互流程图或架构图">图</span></a><a href="introduction.html"><span class="nav-link-text">功能模块设计说明</span></a><a href="miniob-btree-storage-engine.html"><span class="nav-link-text">MiniOB B+Tree 聚簇表存储引擎</span><span class="nav-badge" title="含交互流程图或架构图">图</span></a><a href="miniob-cascade.html"><span class="nav-link-text">Cascade Optimizer(查询优化器)</span><span class="nav-badge" title="含交互流程图或架构图">图</span></a><a href="miniob-update-mvcc-occ.html"><span class="nav-link-text">MiniOB UPDATE、MVCC 与 OCC 方案设计</span><span class="nav-badge" title="含交互流程图或架构图">图</span></a></div></details><details class="nav-group"><summary>课程实验<span>6</span></summary><div class="nav-links"><a href="../db_course_lab/overview.html"><span class="nav-link-text">数据库系统实现原理与实践课程实验</span></a><a href="../db_course_lab/lab0.html"><span class="nav-link-text">LAB#0 C++ 基础</span></a><a href="../db_course_lab/lab1.html"><span class="nav-link-text">LAB#1 LSM-Tree 存储引擎</span></a><a href="../db_course_lab/lab2.html"><span class="nav-link-text">LAB#2 查询引擎</span></a><a href="../db_course_lab/lab3.html"><span class="nav-link-text">LAB#3 事务引擎</span></a><a href="../db_course_lab/lab4.html"><span class="nav-link-text">LAB#4 性能测试</span></a></div></details><details class="nav-group"><summary>简明教程<span>9</span></summary><div class="nav-links"><a href="../lectures/copyright.html"><span class="nav-link-text">版权声明</span></a><a href="../lectures/lecture-1.html"><span class="nav-link-text">第1章 数据库管理系统概述</span></a><a href="../lectures/lecture-2.html"><span class="nav-link-text">第2章 数据库的存储结构</span></a><a href="../lectures/lecture-3.html"><span class="nav-link-text">第3章 索引结构</span></a><a href="../lectures/lecture-4.html"><span class="nav-link-text">第4章 查询处理</span></a><a href="../lectures/lecture-5.html"><span class="nav-link-text">第5章 查询优化</span></a><a href="../lectures/lecture-6.html"><span class="nav-link-text">第6章 事务处理</span></a><a href="../lectures/references.html"><span class="nav-link-text">参考资料</span></a><a href="../lectures/index.html"><span class="nav-link-text">数据库管理系统实现基础讲义</span></a></div></details><details class="nav-group"><summary>开发环境<span>14</span></summary><div class="nav-links"><a href="../dev-env/introduction.html"><span class="nav-link-text">搭建开发环境</span></a><a href="../dev-env/vscode_dev_with_local_virtual_env.html"><span class="nav-link-text">虚拟机+vscode remote开发</span></a><a href="../dev-env/dev_by_online.html"><span class="nav-link-text">使用在线开发环境开发 MiniOB</span></a><a href="../dev-env/how-to-dev-using-docker.html"><span class="nav-link-text">使用Docker开发MiniOB</span></a><a href="../dev-env/how_to_dev_in_docker_container_by_vscode.html"><span class="nav-link-text">使用 Docker 和 VSCode 远程开发 Miniob</span></a><a href="../dev-env/how_to_dev_in_docker_container_by_vscode_on_windows.html"><span class="nav-link-text">在windows上通过docker配置环境并利用vscode调试代码（手把手版）</span></a><a href="../dev-env/how_to_dev_miniob_by_docker_on_windows.html"><span class="nav-link-text">安装Docker</span></a><a href="../dev-env/how_to_dev_miniob_by_vscode.html"><span class="nav-link-text">环境准备</span></a><a href="../dev-env/miniob-how-to-debug.html"><span class="nav-link-text">miniob调试篇</span></a><a href="../dev-env/how_to_submit_for_testing.html"><span class="nav-link-text">训练营平台使用说明</span></a><a href="../dev-env/integration_test.html"><span class="nav-link-text">MiniOB 集成测试使用文档</span></a><a href="../dev-env/cloudlab_setup.html"><span class="nav-link-text">开源学堂在线编程环境开发 MiniOB</span></a><a href="../dev-env/how_to_dev_miniob_by_docker_on_windows_simplified.html"><span class="nav-link-text">在windows上通过docker配置环境并利用vscode编辑、开发、调试代码（简易版）</span></a><a href="../dev-env/how_to_dev_miniob_in_vscodeGUI_by_docker_on_windows.html"><span class="nav-link-text">基于Windows+docker容器在本地利用VSCode编辑、开发及调试miniob</span></a></div></details><details class="nav-group"><summary>大赛与训练<span>9</span></summary><div class="nav-links"><a href="../game/introduction.html"><span class="nav-link-text">OceanBase 数据库大赛</span></a><a href="../game/miniob-output-convention.html"><span class="nav-link-text">输出规范</span></a><a href="../game/debug-output.html"><span class="nav-link-text">输出调试信息</span></a><a href="../game/miniob-memtracer.html"><span class="nav-link-text">MemTracer</span></a><a href="../game/miniob_topics.html"><span class="nav-link-text">OceanBase 数据库大赛2021届题目</span></a><a href="../game/github-introduction.html"><span class="nav-link-text">MiniOB GitHub 在训练营中的使用说明</span></a><a href="../game/gitee-instructions.html"><span class="nav-link-text">MiniOB Gitee 在训练营中的使用说明</span></a><a href="../game/miniob-vectordb.html"><span class="nav-link-text">MiniOB 向量数据库</span></a><a href="../game/git-introduction.html"><span class="nav-link-text">Git 介绍</span></a></div></details><details class="nav-group"><summary>博客<span>2</span></summary><div class="nav-links"><a href="../blog/introduction.html"><span class="nav-link-text">介绍</span></a><a href="../blog/1.html"><span class="nav-link-text">High-Performance Concurrency Control Mechanisms for Main-Memory Databases</span></a></div></details><a class="nav-flows" href="../flows.html"><span class="dot"></span>动态流程<span class="count">13</span></a></nav></aside>
+  <main class="main">
+    
+<nav class="crumbs" aria-label="面包屑导航"><a href="../index.html">首页</a><span>/</span><span>设计文档</span><span>/</span><span aria-current="page">MiniOB 存储实现</span></nav>
+<header class="doc-head">
+  <div class="doc-meta-bar">
+    <span class="eyebrow-pill">设计文档</span>
+    <span class="doc-meta-item">5 个章节</span>
+    <span class="doc-meta-sep">·</span>
+    <span class="doc-meta-item">约 5 分钟阅读</span>
+    <span class="doc-meta-sep">·</span>
+    <a class="doc-meta-source" href="../../docs/design/miniob-buffer-pool.md">Markdown 源文件 ↗</a>
+  </div>
+  <h1>MiniOB 存储实现</h1>
+</header>
+<section class="panel map-panel" id="doc-outline-panel">
+  <div class="panel-head">
+    <div>
+      <h2>章节结构导览</h2>
+      <span>点击任意章节直达正文；支持结构卡片与交互思维导图切换</span>
+    </div>
+    <button type="button" class="map-toggle-btn" data-toggle-markmap aria-expanded="false">⊞ 切换思维导图</button>
+  </div>
+  <div class="tree-view"><div class="tree-grid"><div class="tree-branch"><div class="tree-top"><a class="tree-link" href="#miniob-框架简介"><span class="tree-num">1</span><span>MiniOB 框架简介</span></a></div></div><div class="tree-branch"><div class="tree-top"><a class="tree-link" href="#miniob-文件管理"><span class="tree-num">2</span><span>MiniOB 文件管理</span></a></div></div><div class="tree-branch"><div class="tree-top"><a class="tree-link" href="#miniob-buffer-pool-模块介绍"><span class="tree-num">3</span><span>MiniOB Buffer Pool 模块介绍</span></a></div></div><div class="tree-branch"><div class="tree-top"><a class="tree-link" href="#miniob-记录管理"><span class="tree-num">4</span><span>MiniOB 记录管理</span></a></div></div></div></div>
+  <div class="markmap-wrap" hidden>
+    <div class="markmap"><script type="text/template"># MiniOB 存储实现
+  - [MiniOB 框架简介](#miniob-框架简介)
+  - [MiniOB 文件管理](#miniob-文件管理)
+  - [MiniOB Buffer Pool 模块介绍](#miniob-buffer-pool-模块介绍)
+  - [MiniOB 记录管理](#miniob-记录管理)</script></div>
+  </div>
+</section>
+<div class="flows-inline">
+<section class="flow-player" id="flow-buffer-pool-page-lifecycle" data-flow="buffer-pool-page-lifecycle" tabindex="0" aria-label="Buffer Pool 页生命周期 交互流程播放器">
+  <header class="flow-head">
+    <div>
+      <div class="flow-kicker-row">
+        <span class="flow-kicker">INTERACTIVE MECHANISM · 动态机制流程</span>
+        <span class="flow-step-total">共 7 步</span>
+      </div>
+      <h2>Buffer Pool 页生命周期</h2>
+      <p class="flow-summary">页帧分配、载入、业务使用与空间不足时的腾退复用。</p>
+    </div>
+    <div class="flow-head-actions">
+      <button type="button" class="arch-zoom-btn" data-zoom-diagram aria-label="放大流程图">⤢ 放大</button>
+      <a class="arch-svg-link" href="../assets/diagrams/flow-buffer-pool-page-lifecycle.svg" target="_blank" rel="noopener" title="打开独立 SVG 矢量图">SVG ↗</a>
+      <a class="flow-source" href="miniob-buffer-pool.html#miniob-buffer-pool-模块介绍">跳转原文 →</a>
+    </div>
+  </header>
+  <div class="flow-legend" aria-hidden="true">
+    <span><i class="leg-dot leg-active"></i>当前步骤节点与流转路径</span>
+    <span><i class="leg-dot leg-visited"></i>已执行路径</span>
+    <span><i class="leg-dot leg-idle"></i>待执行节点</span>
+    <span class="flow-legend-tip">💡 可直接点击图中节点、下方步骤条，或使用 ← / → 键切换步骤</span>
+  </div>
+  <div class="flow-canvas" role="img" aria-label="Buffer Pool 页生命周期 流程图"><svg xmlns="http://www.w3.org/2000/svg" width="1060" height="340" viewBox="0 0 1060 340" role="img" aria-labelledby="flow-buffer-pool-page-lifecycle-title flow-buffer-pool-page-lifecycle-desc" class="toolkit-diagram" data-diagram-id="flow-buffer-pool-page-lifecycle">
+  <title id="flow-buffer-pool-page-lifecycle-title">Buffer Pool 页生命周期 — 交互式机制流程图</title>
+  <desc id="flow-buffer-pool-page-lifecycle-desc">页帧分配、载入、业务使用与空间不足时的腾退复用。</desc>
+  <defs>
+    <marker id="flow-buffer-pool-page-lifecycle-arrow-ink" viewBox="0 0 10 10" refX="8.6" refY="5" markerWidth="6.8" markerHeight="6.8" orient="auto">
+      <path d="M0 0.8 L9.5 5 L0 9.2 Z" fill="#334155" />
+    </marker>
+    <marker id="flow-buffer-pool-page-lifecycle-arrow-blue" viewBox="0 0 10 10" refX="8.6" refY="5" markerWidth="6.8" markerHeight="6.8" orient="auto">
+      <path d="M0 0.8 L9.5 5 L0 9.2 Z" fill="#2554C7" />
+    </marker>
+    <marker id="flow-buffer-pool-page-lifecycle-arrow-amber" viewBox="0 0 10 10" refX="8.6" refY="5" markerWidth="6.8" markerHeight="6.8" orient="auto">
+      <path d="M0 0.8 L9.5 5 L0 9.2 Z" fill="#B45309" />
+    </marker>
+    <marker id="flow-buffer-pool-page-lifecycle-arrow-teal" viewBox="0 0 10 10" refX="8.6" refY="5" markerWidth="6.8" markerHeight="6.8" orient="auto">
+      <path d="M0 0.8 L9.5 5 L0 9.2 Z" fill="#0F766E" />
+    </marker>
+    <marker id="flow-buffer-pool-page-lifecycle-arrow-purple" viewBox="0 0 10 10" refX="8.6" refY="5" markerWidth="6.8" markerHeight="6.8" orient="auto">
+      <path d="M0 0.8 L9.5 5 L0 9.2 Z" fill="#6D28D9" />
+    </marker>
+    <marker id="flow-buffer-pool-page-lifecycle-arrow-rose" viewBox="0 0 10 10" refX="8.6" refY="5" markerWidth="6.8" markerHeight="6.8" orient="auto">
+      <path d="M0 0.8 L9.5 5 L0 9.2 Z" fill="#BE123C" />
+    </marker>
+    <marker id="flow-buffer-pool-page-lifecycle-arrow-muted" viewBox="0 0 10 10" refX="8.6" refY="5" markerWidth="6.8" markerHeight="6.8" orient="auto">
+      <path d="M0 0.8 L9.5 5 L0 9.2 Z" fill="#64748B" />
+    </marker>
+  </defs>
+  <g class="diag-bg">
+    <rect x="0" y="0" width="1060" height="340" rx="12" fill="#FCFDFE" stroke="none" class="diag-canvas-bg" />
+  </g>
+  <g class="diag-lanes">
+    <g class="diag-lane">
+      <rect x="16" y="16" width="210" height="308" rx="10" fill="#F4F7FB" stroke="#CBD5E1" stroke-width="1.5" class="diag-lane-rect" />
+      <text x="30" y="38" font-family="&quot;Noto Sans SC&quot;, &quot;PingFang SC&quot;, &quot;Microsoft YaHei&quot;, &quot;Segoe UI&quot;, Arial, sans-serif" font-size="12.8" font-weight="700" fill="#526077" class="diag-lane-title">1. 磁盘文件层</text>
+      <text x="212" y="38" font-family="&quot;JetBrains Mono&quot;, &quot;SFMono-Regular&quot;, Consolas, &quot;Liberation Mono&quot;, monospace" font-size="11.2" font-weight="500" text-anchor="end" fill="#7B89A1" class="diag-lane-sub">Page 0 Header &amp; Data Pages</text>
+    </g>
+    <g class="diag-lane">
+      <rect x="240" y="16" width="588" height="308" rx="10" fill="#F0F5FF" stroke="#2554C7" stroke-width="1.5" class="diag-lane-rect" />
+      <text x="254" y="38" font-family="&quot;Noto Sans SC&quot;, &quot;PingFang SC&quot;, &quot;Microsoft YaHei&quot;, &quot;Segoe UI&quot;, Arial, sans-serif" font-size="12.8" font-weight="700" fill="#1E40AF" class="diag-lane-title">2. 缓冲池管理层 (DiskBufferPool &amp; BPFrameManager)</text>
+      <text x="814" y="38" font-family="&quot;JetBrains Mono&quot;, &quot;SFMono-Regular&quot;, Consolas, &quot;Liberation Mono&quot;, monospace" font-size="11.2" font-weight="500" text-anchor="end" fill="#7B89A1" class="diag-lane-sub">页帧查找、空闲直接载入 vs 内存满时淘汰重绑</text>
+    </g>
+    <g class="diag-lane">
+      <rect x="842" y="16" width="202" height="308" rx="10" fill="#F0FDFA" stroke="#0F766E" stroke-width="1.5" class="diag-lane-rect" />
+      <text x="856" y="38" font-family="&quot;Noto Sans SC&quot;, &quot;PingFang SC&quot;, &quot;Microsoft YaHei&quot;, &quot;Segoe UI&quot;, Arial, sans-serif" font-size="12.8" font-weight="700" fill="#115E59" class="diag-lane-title">3. 上层业务模块</text>
+      <text x="1030" y="38" font-family="&quot;JetBrains Mono&quot;, &quot;SFMono-Regular&quot;, Consolas, &quot;Liberation Mono&quot;, monospace" font-size="11.2" font-weight="500" text-anchor="end" fill="#7B89A1" class="diag-lane-sub">RecordManager / B+Tree</text>
+    </g>
+  </g>
+  <g class="diag-edges">
+    <g class="flow-edge" data-from="read_page" data-to="find_frame">
+      <path d="M 208.0 170.0 L 262.0 170.0" fill="none" stroke="#2554C7" stroke-width="1.9" stroke-linejoin="round" stroke-linecap="round" class="flow-edge-path" marker-end="url(#flow-buffer-pool-page-lifecycle-arrow-blue)" />
+    </g>
+    <g class="flow-edge" data-from="find_frame" data-to="load_frame">
+      <path d="M 428.0 152.0 L 642.0 152.0" fill="none" stroke="#0F766E" stroke-width="1.9" stroke-linejoin="round" stroke-linecap="round" class="flow-edge-path" marker-end="url(#flow-buffer-pool-page-lifecycle-arrow-teal)" />
+      <rect x="501.6" y="126.5" width="66.9" height="19.0" rx="5.5" fill="#FFFFFF" stroke="#CBD5E1" stroke-width="1.1" class="flow-edge-pill" />
+      <text x="535.0" y="139.8" font-family="&quot;Noto Sans SC&quot;, &quot;PingFang SC&quot;, &quot;Microsoft YaHei&quot;, &quot;Segoe UI&quot;, Arial, sans-serif" font-size="11.2" font-weight="600" text-anchor="middle" fill="#526077" class="flow-edge-label">有空闲页帧</text>
+    </g>
+    <g class="flow-edge" data-from="find_frame" data-to="evict_page">
+      <path d="M 345.0 208.0 L 345.0 260.0 L 450.0 260.0" fill="none" stroke="#B45309" stroke-width="1.9" stroke-linejoin="round" stroke-linecap="round" class="flow-edge-path" marker-end="url(#flow-buffer-pool-page-lifecycle-arrow-amber)" />
+      <rect x="349.1" y="266.5" width="66.9" height="19.0" rx="5.5" fill="#FFFFFF" stroke="#CBD5E1" stroke-width="1.1" class="flow-edge-pill" />
+      <text x="382.5" y="279.8" font-family="&quot;Noto Sans SC&quot;, &quot;PingFang SC&quot;, &quot;Microsoft YaHei&quot;, &quot;Segoe UI&quot;, Arial, sans-serif" font-size="11.2" font-weight="600" text-anchor="middle" fill="#526077" class="flow-edge-label">无空闲页帧</text>
+    </g>
+    <g class="flow-edge" data-from="evict_page" data-to="rebind_frame">
+      <path d="M 610.0 264.0 L 642.0 264.0" fill="none" stroke="#B45309" stroke-width="1.9" stroke-linejoin="round" stroke-linecap="round" class="flow-edge-path" marker-end="url(#flow-buffer-pool-page-lifecycle-arrow-amber)" />
+    </g>
+    <g class="flow-edge" data-from="rebind_frame" data-to="load_frame">
+      <path d="M 726.0 232.0 L 726.0 208.0" fill="none" stroke="#B45309" stroke-width="1.9" stroke-linejoin="round" stroke-linecap="round" class="flow-edge-path" marker-end="url(#flow-buffer-pool-page-lifecycle-arrow-amber)" />
+    </g>
+    <g class="flow-edge" data-from="load_frame" data-to="use_page">
+      <path d="M 810.0 170.0 L 860.0 170.0" fill="none" stroke="#0F766E" stroke-width="1.9" stroke-linejoin="round" stroke-linecap="round" class="flow-edge-path" marker-end="url(#flow-buffer-pool-page-lifecycle-arrow-teal)" />
+    </g>
+  </g>
+  <g class="diag-nodes">
+    <g class="flow-node role-gray" data-node-id="read_page" data-steps="0,1" tabindex="0" role="button" aria-label="按页读取文件 (Page 0 Bitmap &amp; page_num)">
+      <rect x="34" y="132" width="174" height="76" rx="9" fill="#F1F5F9" stroke="#475569" stroke-width="1.8" class="flow-node-rect" />
+      <rect x="42" y="138" width="39.6" height="16" rx="4.5" fill="#334155" stroke="none" class="flow-node-badge-bg" />
+      <text x="61.8" y="149.5" font-family="&quot;JetBrains Mono&quot;, &quot;SFMono-Regular&quot;, Consolas, &quot;Liberation Mono&quot;, monospace" font-size="10.2" font-weight="700" text-anchor="middle" fill="#FFFFFF" class="flow-node-badge-text">S1,S2</text>
+      <text x="121.0" y="172.0" font-family="&quot;Noto Sans SC&quot;, &quot;PingFang SC&quot;, &quot;Microsoft YaHei&quot;, &quot;Segoe UI&quot;, Arial, sans-serif" font-size="14.2" font-weight="700" text-anchor="middle" fill="#141E30" class="flow-node-title">按页读取文件</text>
+      <text x="121.0" y="188.5" font-family="&quot;JetBrains Mono&quot;, &quot;SFMono-Regular&quot;, Consolas, &quot;Liberation Mono&quot;, monospace" font-size="11" font-weight="500" text-anchor="middle" fill="#526077" class="flow-node-sub">Page 0 Bitmap &amp; page_num</text>
+    </g>
+    <g class="flow-node role-blue" data-node-id="find_frame" data-steps="1,2,5" tabindex="0" role="button" aria-label="查找空闲页帧 (BPFrameManager)">
+      <rect x="262" y="132" width="166" height="76" rx="9" fill="#E6EFFD" stroke="#2554C7" stroke-width="1.8" class="flow-node-rect" />
+      <rect x="270" y="138" width="57.3" height="16" rx="4.5" fill="#1E40AF" stroke="none" class="flow-node-badge-bg" />
+      <text x="298.7" y="149.5" font-family="&quot;JetBrains Mono&quot;, &quot;SFMono-Regular&quot;, Consolas, &quot;Liberation Mono&quot;, monospace" font-size="10.2" font-weight="700" text-anchor="middle" fill="#FFFFFF" class="flow-node-badge-text">S2,S3,S6</text>
+      <text x="345.0" y="172.0" font-family="&quot;Noto Sans SC&quot;, &quot;PingFang SC&quot;, &quot;Microsoft YaHei&quot;, &quot;Segoe UI&quot;, Arial, sans-serif" font-size="14.2" font-weight="700" text-anchor="middle" fill="#141E30" class="flow-node-title">查找空闲页帧</text>
+      <text x="345.0" y="188.5" font-family="&quot;JetBrains Mono&quot;, &quot;SFMono-Regular&quot;, Consolas, &quot;Liberation Mono&quot;, monospace" font-size="11" font-weight="500" text-anchor="middle" fill="#526077" class="flow-node-sub">BPFrameManager</text>
+    </g>
+    <g class="flow-node role-teal" data-node-id="load_frame" data-steps="3,6" tabindex="0" role="button" aria-label="页帧关联并载入 (Frame 绑定并读入页)">
+      <rect x="642" y="132" width="168" height="76" rx="9" fill="#CCFBF1" stroke="#0F766E" stroke-width="1.8" class="flow-node-rect" />
+      <rect x="650" y="138" width="39.6" height="16" rx="4.5" fill="#115E59" stroke="none" class="flow-node-badge-bg" />
+      <text x="669.8" y="149.5" font-family="&quot;JetBrains Mono&quot;, &quot;SFMono-Regular&quot;, Consolas, &quot;Liberation Mono&quot;, monospace" font-size="10.2" font-weight="700" text-anchor="middle" fill="#FFFFFF" class="flow-node-badge-text">S4,S7</text>
+      <text x="726.0" y="172.0" font-family="&quot;Noto Sans SC&quot;, &quot;PingFang SC&quot;, &quot;Microsoft YaHei&quot;, &quot;Segoe UI&quot;, Arial, sans-serif" font-size="14.2" font-weight="700" text-anchor="middle" fill="#141E30" class="flow-node-title">页帧关联并载入</text>
+      <text x="726.0" y="188.5" font-family="&quot;JetBrains Mono&quot;, &quot;SFMono-Regular&quot;, Consolas, &quot;Liberation Mono&quot;, monospace" font-size="11" font-weight="500" text-anchor="middle" fill="#526077" class="flow-node-sub">Frame 绑定并读入页</text>
+    </g>
+    <g class="flow-node role-amber" data-node-id="evict_page" data-steps="5,6" tabindex="0" role="button" aria-label="淘汰现有页面 (按策略淘汰旧 Frame)">
+      <rect x="450" y="224" width="160" height="72" rx="9" fill="#FEF0C7" stroke="#B45309" stroke-width="1.8" class="flow-node-rect" />
+      <rect x="458" y="230" width="39.6" height="16" rx="4.5" fill="#92400E" stroke="none" class="flow-node-badge-bg" />
+      <text x="477.8" y="241.5" font-family="&quot;JetBrains Mono&quot;, &quot;SFMono-Regular&quot;, Consolas, &quot;Liberation Mono&quot;, monospace" font-size="10.2" font-weight="700" text-anchor="middle" fill="#FFFFFF" class="flow-node-badge-text">S6,S7</text>
+      <text x="530.0" y="262.0" font-family="&quot;Noto Sans SC&quot;, &quot;PingFang SC&quot;, &quot;Microsoft YaHei&quot;, &quot;Segoe UI&quot;, Arial, sans-serif" font-size="14.2" font-weight="700" text-anchor="middle" fill="#141E30" class="flow-node-title">淘汰现有页面</text>
+      <text x="530.0" y="278.5" font-family="&quot;JetBrains Mono&quot;, &quot;SFMono-Regular&quot;, Consolas, &quot;Liberation Mono&quot;, monospace" font-size="11" font-weight="500" text-anchor="middle" fill="#526077" class="flow-node-sub">按策略淘汰旧 Frame</text>
+    </g>
+    <g class="flow-node role-amber" data-node-id="rebind_frame" data-steps="6" tabindex="0" role="button" aria-label="页帧重新关联 (复用被淘汰 Frame)">
+      <rect x="642" y="232" width="168" height="64" rx="9" fill="#FEF0C7" stroke="#B45309" stroke-width="1.8" class="flow-node-rect" />
+      <rect x="650" y="238" width="22.0" height="16" rx="4.5" fill="#92400E" stroke="none" class="flow-node-badge-bg" />
+      <text x="661.0" y="249.5" font-family="&quot;JetBrains Mono&quot;, &quot;SFMono-Regular&quot;, Consolas, &quot;Liberation Mono&quot;, monospace" font-size="10.2" font-weight="700" text-anchor="middle" fill="#FFFFFF" class="flow-node-badge-text">S7</text>
+      <text x="726.0" y="266.0" font-family="&quot;Noto Sans SC&quot;, &quot;PingFang SC&quot;, &quot;Microsoft YaHei&quot;, &quot;Segoe UI&quot;, Arial, sans-serif" font-size="14.2" font-weight="700" text-anchor="middle" fill="#141E30" class="flow-node-title">页帧重新关联</text>
+      <text x="726.0" y="282.5" font-family="&quot;JetBrains Mono&quot;, &quot;SFMono-Regular&quot;, Consolas, &quot;Liberation Mono&quot;, monospace" font-size="11" font-weight="500" text-anchor="middle" fill="#526077" class="flow-node-sub">复用被淘汰 Frame</text>
+    </g>
+    <g class="flow-node role-teal" data-node-id="use_page" data-steps="4" tabindex="0" role="button" aria-label="业务模块访问数据 (读写 page.data)">
+      <rect x="860" y="132" width="166" height="76" rx="9" fill="#CCFBF1" stroke="#0F766E" stroke-width="1.8" class="flow-node-rect" />
+      <rect x="868" y="138" width="22.0" height="16" rx="4.5" fill="#115E59" stroke="none" class="flow-node-badge-bg" />
+      <text x="879.0" y="149.5" font-family="&quot;JetBrains Mono&quot;, &quot;SFMono-Regular&quot;, Consolas, &quot;Liberation Mono&quot;, monospace" font-size="10.2" font-weight="700" text-anchor="middle" fill="#FFFFFF" class="flow-node-badge-text">S5</text>
+      <text x="943.0" y="172.0" font-family="&quot;Noto Sans SC&quot;, &quot;PingFang SC&quot;, &quot;Microsoft YaHei&quot;, &quot;Segoe UI&quot;, Arial, sans-serif" font-size="14.2" font-weight="700" text-anchor="middle" fill="#141E30" class="flow-node-title">业务模块访问数据</text>
+      <text x="943.0" y="188.5" font-family="&quot;JetBrains Mono&quot;, &quot;SFMono-Regular&quot;, Consolas, &quot;Liberation Mono&quot;, monospace" font-size="11" font-weight="500" text-anchor="middle" fill="#526077" class="flow-node-sub">读写 page.data</text>
+    </g>
+  </g>
+  <g class="diag-labels" />
+</svg></div>
+  <div class="flow-progress-track" aria-hidden="true"><div class="flow-progress-bar" style="width:14.3%"></div></div>
+  <div class="flow-controls-row">
+    <div class="flow-bar">
+      <button type="button" class="flow-btn" data-act="prev" aria-label="上一步" title="上一步 (←)">← 上一步</button>
+      <button type="button" class="flow-btn primary" data-act="play" aria-label="自动播放" title="播放 / 暂停 (Space)">▶ 自动播放</button>
+      <button type="button" class="flow-btn" data-act="next" aria-label="下一步" title="下一步 (→)">下一步 →</button>
+    </div>
+    <span class="flow-count">步骤 1 / 7</span>
+  </div>
+  <div class="flow-steps" role="tablist" aria-label="流程步骤列表"><button type="button" class="step-chip active" data-step="0" title="从页头定位页号" aria-label="第 1 步：从页头定位页号"><span class="step-chip-num">1</span><span class="step-chip-label">从页头定位页号</span></button><button type="button" class="step-chip" data-step="1" title="以页为单位读取" aria-label="第 2 步：以页为单位读取"><span class="step-chip-num">2</span><span class="step-chip-label">以页为单位读取</span></button><button type="button" class="step-chip" data-step="2" title="查找空闲页帧" aria-label="第 3 步：查找空闲页帧"><span class="step-chip-num">3</span><span class="step-chip-label">查找空闲页帧</span></button><button type="button" class="step-chip" data-step="3" title="关联并载入" aria-label="第 4 步：关联并载入"><span class="step-chip-num">4</span><span class="step-chip-label">关联并载入</span></button><button type="button" class="step-chip" data-step="4" title="交给业务模块使用" aria-label="第 5 步：交给业务模块使用"><span class="step-chip-num">5</span><span class="step-chip-label">交给业务模块使用</span></button><button type="button" class="step-chip" data-step="5" title="内存不足时淘汰" aria-label="第 6 步：内存不足时淘汰"><span class="step-chip-num">6</span><span class="step-chip-label">内存不足时淘汰</span></button><button type="button" class="step-chip" data-step="6" title="页帧重新关联" aria-label="第 7 步：页帧重新关联"><span class="step-chip-num">7</span><span class="step-chip-label">页帧重新关联</span></button></div>
+  <div class="flow-desc" aria-live="polite">
+    <div class="flow-desc-head">
+      <span class="flow-desc-badge">STEP 1 / 7</span>
+      <strong class="flow-desc-title">从页头定位页号</strong>
+      <div class="flow-desc-tags"><span class="flow-tag">按页读取文件</span></div>
+    </div>
+    <p class="flow-desc-text">文件第一页是页头（page num 为 0），记录 page count、allocated pages 与 Bitmap，普通页的第一个字段则是四字节的 page_num。</p>
+  </div>
+  <details class="flow-notes"><summary><span>边界与文档未决点（4 项事实核对）</span></summary><ul><li>文档只说明淘汰有“淘汰条件和算法”，并明确“暂时先不深入讨论细节”，未给出具体算法。</li><li>文档未描述脏页写回磁盘的时机；页头 Bitmap 仅描述文件内页面分配状态，未说明其与 frame 分配的关系。</li><li>文档未在本节提到 pin_count/unpin，页帧引用计数与读写锁在《B+ 树并发操作》的“B+树与Buffer Pool”一节描述。</li><li>页头可支持的页面数受页面大小限制是文档明确指出的缺陷，本文未画出扩容方案。</li></ul></details>
+</section></div>
+<article class="content"><h1 id="miniob-存储实现">MiniOB 存储实现</h1>
+<p>本节将从存储层面介绍 MiniOB 的实现。</p>
+<h2 id="miniob-框架简介">MiniOB 框架简介</h2>
+<p>首先回顾一下 MiniOB 的框架，在 MiniOB 概述章节已经简单的介绍过，本节重点介绍执行器（Executor）访问的存储引擎。</p>
+<p><img loading="lazy" src="../../docs/design/images/miniob-overview.png" alt="Overview" /></p>
+<p>存储引擎控制整个数据、记录是如何在文件和磁盘中存储，以及如何跟内部 SQL 模块之间进行交互。存储引擎中有三个关键模块：</p>
+<ul>
+<li>
+<p>Record Manager：组织记录一行数据在文件中如何存放。</p>
+</li>
+<li>
+<p>Buffer Pool：文件跟内存交互的关键组件。</p>
+</li>
+<li>
+<p>B+Tree：索引结构。</p>
+</li>
+</ul>
+<h2 id="miniob-文件管理">MiniOB 文件管理</h2>
+<p>首先介绍 MiniOB 中文件是怎么存放，文件需要管理一些基础对象，如数据结构、表、索引。数据库在 MiniOB 这里体现就是一个文件夹，如下图所示，最上面就是一个目录，MiniOB 启动后会默认创建一个 sys 数据库，所有的操作都默认在 sys 中。</p>
+<p><img loading="lazy" src="../../docs/design/images/miniob-buffer-pool-directory.png" alt="目录" /></p>
+<p>一个数据库下会有多张表。上图示例中只有三张表，接下来以 test1 表为例介绍一下表里都存放什么内容。</p>
+<ul>
+<li>
+<p>test1.table：元数据文件，这里面存放了一些元数据。如：表名、数据的索引、字段类型、类型长度等。</p>
+</li>
+<li>
+<p>test1.data：数据文件，真正记录存放的文件。</p>
+</li>
+<li>
+<p>test1-i_name.index：索引文件，索引文件有很多个，这里只展示一个示例。</p>
+</li>
+</ul>
+<h2 id="miniob-buffer-pool-模块介绍">MiniOB Buffer Pool 模块介绍</h2>
+<p>Buffer Pool 在传统数据库里是非常重要的基础组件。</p>
+<p>首先来了解一下为什么要有一个 Buffer Pool ，数据库的数据是存放在磁盘里的，但不能直接从磁盘中读取数据，而是需要先把磁盘的数据读取到内存中，再在 CPU 做一些运算之后，展示给前端用户。写入也是一样的，一般都会先写入到内存，再把内存中的数据写入到磁盘。这种做法也是一个很常见的缓存机制。</p>
+<p><img loading="lazy" src="../../docs/design/images/miniob-buffer-pool-implementation.png" alt="Buffer Pool" /></p>
+<p>接着来看 Buffer Pool 在 MiniOB 中是如何组织的。如上图所示，左边是内存，把内存拆分成不同的帧（frame）。假如内存中有四个 frame，对应了右边的多个文件，每个文件按照每页来划分，每个页的大小都是固定的，每个页读取时是以页为单位跟内存中的一个 frame 相对应。</p>
+<p>Buffer Pool 在 MiniOB 里面组织的时候，一个 DiskBufferPool 对象对应一个物理文件。所有的 DiskBufferPool 都使用一个内存页帧管理组件 BPFrameManager，他是公用的。</p>
+<p>再来看下读取文件时，怎么跟内存去做交互的。如上图所示，frame1 关联了磁盘中一个文件的页面，frame2 关联了另一个页面，frame3 是空闲页面，没有关联任何磁盘文件，frame4 也关联了一个页面。</p>
+<p>比如现在要去读取 file3 的 Page3 页面，首先需要从 BPFrameManager 里面去找一个空闲的 frame，很明显，就是 frame3，然后再把 frame3 跟它关联起来，把 Page3 的数据读取到 frame3 里。现在内存中的所有 frame 都对应了物理页面。</p>
+<p>如果再去读取一个页面，如 Page5，这时候已经找不到内存了，通常有两种情况：</p>
+<ul>
+<li>
+<p>内存还有空闲空间，可以再申请一个 frame，跟 Page5 关联起来。</p>
+</li>
+<li>
+<p>内存没有空闲空间，还要再去读 Page4，已经没有办法去申请新的内存了。此时就需要从现有的 frame 中淘汰一个页面，比如把 frame1 淘汰掉了，然后把 frame1 跟 Page4 关联起来，再把 Page4 的数据读取到 frame1 里面。淘汰机制也是有一些淘汰条件和算法的，可以先做简单的了解，暂时先不深入讨论细节。</p>
+</li>
+</ul>
+<p><img loading="lazy" src="../../docs/design/images/miniob-buffer-pool-page.png" alt="Page" /></p>
+<p>再来看一下，一个物理的文件上面都有哪些组织结构，如上图所示。</p>
+<ul>
+<li>
+<p>文件上的第一页称为页头或文件头。文件头是一个特殊的页面，这个页面上会存放一个页号，这个页号肯定都是零号页，即 page num 是 0。</p>
+</li>
+<li>
+<p>page  count 表示当前的文件一共有多少个页面。</p>
+</li>
+<li>
+<p>allocated pages 表示已经分配了多少个页面。如图所示标灰的是已经分配的三个页面。</p>
+</li>
+<li>
+<p>Bitmap 表示每一个 bit 位当前对应的页面的分配状态，1 已分配页面，0 空闲页面。</p>
+</li>
+</ul>
+<p>当前这一种组织结构是有一个缺陷的，整个文件能够支持的页面的个数受页面大小的限制，也就是说能够申请的页面的个数受页面大小的限制的。有兴趣的，可以思考一下怎么能实现一个无限大或支持更大页面的算法。</p>
+<p>接下来介绍一下普通页面（除 PageHeader 外），普通页面对 Buffer Pool 来说，第一个字段是用四字节的 int 来表示，就是 page  num。接下来是数据，这个数据是由使用 Buffer Pool 的一些模块去控制。比如 Record Manage 或 B+Tree，他们会定义自己的结构，但第一个字段都是 page num，业务模块使用都是 page data 去做组织。</p>
+<h2 id="miniob-记录管理">MiniOB 记录管理</h2>
+<p>记录管理模块（Record Manager）主要负责组织记录在磁盘上的存放，以及处理记录的新增与删除。需要尽可能高效的利用磁盘空间，尽量减少空洞，支持高效的查找和新增操作。</p>
+<p>MiniOB 的 Record Manager 做了简化，有一些假设，记录通常都是比较短的，加上页表头，不会超出一个页面的大小。另外记录都是固定长度的，这个简化让学习 MiniOB 变得更简单一点。</p>
+<p><img loading="lazy" src="../../docs/design/images/miniob-buffer-pool-record.png" alt="Record Manager" /></p>
+<p>上面的图片展示了 MiniOB 的 Record Manager 是怎么实现的，以及 Record 在文件中是如何组织的。</p>
+<p>Record Manager 是在 Buffer Pool 的基础上实现的，比如 page0 是 Buffer Pool 里面使用的元数据，Record Manager 利用了其他的一些页面。每个页面有一个头信息 Page Header，一个 Bitmap，Bitmap 为 0 表示最近的记录是不是已经有有效数据；1 表示有有效数据。Page Header 中记录了当前页面一共有多少记录、最多可以容纳多少记录、每个记录的实际长度与对齐后的长度等信息。</p>
+</article>
+<nav class="pager" aria-label="相邻文档导航"><a class="prev" href="miniob-architecture.html"><span>← 上一篇</span>MiniOB代码架构框架设计和说明</a><a class="next" href="miniob-double-write-buffer.html"><span>下一篇 →</span>MiniOB Double Write Buffer 实现</a></nav>
+<p class="source-line">源文件：<a href="../../docs/design/miniob-buffer-pool.md">design/miniob-buffer-pool.md</a></p>
+
+    <footer class="page-footer">
+      <span>由 <code>docs/visual/build.py</code> &amp; <code>draw_diagrams.py</code> 从 <code>docs/docs</code> 生成</span>
+      <span>MiniOB · 可视化技术文档</span>
+    </footer>
+  </main>
+  <aside class="page-toc" aria-label="本页目录"><div class="toc-inner"><p class="toc-title">本页导览</p><ul class="toc-list"><li class="toc-item toc-flow"><a href="#flow-buffer-pool-page-lifecycle">▶ 流程：Buffer Pool 页生命周期</a></li><li class="toc-item toc-l2"><a href="#miniob-框架简介">MiniOB 框架简介</a></li><li class="toc-item toc-l2"><a href="#miniob-文件管理">MiniOB 文件管理</a></li><li class="toc-item toc-l2"><a href="#miniob-buffer-pool-模块介绍">MiniOB Buffer Pool 模块介绍</a></li><li class="toc-item toc-l2"><a href="#miniob-记录管理">MiniOB 记录管理</a></li></ul><a class="toc-top" href="#top">↑ 回到顶部</a></div></aside>
+</div>
+<div class="nav-scrim" id="navScrim"></div>
+<div class="diagram-modal" id="diagramModal" hidden role="dialog" aria-modal="true" aria-label="图表放大检视">
+  <div class="diagram-modal-bar">
+    <span class="diagram-modal-title" id="diagramModalTitle">架构与流程图检视</span>
+    <button type="button" class="diagram-modal-close" id="diagramModalClose" aria-label="关闭">✕ 关闭 (Esc)</button>
+  </div>
+  <div class="diagram-modal-body" id="diagramModalBody"></div>
+</div>
+<script src="../assets/markmap-config.js"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/markmap-autoloader@0.18"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/@highlightjs/cdn-assets@11/highlight.min.js"></script>
+<script type="application/json" id="flow-data">[{"id": "buffer-pool-page-lifecycle", "title": "Buffer Pool 页生命周期", "source": "design/miniob-buffer-pool.md", "anchor": "MiniOB Buffer Pool 模块介绍", "nodes": [{"id": "read_page", "label": "按页读取文件"}, {"id": "find_frame", "label": "查找空闲页帧"}, {"id": "load_frame", "label": "页帧关联并载入"}, {"id": "use_page", "label": "业务模块访问数据"}, {"id": "evict_page", "label": "淘汰现有页面"}, {"id": "rebind_frame", "label": "页帧重新关联"}], "edges": [["read_page", "find_frame"], ["find_frame", "load_frame", "有空闲页帧"], ["find_frame", "evict_page", "无空闲页帧"], ["evict_page", "rebind_frame"], ["rebind_frame", "load_frame"], ["load_frame", "use_page"]], "steps": [{"title": "从页头定位页号", "desc": "文件第一页是页头（page num 为 0），记录 page count、allocated pages 与 Bitmap，普通页的第一个字段则是四字节的 page_num。", "highlight": ["read_page"]}, {"title": "以页为单位读取", "desc": "文件按固定大小的页划分，Buffer Pool 读取文件时总是以页为单位，把磁盘页读到内存中。", "highlight": ["read_page", "find_frame"]}, {"title": "查找空闲页帧", "desc": "一个 DiskBufferPool 对应一个物理文件，所有 DiskBufferPool 共用一个 BPFrameManager，读页时先在其中找一个空闲 frame（例如 frame3）。", "highlight": ["find_frame"]}, {"title": "关联并载入", "desc": "把空闲 frame 与目标页面关联起来，再把该页面的数据读取到 frame 中。", "highlight": ["load_frame"]}, {"title": "交给业务模块使用", "desc": "普通页面对 Buffer Pool 而言只有开头的 page num，其余 page data 由 Record Manager 或 B+Tree 等模块自行定义和组织。", "highlight": ["use_page"]}, {"title": "内存不足时淘汰", "desc": "当所有 frame 都关联了页面且还需要读入新页时，从现有 frame 中淘汰一个页面，例如淘汰 frame1。", "highlight": ["find_frame", "evict_page"]}, {"title": "页帧重新关联", "desc": "把被淘汰的 frame 与新的磁盘页面关联，并把新页面数据读入该 frame，后续访问复用它。", "highlight": ["evict_page", "rebind_frame", "load_frame"]}], "uncertainties": ["文档只说明淘汰有“淘汰条件和算法”，并明确“暂时先不深入讨论细节”，未给出具体算法。", "文档未描述脏页写回磁盘的时机；页头 Bitmap 仅描述文件内页面分配状态，未说明其与 frame 分配的关系。", "文档未在本节提到 pin_count/unpin，页帧引用计数与读写锁在《B+ 树并发操作》的“B+树与Buffer Pool”一节描述。", "页头可支持的页面数受页面大小限制是文档明确指出的缺陷，本文未画出扩容方案。"], "summary": "页帧分配、载入、业务使用与空间不足时的腾退复用。"}]</script>
+<script defer src="../assets/site.js"></script>
+</body>
+</html>

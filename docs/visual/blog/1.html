@@ -1,0 +1,584 @@
+<!doctype html>
+<html lang="zh-CN" id="top">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>High-Performance Concurrency Control Mechanisms for Main-Memory Databases · MiniOB 可视化文档</title>
+<link rel="stylesheet" href="../assets/style.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@highlightjs/cdn-assets@11/styles/atom-one-dark.min.css">
+<script src="../assets/theme.js"></script>
+
+</head>
+<body class="">
+<div class="reading-progress" id="readingProgress" aria-hidden="true"></div>
+<header class="topbar">
+  <button class="menu-btn" id="menuBtn" aria-label="切换侧栏" aria-expanded="false">☰</button>
+  <a class="brand" href="../index.html"><span class="brand-mark">M</span><span>MiniOB <em>可视化文档</em></span></a>
+  <div class="top-actions">
+    <a class="top-link" href="../flows.html">动态流程</a>
+    <button class="theme-btn" id="themeBtn" aria-label="切换明暗主题" title="切换明暗主题">◐</button>
+  </div>
+</header>
+<div class="layout has-toc">
+  <aside class="sidebar" id="sidebar"><nav class="site-nav" aria-label="文档目录"><a class="nav-home" href="../index.html"><span class="brand-mark">M</span><span>MiniOB 可视化文档</span></a><details class="nav-group"><summary>快速开始<span>2</span></summary><div class="nav-links"><a href="../how_to_build.html"><span class="nav-link-text">如何编译</span></a><a href="../how_to_run.html"><span class="nav-link-text">如何运行</span></a></div></details><details class="nav-group"><summary>设计文档<span>21</span></summary><div class="nav-links"><a href="../design/miniob-architecture.html"><span class="nav-link-text">MiniOB代码架构框架设计和说明</span><span class="nav-badge" title="含交互流程图或架构图">图</span></a><a href="../design/miniob-buffer-pool.html"><span class="nav-link-text">MiniOB 存储实现</span><span class="nav-badge" title="含交互流程图或架构图">图</span></a><a href="../design/miniob-double-write-buffer.html"><span class="nav-link-text">MiniOB Double Write Buffer 实现</span><span class="nav-badge" title="含交互流程图或架构图">图</span></a><a href="../design/miniob-transaction.html"><span class="nav-link-text">事务模块</span><span class="nav-badge" title="含交互流程图或架构图">图</span></a><a href="../design/miniob-durability.html"><span class="nav-link-text">持久化</span><span class="nav-badge" title="含交互流程图或架构图">图</span></a><a href="../design/miniob-persistence-files.html"><span class="nav-link-text">持久化文件与恢复路径</span><span class="nav-badge" title="含交互流程图或架构图">图</span></a><a href="../design/miniob-checkpoint-wal.html"><span class="nav-link-text">MiniOB 检查点与 WAL 截断</span><span class="nav-badge" title="含交互流程图或架构图">图</span></a><a href="../design/miniob-sql-parser.html"><span class="nav-link-text">SQL 词法语法分析</span></a><a href="../design/miniob-how-to-add-new-sql.html"><span class="nav-link-text">SQL语句执行流程</span><span class="nav-badge" title="含交互流程图或架构图">图</span></a><a href="../design/miniob-sql-expression.html"><span class="nav-link-text">SQL 表达式</span></a><a href="../design/miniob-bplus-tree.html"><span class="nav-link-text">MiniOB B+Tree 实现</span><span class="nav-badge" title="含交互流程图或架构图">图</span></a><a href="../design/miniob-bplus-tree-concurrency.html"><span class="nav-link-text">B+ 树并发操作</span><span class="nav-badge" title="含交互流程图或架构图">图</span></a><a href="../design/miniob-thread-model.html"><span class="nav-link-text">线程模型</span><span class="nav-badge" title="含交互流程图或架构图">图</span></a><a href="../design/miniob-mysql-protocol.html"><span class="nav-link-text">MySQL 通讯协议</span></a><a href="../design/miniob-pax-storage.html"><span class="nav-link-text">MiniOB PAX 存储格式</span><span class="nav-badge" title="含交互流程图或架构图">图</span></a><a href="../design/miniob-aggregation-and-group-by.html"><span class="nav-link-text">MiniOB 向量化执行 aggregation 和 group by 实现</span></a><a href="../design/miniob-lsm-tree.html"><span class="nav-link-text">MiniOB LSM-Tree 存储引擎</span><span class="nav-badge" title="含交互流程图或架构图">图</span></a><a href="../design/introduction.html"><span class="nav-link-text">功能模块设计说明</span></a><a href="../design/miniob-btree-storage-engine.html"><span class="nav-link-text">MiniOB B+Tree 聚簇表存储引擎</span><span class="nav-badge" title="含交互流程图或架构图">图</span></a><a href="../design/miniob-cascade.html"><span class="nav-link-text">Cascade Optimizer(查询优化器)</span><span class="nav-badge" title="含交互流程图或架构图">图</span></a><a href="../design/miniob-update-mvcc-occ.html"><span class="nav-link-text">MiniOB UPDATE、MVCC 与 OCC 方案设计</span><span class="nav-badge" title="含交互流程图或架构图">图</span></a></div></details><details class="nav-group"><summary>课程实验<span>6</span></summary><div class="nav-links"><a href="../db_course_lab/overview.html"><span class="nav-link-text">数据库系统实现原理与实践课程实验</span></a><a href="../db_course_lab/lab0.html"><span class="nav-link-text">LAB#0 C++ 基础</span></a><a href="../db_course_lab/lab1.html"><span class="nav-link-text">LAB#1 LSM-Tree 存储引擎</span></a><a href="../db_course_lab/lab2.html"><span class="nav-link-text">LAB#2 查询引擎</span></a><a href="../db_course_lab/lab3.html"><span class="nav-link-text">LAB#3 事务引擎</span></a><a href="../db_course_lab/lab4.html"><span class="nav-link-text">LAB#4 性能测试</span></a></div></details><details class="nav-group"><summary>简明教程<span>9</span></summary><div class="nav-links"><a href="../lectures/copyright.html"><span class="nav-link-text">版权声明</span></a><a href="../lectures/lecture-1.html"><span class="nav-link-text">第1章 数据库管理系统概述</span></a><a href="../lectures/lecture-2.html"><span class="nav-link-text">第2章 数据库的存储结构</span></a><a href="../lectures/lecture-3.html"><span class="nav-link-text">第3章 索引结构</span></a><a href="../lectures/lecture-4.html"><span class="nav-link-text">第4章 查询处理</span></a><a href="../lectures/lecture-5.html"><span class="nav-link-text">第5章 查询优化</span></a><a href="../lectures/lecture-6.html"><span class="nav-link-text">第6章 事务处理</span></a><a href="../lectures/references.html"><span class="nav-link-text">参考资料</span></a><a href="../lectures/index.html"><span class="nav-link-text">数据库管理系统实现基础讲义</span></a></div></details><details class="nav-group"><summary>开发环境<span>14</span></summary><div class="nav-links"><a href="../dev-env/introduction.html"><span class="nav-link-text">搭建开发环境</span></a><a href="../dev-env/vscode_dev_with_local_virtual_env.html"><span class="nav-link-text">虚拟机+vscode remote开发</span></a><a href="../dev-env/dev_by_online.html"><span class="nav-link-text">使用在线开发环境开发 MiniOB</span></a><a href="../dev-env/how-to-dev-using-docker.html"><span class="nav-link-text">使用Docker开发MiniOB</span></a><a href="../dev-env/how_to_dev_in_docker_container_by_vscode.html"><span class="nav-link-text">使用 Docker 和 VSCode 远程开发 Miniob</span></a><a href="../dev-env/how_to_dev_in_docker_container_by_vscode_on_windows.html"><span class="nav-link-text">在windows上通过docker配置环境并利用vscode调试代码（手把手版）</span></a><a href="../dev-env/how_to_dev_miniob_by_docker_on_windows.html"><span class="nav-link-text">安装Docker</span></a><a href="../dev-env/how_to_dev_miniob_by_vscode.html"><span class="nav-link-text">环境准备</span></a><a href="../dev-env/miniob-how-to-debug.html"><span class="nav-link-text">miniob调试篇</span></a><a href="../dev-env/how_to_submit_for_testing.html"><span class="nav-link-text">训练营平台使用说明</span></a><a href="../dev-env/integration_test.html"><span class="nav-link-text">MiniOB 集成测试使用文档</span></a><a href="../dev-env/cloudlab_setup.html"><span class="nav-link-text">开源学堂在线编程环境开发 MiniOB</span></a><a href="../dev-env/how_to_dev_miniob_by_docker_on_windows_simplified.html"><span class="nav-link-text">在windows上通过docker配置环境并利用vscode编辑、开发、调试代码（简易版）</span></a><a href="../dev-env/how_to_dev_miniob_in_vscodeGUI_by_docker_on_windows.html"><span class="nav-link-text">基于Windows+docker容器在本地利用VSCode编辑、开发及调试miniob</span></a></div></details><details class="nav-group"><summary>大赛与训练<span>9</span></summary><div class="nav-links"><a href="../game/introduction.html"><span class="nav-link-text">OceanBase 数据库大赛</span></a><a href="../game/miniob-output-convention.html"><span class="nav-link-text">输出规范</span></a><a href="../game/debug-output.html"><span class="nav-link-text">输出调试信息</span></a><a href="../game/miniob-memtracer.html"><span class="nav-link-text">MemTracer</span></a><a href="../game/miniob_topics.html"><span class="nav-link-text">OceanBase 数据库大赛2021届题目</span></a><a href="../game/github-introduction.html"><span class="nav-link-text">MiniOB GitHub 在训练营中的使用说明</span></a><a href="../game/gitee-instructions.html"><span class="nav-link-text">MiniOB Gitee 在训练营中的使用说明</span></a><a href="../game/miniob-vectordb.html"><span class="nav-link-text">MiniOB 向量数据库</span></a><a href="../game/git-introduction.html"><span class="nav-link-text">Git 介绍</span></a></div></details><details class="nav-group" open><summary>博客<span>2</span></summary><div class="nav-links"><a href="introduction.html"><span class="nav-link-text">介绍</span></a><a href="1.html" class="active" aria-current="page"><span class="nav-link-text">High-Performance Concurrency Control Mechanisms for Main-Memory Databases</span></a></div></details><a class="nav-flows" href="../flows.html"><span class="dot"></span>动态流程<span class="count">13</span></a></nav></aside>
+  <main class="main">
+    
+<nav class="crumbs" aria-label="面包屑导航"><a href="../index.html">首页</a><span>/</span><span>博客</span><span>/</span><span aria-current="page">High-Performance Concurrency Control Mechanisms for Main-Memory Databases</span></nav>
+<header class="doc-head">
+  <div class="doc-meta-bar">
+    <span class="eyebrow-pill">博客</span>
+    <span class="doc-meta-item">38 个章节</span>
+    <span class="doc-meta-sep">·</span>
+    <span class="doc-meta-item">约 14 分钟阅读</span>
+    <span class="doc-meta-sep">·</span>
+    <a class="doc-meta-source" href="../../docs/blog/1.md">Markdown 源文件 ↗</a>
+  </div>
+  <h1>High-Performance Concurrency Control Mechanisms for Main-Memory Databases</h1>
+</header>
+<section class="panel map-panel" id="doc-outline-panel">
+  <div class="panel-head">
+    <div>
+      <h2>章节结构导览</h2>
+      <span>点击任意章节直达正文；支持结构卡片与交互思维导图切换</span>
+    </div>
+    <button type="button" class="map-toggle-btn" data-toggle-markmap aria-expanded="false">⊞ 切换思维导图</button>
+  </div>
+  <div class="tree-view"><div class="tree-grid"><div class="tree-branch"><div class="tree-top"><a class="tree-link" href="#background"><span class="tree-num">1</span><span>Background</span></a></div><ul class="tree-sub"><li><a class="tree-link" href="#main-memory-database"><span class="tree-num">1.1</span><span>Main-Memory Database</span></a></li><li><a class="tree-link" href="#sql-server-hekaton"><span class="tree-num">1.2</span><span>SQL Server Hekaton</span></a></li><li><a class="tree-link" href="#hekaton-concurrency-control-mechanism"><span class="tree-num">1.3</span><span>Hekaton Concurrency Control Mechanism</span></a></li></ul></div><div class="tree-branch"><div class="tree-top"><a class="tree-link" href="#mvcc-storage-engine"><span class="tree-num">2</span><span>MVCC Storage Engine</span></a></div><ul class="tree-sub"><li><a class="tree-link" href="#存储和索引"><span class="tree-num">2.1</span><span>存储和索引</span></a></li><li><a class="tree-link" href="#事务执行"><span class="tree-num">2.2</span><span>事务执行</span></a></li><li><a class="tree-link" href="#版本可见性"><span class="tree-num">2.3</span><span>版本可见性</span></a></li><li><a class="tree-link" href="#版本更新"><span class="tree-num">2.4</span><span>版本更新</span></a></li><li><a class="tree-link" href="#commit-依赖"><span class="tree-num">2.5</span><span>Commit 依赖</span></a></li></ul></div><div class="tree-branch"><div class="tree-top"><a class="tree-link" href="#optimistic-concurrency-control"><span class="tree-num">3</span><span>Optimistic Concurrency Control</span></a></div><ul class="tree-sub"><li><a class="tree-link" href="#事务维系数据集合"><span class="tree-num">3.1</span><span>事务维系数据集合</span></a></li><li><a class="tree-link" href="#normal-processing-phase"><span class="tree-num">3.2</span><span>Normal Processing Phase</span></a></li><li><a class="tree-link" href="#preparation-phase"><span class="tree-num">3.3</span><span>Preparation Phase</span></a></li><li><a class="tree-link" href="#postprocessing-phase"><span class="tree-num">3.4</span><span>Postprocessing Phase</span></a></li><li><a class="tree-link" href="#low-level-isolation"><span class="tree-num">3.5</span><span>Low Level Isolation</span></a></li></ul></div><div class="tree-branch"><div class="tree-top"><a class="tree-link" href="#pessimistic-concurrency-control"><span class="tree-num">4</span><span>Pessimistic Concurrency Control</span></a></div><ul class="tree-sub"><li><a class="tree-link" href="#事务维系数据集合-1"><span class="tree-num">4.1</span><span>事务维系数据集合</span></a></li><li><a class="tree-link" href="#lock-types"><span class="tree-num">4.2</span><span>Lock Types</span></a></li><li><a class="tree-link" href="#eager-update-wait-for-dependencies"><span class="tree-num">4.3</span><span>Eager update &amp; Wait-For Dependencies</span></a></li><li><a class="tree-link" href="#wait-for-denpendencies"><span class="tree-num">4.4</span><span>Wait-For Denpendencies</span></a></li><li><a class="tree-link" href="#read-lock-denpendencies"><span class="tree-num">4.5</span><span>Read Lock Denpendencies</span></a></li><li><a class="tree-link" href="#bucket-lock-denpendencies"><span class="tree-num">4.6</span><span>Bucket Lock Denpendencies</span></a></li><li><a class="tree-link" href="#normal-processing-phase-1"><span class="tree-num">4.7</span><span>Normal Processing Phase</span></a></li><li><a class="tree-link" href="#preparation-phase-1"><span class="tree-num">4.8</span><span>Preparation Phase</span></a></li><li><a class="tree-link" href="#postprocessing-phase-1"><span class="tree-num">4.9</span><span>Postprocessing Phase</span></a></li></ul></div><div class="tree-branch"><div class="tree-top"><a class="tree-link" href="#experimental-results"><span class="tree-num">5</span><span>Experimental Results</span></a></div><ul class="tree-sub"><li><a class="tree-link" href="#实验环境"><span class="tree-num">5.1</span><span>实验环境</span></a></li><li><a class="tree-link" href="#同构负载-rc"><span class="tree-num">5.2</span><span>同构负载-RC</span></a></li><li><a class="tree-link" href="#higher-isolation-level"><span class="tree-num">5.3</span><span>Higher Isolation Level</span></a></li><li><a class="tree-link" href="#异构负载短只读事务影响"><span class="tree-num">5.4</span><span>异构负载—短只读事务影响</span></a></li><li><a class="tree-link" href="#异构负载长只读事务影响"><span class="tree-num">5.5</span><span>异构负载—长只读事务影响</span></a></li></ul></div><div class="tree-branch"><div class="tree-top"><a class="tree-link" href="#conclusion"><span class="tree-num">6</span><span>Conclusion</span></a></div><ul class="tree-sub"><li><a class="tree-link" href="#main-memory-database-concurrency-control-mechanisms"><span class="tree-num">6.1</span><span>Main-Memory Database Concurrency Control Mechanisms</span></a></li></ul></div><div class="tree-branch"><div class="tree-top"><a class="tree-link" href="#references"><span class="tree-num">7</span><span>References</span></a></div></div><div class="tree-branch"><div class="tree-top"><a class="tree-link" href="#附录"><span class="tree-num">8</span><span>附录</span></a></div></div></div></div>
+  <div class="markmap-wrap" hidden>
+    <div class="markmap"><script type="text/template"># High-Performance Concurrency Control Mechanisms for Main-Memory Databases
+  - [Background](#background)
+    - [Main-Memory Database](#main-memory-database)
+    - [SQL Server Hekaton](#sql-server-hekaton)
+    - [Hekaton Concurrency Control Mechanism](#hekaton-concurrency-control-mechanism)
+  - [MVCC Storage Engine](#mvcc-storage-engine)
+    - [存储和索引](#存储和索引)
+    - [事务执行](#事务执行)
+    - [版本可见性](#版本可见性)
+    - [版本更新](#版本更新)
+    - [Commit 依赖](#commit-依赖)
+  - [Optimistic Concurrency Control](#optimistic-concurrency-control)
+    - [事务维系数据集合](#事务维系数据集合)
+    - [Normal Processing Phase](#normal-processing-phase)
+    - [Preparation Phase](#preparation-phase)
+    - [Postprocessing Phase](#postprocessing-phase)
+    - [Low Level Isolation](#low-level-isolation)
+  - [Pessimistic Concurrency Control](#pessimistic-concurrency-control)
+    - [事务维系数据集合](#事务维系数据集合-1)
+    - [Lock Types](#lock-types)
+      - [Record Lock](#record-lock)
+      - [Bucket Lock(Range Locks)](#bucket-lockrange-locks)
+    - [Eager update & Wait-For Dependencies](#eager-update-wait-for-dependencies)
+    - [Wait-For Denpendencies](#wait-for-denpendencies)
+    - [Read Lock Denpendencies](#read-lock-denpendencies)
+    - [Bucket Lock Denpendencies](#bucket-lock-denpendencies)
+    - [Normal Processing Phase](#normal-processing-phase-1)
+    - [Preparation Phase](#preparation-phase-1)
+    - [Postprocessing Phase](#postprocessing-phase-1)
+  - [Experimental Results](#experimental-results)
+    - [实验环境](#实验环境)
+    - [同构负载-RC](#同构负载-rc)
+    - [Higher Isolation Level](#higher-isolation-level)
+    - [异构负载—短只读事务影响](#异构负载短只读事务影响)
+    - [异构负载—长只读事务影响](#异构负载长只读事务影响)
+  - [Conclusion](#conclusion)
+    - [Main-Memory Database Concurrency Control Mechanisms](#main-memory-database-concurrency-control-mechanisms)
+  - [References](#references)
+  - [附录](#附录)</script></div>
+  </div>
+</section>
+
+<article class="content"><blockquote>
+<p>本篇文章来自 <a target="_blank" rel="noopener" href="https://github.com/oceanbase/oceanbase">OceanBase</a> 内部论文分享</p>
+</blockquote>
+<p>本篇文章分享的论文是<a target="_blank" rel="noopener" href="https://www.microsoft.com/en-us/research/wp-content/uploads/2011/12/MVCC-published-revised.pdf">《High-Performance Concurrency Control Mechanisms for Main-Memory Databases》</a>,该论文介绍了微软SQL Server内存数据库Hekaton所使用的并发控制算法原型，提出了一种无锁的乐观并发控制以及一种无锁的悲观并发控制方法，最终Hekaton采用的是其中的乐观并发控制方法，其也是第一个在生产中将OCC落地的数据库。欢迎感兴趣的同学一起交流学习~</p>
+<h1 id="background">Background</h1>
+<p>本篇论文讨论内存数据库(Main-Memory Database)中MVCC的设计。</p>
+<h2 id="main-memory-database">Main-Memory Database</h2>
+<p>产生背景：</p>
+<ul>
+<li>服务器内存大小不断增加（TB级）</li>
+<li>服务器处理器核数不断增加</li>
+<li>内存价格持续下降</li>
+</ul>
+<p>特点：</p>
+<ul>
+<li>表数据完全存在内存中，无需从磁盘读取</li>
+<li>进行针对性优化，如无锁结构、无锁并发控制方法等</li>
+<li>性能优异</li>
+</ul>
+<h2 id="sql-server-hekaton">SQL Server Hekaton</h2>
+<p>集成在SQL Server中针对内存数据以及OLTP负载进行优化的数据库引擎。
+优化点：</p>
+<ul>
+<li>优化内存索引</li>
+<li>无锁结构</li>
+<li>解释执行</li>
+</ul>
+<h2 id="hekaton-concurrency-control-mechanism">Hekaton Concurrency Control Mechanism</h2>
+<p>论文介绍了Hekaton高性能事务并发控制算法的原型方法，基于事务不阻塞的原则以及MVCC技术，介绍了一种无锁的多版本悲观并发控制（PCC）以及一种无锁的多版本乐观并发控制（OCC）策略，并实现了面向内存优化的单版本加锁基线方案，在不同场景对这三种方法进行了测试与比较。</p>
+<p>这里的事务不阻塞不是说永远不等待，是说不等锁。
+不阻塞的好处是会有更少的上下文切换。</p>
+<h1 id="mvcc-storage-engine">MVCC Storage Engine</h1>
+<h2 id="存储和索引">存储和索引</h2>
+<p><strong>设计原则</strong></p>
+<p>避免等待，设计为lock-free</p>
+<p>论文以 lock-free hashtable index为例，介绍并发控制策略，也可用于trees以及skip list等顺序索引结构中。</p>
+<p><img loading="lazy" src="../../docs/blog/images/1-storage-engine-prototype.png" alt="memory storage engine prototype" /></p>
+<p><strong>Record</strong></p>
+<ul>
+<li>包含Name、Amount两列</li>
+<li>包含Begin、End字段，存储时间戳或事务id，代表该版本有效时间范围</li>
+<li>相同hash bucket版本通过指针相连，从旧到新</li>
+<li>与原型基本结构相同</li>
+<li>增加将相同key的version连接的指针</li>
+<li>增加了一个无锁B-tree（Bw-tree）用于范围查询，叶子节点指向第一个版本</li>
+<li>可同时存在多个hash index（见附录）</li>
+</ul>
+<p><img loading="lazy" src="../../docs/blog/images/1-hekaton-storage-engine.png" alt="hekaton storage engine" /></p>
+<h2 id="事务执行">事务执行</h2>
+<ol>
+<li>Active：事务创建，获取开启时间戳</li>
+<li>Normal processsing phase：事务执行。</li>
+<li>Preparation phase：若commit，则将新version以及delete版本相关信息写redo log并等待日志持久化</li>
+<li>Postprocessing phase：commit成功则替换新旧版本中事务ID为事务end时间戳；abort则将事务ID替换为infinity</li>
+<li>Transaction terminated：旧版本通过garbage colloctor</li>
+</ol>
+<p><img loading="lazy" src="../../docs/blog/images/1-transaction-state.png" alt="事务状态图" /></p>
+<h2 id="版本可见性">版本可见性</h2>
+<p>RT为事务T读取时间，</p>
+<p><strong>场景一、Begin与End都为时间戳</strong></p>
+<p>TBegin &lt;= RT &lt; TEnd则可读</p>
+<p><strong>场景二、Begin为 TB 事务ID</strong></p>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>TB状态</th>
+<th>TB的结束时间戳</th>
+<th>事务T检查版本V的记录是否可见</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Active</td>
+<td>未设置</td>
+<td>只有TBeigin=T并且V的结束时间戳是infinity才可见</td>
+</tr>
+<tr>
+<td>Preparing</td>
+<td>TS</td>
+<td>V的开始时间戳是TS但是V还没有提交。使用TS作为V的开始时间戳来检测可见性</td>
+</tr>
+<tr>
+<td>Committed</td>
+<td>TS</td>
+<td>V的开始时间戳就是TS</td>
+</tr>
+<tr>
+<td>Aborted</td>
+<td>不相关</td>
+<td>忽略，这是一个垃圾版本</td>
+</tr>
+<tr>
+<td>Terminated<br/>或没找到</td>
+<td>不相关</td>
+<td>重新读取V的Begin字段</td>
+</tr>
+</tbody>
+</table></div>
+<p><strong>场景三、End 为 TE 事务ID</strong></p>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>TE状态</th>
+<th>TE的结束时间戳</th>
+<th>事务T检查版本V的记录是否可见</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Active</td>
+<td>未设置</td>
+<td>TE=T就可见</td>
+</tr>
+<tr>
+<td>Preparing</td>
+<td>TS</td>
+<td>V的结束时间戳会在提交时变成TS。如果TS&gt;RT,就可见</td>
+</tr>
+<tr>
+<td>Committed</td>
+<td>TS</td>
+<td>使用TS做可见性判断</td>
+</tr>
+<tr>
+<td>Aborted</td>
+<td>不相关</td>
+<td>V可见</td>
+</tr>
+<tr>
+<td>Terminated<br/>或没找到</td>
+<td>不相关</td>
+<td>重新读取V的结束时间戳字段</td>
+</tr>
+</tbody>
+</table></div>
+<h2 id="版本更新">版本更新</h2>
+<p>事务只允许更新最新版本V：</p>
+<ul>
+<li>V的结束时间戳字段End是infinity</li>
+<li>V End 字段=TE事务，事务TE Aborted</li>
+<li>V End 字段=TE事务，事务TE是Active或Preparing，产生写写冲突，采用first-write-win策略，事务终止</li>
+</ul>
+<h2 id="commit-依赖">Commit 依赖</h2>
+<p>如果T1必须在T2提交后才能提交，那就认为T1依赖T2：</p>
+<ul>
+<li>提前读</li>
+<li>提前忽略</li>
+</ul>
+<p>每个事务增加：</p>
+<ul>
+<li>CommitDepCounter：commit依赖事务数</li>
+<li>AbortNow：是否需要abort</li>
+<li>CommitDepSet：依赖于本事务commit的事务ID</li>
+</ul>
+<p>如果事务T2提交成功，就将T1 的 CommitDepCounter 减1并唤醒它。
+如果事务T2 Abort，那就将 T1 的AbortNow置为1。</p>
+<p>Commit依赖将所有的等待步骤都推迟到了Commit阶段。
+事务在commit之前很可能不需要等待，因为很可能它依赖的事务也都提交了。
+也免去了死锁问题，总是年轻事务等待年老事务。</p>
+<h1 id="optimistic-concurrency-control">Optimistic Concurrency Control</h1>
+<h2 id="事务维系数据集合">事务维系数据集合</h2>
+<p>串行化级别：</p>
+<ul>
+<li>ReadSet: 所读版本</li>
+<li>ScanSet: 重复scan操作所需要的信息</li>
+<li>WriteSet: 新旧版本指针</li>
+</ul>
+<h2 id="normal-processing-phase">Normal Processing Phase</h2>
+<p>包含Index Scan定位对应版本以及读/写。
+可串行化级别下，使用事务开始时间作为读操作TS。</p>
+<p><img loading="lazy" src="../../docs/blog/images/1-transaction-process-phases.png" alt="事务流程图" /></p>
+<ol>
+<li>Start Scan: 执行scan操作，记录scan信息</li>
+<li>Check Predicate: 谓词检查</li>
+<li>Check visibility: 可见性判断，同时添加commit依赖</li>
+<li>Read Version: 读数据，记录指针到ReadSet</li>
+<li>Check Updatability: 确定版本可以更新；可提前更新，前提是该版本的事务已经完成normal processing</li>
+<li>Update Version: 执行更新，插入新版本，旧版本end修改为事务ID(失败就abort)，写入WriteSet</li>
+<li>Delete Version: 修改旧版本end字段为事务ID，记录其指针到WriteSet</li>
+</ol>
+<p><img loading="lazy" src="../../docs/blog/images/1-transaction-process-phases-2.png" alt="事务流程图2" /></p>
+<p><strong>PreCommit</strong></p>
+<ul>
+<li>获取事务end ts（commit ts）</li>
+<li>设置事务状态为Preparing</li>
+<li>进入Preparation phase</li>
+</ul>
+<h2 id="preparation-phase">Preparation Phase</h2>
+<ol>
+<li>Read validation:</li>
+</ol>
+<ul>
+<li>可重复读检查。重新扫描ReadSet，确认版本仍然可见</li>
+<li>幻读检查: 重新执行ScanSet中的扫描，检查是否有新版本</li>
+</ul>
+<ol start="2">
+<li>Wait for commit dependencies</li>
+</ol>
+<ul>
+<li>等待所有依赖事务提交， CommitDepCounter=0</li>
+<li>未通过或者AbortNow=1，就abort,进入 postprocessing phase</li>
+</ul>
+<ol start="3">
+<li>Logging</li>
+</ol>
+<ul>
+<li>将创建的新版本、删除版本的信息写入日志</li>
+</ul>
+<p>设置事务状态：aborted/committed</p>
+<h2 id="postprocessing-phase">Postprocessing Phase</h2>
+<p>成功commit就把TS写到旧版本end字段和新版本的begin字段。
+如果abort就把WriteSet中的新版本end字段设置为infinity，新版本start字段设置为infinity。
+这里的abort动作不会阻塞其它事务。</p>
+<h2 id="low-level-isolation">Low Level Isolation</h2>
+<p><strong>Repeatable read</strong></p>
+<p>不需要做幻读检查。读操作使用事务开始时间。</p>
+<p><strong>Snapshot Isolation</strong></p>
+<p>不做可重复读检查与幻读检查，使用事务开始时间作为读操作时间戳。</p>
+<p><strong>Read Committed</strong></p>
+<p>不做可重复读检查与幻读检查。读操作使用当前时间。</p>
+<p><strong>Read-only Transaction</strong></p>
+<p>SI 或者 RC隔离级别性能更好</p>
+<h1 id="pessimistic-concurrency-control">Pessimistic Concurrency Control</h1>
+<h2 id="事务维系数据集合-1">事务维系数据集合</h2>
+<p>串行化级别：</p>
+<ul>
+<li>ReadSet: 事务读到的版本数据</li>
+<li>BucketSet: 访问上锁的bucket集合</li>
+<li>WriteSet: 新旧版本指针</li>
+</ul>
+<h2 id="lock-types">Lock Types</h2>
+<h3 id="record-lock">Record Lock</h3>
+<ul>
+<li>保证可重复读</li>
+<li>只对最新版本加锁</li>
+<li>使用Record End 字段实现(64 bits)</li>
+</ul>
+<p><img loading="lazy" src="../../docs/blog/images/1-record-lock.png" alt="记录锁" /></p>
+<h3 id="bucket-lockrange-locks">Bucket Lock(Range Locks)</h3>
+<ul>
+<li>避免幻读</li>
+<li>存储于hash bucket中，扫描的时候上锁</li>
+</ul>
+<p>数据结构：</p>
+<pre><code>LockCount: 上锁的数目
+LockList: 加锁的事务
+</code></pre>
+<h2 id="eager-update-wait-for-dependencies">Eager update &amp; Wait-For Dependencies</h2>
+<p>可串行化场景下，传统的多版本加锁方法更新/删除某一行，下面的场景会导致阻塞：</p>
+<ul>
+<li>行已经加了read lock</li>
+<li>Bucket 已经加锁</li>
+</ul>
+<p><strong>Eager Update</strong></p>
+<p>允许对有read lock和bucket lock的bucket进行update。</p>
+<p>但是锁释放之前不允许precommit 进入preparing阶段。
+还需要添加wait-for依赖。</p>
+<h2 id="wait-for-denpendencies">Wait-For Denpendencies</h2>
+<p>一个事务有以下结构：</p>
+<pre><code>WaitForCounter: 事务依赖的的个数
+NoMoreWaitFors: 不允许再添加wait-for依赖
+WaitingTxnList: 依赖当前事务结束的事务集合
+</code></pre>
+<p>Wait-For类型：</p>
+<ul>
+<li>Read Lock Denpendency</li>
+<li>Bucket Lock Denpendency</li>
+</ul>
+<h2 id="read-lock-denpendencies">Read Lock Denpendencies</h2>
+<p>一个事务TU想要对版本V更新或删除，但是V已经有了read lock：</p>
+<ul>
+<li>将TU的事务ID写入V的 WriteLock 字段</li>
+<li>ReadLockCounter &gt; 0，TU WaitForCounter加1</li>
+</ul>
+<p>事务TR对V加读锁：</p>
+<ul>
+<li>NoMoreReadLocks=true 或 ReadLockCount=max_value，TR abort</li>
+<li>ReadLockCounter &gt; 0，将其加1</li>
+<li>若已存在事务TU添加的write lock，且TR为第一个读锁，检查TU NoMoreWaitFor，若true，abort，否则强制TU等待TR（添加wait-for依赖）</li>
+</ul>
+<p>事务 TR 对版本 V 释放read lock</p>
+<ul>
+<li>不存在write lock，直接将ReadLockCounter减1</li>
+<li>存在write lock 且 ReadLockCounter &gt; 1，同上</li>
+<li>存在write lock 且 ReadLockCounter = 1， ReadLockCounter置为0，并将其NoMoreReadLocks置为1，TU WaitForCounter减1避免后续read lock进一步阻塞TU commit</li>
+</ul>
+<h2 id="bucket-lock-denpendencies">Bucket Lock Denpendencies</h2>
+<p>允许Bucket提前插入，但需要上锁事务完成，才能进行precommit，通过添加wait-for依赖实现。</p>
+<p>TU在Bucket B插入/删除新版本：</p>
+<ul>
+<li>B不存在Bucket lock，直接上锁事务维系结构</li>
+<li>B存在Bucket lock
+<ul>
+<li>TU NoMoreWaitFors=true，TU abort</li>
+<li>TU NoMoreWaitFors=false，对B LockList事务添加wait-for依赖</li>
+</ul>
+</li>
+</ul>
+<p>这时是TU给自己加了一个依赖(Wait-For Denpendency)。</p>
+<p>事务TS scan Bucket B，发现满足查询条件但不可见版本V，且更新其事务TU为Active，为避免幻读，需添加wait-for依赖：</p>
+<ul>
+<li>TU NoMoreWaitFors=true，TS abort</li>
+<li>TU NoMoreWaitFors=false：TU添加到自身WaitingTxnList；将TU WaitForCounter加1</li>
+</ul>
+<p>这时是TS给TU添加依赖。</p>
+<h2 id="normal-processing-phase-1">Normal Processing Phase</h2>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>阶段/控制策略</th>
+<th>OCC</th>
+<th>PCC</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Start Scan</td>
+<td>记录Scan信息到ScanSet(Serializable)</td>
+<td>对Scan的Bucket加锁，放入BUcketLockSet(Serializable)</td>
+</tr>
+<tr>
+<td>Check Predicate</td>
+<td>条件检查</td>
+<td>条件检查</td>
+</tr>
+<tr>
+<td>Check Visibility</td>
+<td>可见性判断，commit 依赖条件添加</td>
+<td>与OCC相同，但是需要添加Wait-For依赖(Serializable)</td>
+</tr>
+<tr>
+<td>Read Version</td>
+<td>读版本指针存入ReadSet(Serializable、RR)</td>
+<td>添加read lock（Serializable、RR）</td>
+</tr>
+<tr>
+<td>Check Updatability</td>
+<td>可更新检查，commit依赖添加</td>
+<td>与OCC相同</td>
+</tr>
+<tr>
+<td>Update Version</td>
+<td>更新，加入WriteSet</td>
+<td>更新，添加wait-for依赖</td>
+</tr>
+<tr>
+<td>Delete Version</td>
+<td>删除，加入WriteSet</td>
+<td>删除，添加wait-for依赖</td>
+</tr>
+<tr>
+<td>Process End</td>
+<td>Precommit</td>
+<td>wait-for等待，precommit，释放read/bucket lock</td>
+</tr>
+</tbody>
+</table></div>
+<h2 id="preparation-phase-1">Preparation Phase</h2>
+<p>不需要做Read Validation。
+直接等待commit denpendencies。
+然后记录日志。</p>
+<h2 id="postprocessing-phase-1">Postprocessing Phase</h2>
+<p>与乐观并发控制一致，通过修改版本的begin、end字段，隐式释放写锁。</p>
+<h1 id="experimental-results">Experimental Results</h1>
+<h2 id="实验环境">实验环境</h2>
+<ul>
+<li>2-socket CPU，共12核24线程，NUMA架构，访问remote memory比local memory慢30%</li>
+<li>Log异步刷盘，组提交避免IO带宽成为瓶颈</li>
+<li>测试0 - 24线程，24线程CPU利用率最高，加线程吞吐下降</li>
+</ul>
+<p>实现面向内存优化的单版本加锁（1V）方案作为基线，测试不同场景1V、OCC（MV/O）以及PCC（MV/L）的表现。</p>
+<h2 id="同构负载-rc">同构负载-RC</h2>
+<p>低竞争：</p>
+<ul>
+<li>多版本管理以及垃圾回收开销，吞吐不如1V</li>
+<li>MV/L 比 MV/O慢30%，依赖追踪以及锁的额外写导致内存流量增加</li>
+</ul>
+<p>高竞争：</p>
+<ul>
+<li>热点数据访问cache同步导致核间流量大</li>
+<li>MV/O表现最好</li>
+</ul>
+<h2 id="higher-isolation-level">Higher Isolation Level</h2>
+<p>固定24线程，改变隔离级别：</p>
+<ul>
+<li>加锁方式，RR级别损失很小&lt;2%；MV/O 可重复读检查，损失8%</li>
+<li>Serializable：1V &gt; MV/L &gt; MV/O</li>
+<li>MV/O需要承担更多隔离级别造成的性能损失</li>
+</ul>
+<h2 id="异构负载短只读事务影响">异构负载—短只读事务影响</h2>
+<p>低竞争：</p>
+<ul>
+<li>只读比例增加，gap减小——多版本以及垃圾回收代价减小</li>
+<li>绝大多数只读，MV比1V好，纯只读MV相同，1V略差</li>
+</ul>
+<p>高竞争：
+80%是只读，MV比1V高73%以及63%——MV只读不影响写</p>
+<h2 id="异构负载长只读事务影响">异构负载—长只读事务影响</h2>
+<p>存在长事务时更新吞吐：</p>
+<ul>
+<li>存在1个长事务，1V下降75%，MV下降5%，MV为1V两倍</li>
+<li>50%长事务，MV为1V 80倍</li>
+</ul>
+<p>存在长事务时读吞吐：
+MV优于1V</p>
+<h1 id="conclusion">Conclusion</h1>
+<ul>
+<li>可在获取锁不成为瓶颈的情况下有效的实现1V-Lock方式</li>
+<li>1V-Lock方式在短事务、低竞争下表现好，但不同场景适应性很差</li>
+<li>高竞争以及存在长事务时MVCC优于1V-Lock</li>
+<li>MVCC-O表现比MVCC-P好</li>
+</ul>
+<p>悲观并发控制：访问数据时加锁，有可能需要等待锁释放
+乐观并发控制：假设数据一般不会造成冲突，只在事务提交时进行冲突检测</p>
+<p>最终Hekaton所采用为其中的乐观并发控制（OCC）方法。而基于磁盘的数据库通常采用悲观并发控制（PCC）方法，其解释原因如下：</p>
+<ul>
+<li>在对数据update时进行冲突检测（写写冲突）</li>
+<li>假设前提不同：
+<ul>
+<li>基于磁盘的PCC事务tx1 等到tx2 回滚时才能继续，tx2 commit产生conflict error（假设tx2会提交失败）</li>
+<li>基于内存的PCC事务tx1 直接产生conflict Error（假设tx2会提交成功）</li>
+</ul>
+</li>
+</ul>
+<h2 id="main-memory-database-concurrency-control-mechanisms">Main-Memory Database Concurrency Control Mechanisms</h2>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>Main-Memory 数据库</th>
+<th>并发控制方法</th>
+<th>支持隔离级别</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Microsoft Hekaton</td>
+<td>MVCC-O(lock-free)</td>
+<td>Serializable, RR, SI, RC(single stmt)</td>
+</tr>
+<tr>
+<td>Oracle TimesTen</td>
+<td>Single-version + multiple-lock</td>
+<td>Serializable, RC</td>
+</tr>
+<tr>
+<td>SAP HANA</td>
+<td>MVCC-P(lock)</td>
+<td>Serializable, SI, RC</td>
+</tr>
+<tr>
+<td>IBM SolidDB</td>
+<td>Single-version + multiple-lock</td>
+<td>RR, RC</td>
+</tr>
+<tr>
+<td>VoltDB</td>
+<td>Deterministic Concurrency Control</td>
+<td>Serializable</td>
+</tr>
+</tbody>
+</table></div>
+<h1 id="references">References</h1>
+<ul>
+<li><a target="_blank" rel="noopener" href="https://www.microsoft.com/en-us/research/wp-content/uploads/2013/06/Hekaton-Sigmod2013-final.pdf">Hekaton: SQL Server’s Memory-Optimized OLTP Engine</a></li>
+<li><a target="_blank" rel="noopener" href="https://learn.microsoft.com/en-us/sql/relational-databases/in-memory-oltp/sql-server-in-memory-oltp-internals-for-sql-server-2016?view=sql-server-ver16">SQL Server In-Memory OLTP Internals for SQL Server 2016</a></li>
+<li>OCC的前世今生</li>
+</ul>
+<h1 id="附录">附录</h1>
+<p><img loading="lazy" src="../../docs/blog/images/1-range-index-bw-tree.png" alt="Bw树" /></p>
+</article>
+<nav class="pager" aria-label="相邻文档导航"><a class="prev" href="introduction.html"><span>← 上一篇</span>介绍</a><span></span></nav>
+<p class="source-line">源文件：<a href="../../docs/blog/1.md">blog/1.md</a></p>
+
+    <footer class="page-footer">
+      <span>由 <code>docs/visual/build.py</code> &amp; <code>draw_diagrams.py</code> 从 <code>docs/docs</code> 生成</span>
+      <span>MiniOB · 可视化技术文档</span>
+    </footer>
+  </main>
+  <aside class="page-toc" aria-label="本页目录"><div class="toc-inner"><p class="toc-title">本页导览</p><ul class="toc-list"><li class="toc-item toc-l1"><a href="#background">Background</a></li><li class="toc-item toc-l2"><a href="#main-memory-database">Main-Memory Database</a></li><li class="toc-item toc-l2"><a href="#sql-server-hekaton">SQL Server Hekaton</a></li><li class="toc-item toc-l2"><a href="#hekaton-concurrency-control-mechanism">Hekaton Concurrency Control Mechanism</a></li><li class="toc-item toc-l1"><a href="#mvcc-storage-engine">MVCC Storage Engine</a></li><li class="toc-item toc-l2"><a href="#存储和索引">存储和索引</a></li><li class="toc-item toc-l2"><a href="#事务执行">事务执行</a></li><li class="toc-item toc-l2"><a href="#版本可见性">版本可见性</a></li><li class="toc-item toc-l2"><a href="#版本更新">版本更新</a></li><li class="toc-item toc-l2"><a href="#commit-依赖">Commit 依赖</a></li><li class="toc-item toc-l1"><a href="#optimistic-concurrency-control">Optimistic Concurrency Control</a></li><li class="toc-item toc-l2"><a href="#事务维系数据集合">事务维系数据集合</a></li><li class="toc-item toc-l2"><a href="#normal-processing-phase">Normal Processing Phase</a></li><li class="toc-item toc-l2"><a href="#preparation-phase">Preparation Phase</a></li><li class="toc-item toc-l2"><a href="#postprocessing-phase">Postprocessing Phase</a></li><li class="toc-item toc-l2"><a href="#low-level-isolation">Low Level Isolation</a></li><li class="toc-item toc-l1"><a href="#pessimistic-concurrency-control">Pessimistic Concurrency Control</a></li><li class="toc-item toc-l2"><a href="#事务维系数据集合-1">事务维系数据集合</a></li><li class="toc-item toc-l2"><a href="#lock-types">Lock Types</a></li><li class="toc-item toc-l3"><a href="#record-lock">Record Lock</a></li><li class="toc-item toc-l3"><a href="#bucket-lockrange-locks">Bucket Lock(Range Locks)</a></li><li class="toc-item toc-l2"><a href="#eager-update-wait-for-dependencies">Eager update &amp; Wait-For Dependencies</a></li><li class="toc-item toc-l2"><a href="#wait-for-denpendencies">Wait-For Denpendencies</a></li><li class="toc-item toc-l2"><a href="#read-lock-denpendencies">Read Lock Denpendencies</a></li><li class="toc-item toc-l2"><a href="#bucket-lock-denpendencies">Bucket Lock Denpendencies</a></li><li class="toc-item toc-l2"><a href="#normal-processing-phase-1">Normal Processing Phase</a></li><li class="toc-item toc-l2"><a href="#preparation-phase-1">Preparation Phase</a></li><li class="toc-item toc-l2"><a href="#postprocessing-phase-1">Postprocessing Phase</a></li><li class="toc-item toc-l1"><a href="#experimental-results">Experimental Results</a></li><li class="toc-item toc-l2"><a href="#实验环境">实验环境</a></li><li class="toc-item toc-l2"><a href="#同构负载-rc">同构负载-RC</a></li><li class="toc-item toc-l2"><a href="#higher-isolation-level">Higher Isolation Level</a></li><li class="toc-item toc-l2"><a href="#异构负载短只读事务影响">异构负载—短只读事务影响</a></li><li class="toc-item toc-l2"><a href="#异构负载长只读事务影响">异构负载—长只读事务影响</a></li><li class="toc-item toc-l1"><a href="#conclusion">Conclusion</a></li><li class="toc-item toc-l2"><a href="#main-memory-database-concurrency-control-mechanisms">Main-Memory Database Concurrency Control Mechanisms</a></li><li class="toc-item toc-l1"><a href="#references">References</a></li><li class="toc-item toc-l1"><a href="#附录">附录</a></li></ul><a class="toc-top" href="#top">↑ 回到顶部</a></div></aside>
+</div>
+<div class="nav-scrim" id="navScrim"></div>
+<div class="diagram-modal" id="diagramModal" hidden role="dialog" aria-modal="true" aria-label="图表放大检视">
+  <div class="diagram-modal-bar">
+    <span class="diagram-modal-title" id="diagramModalTitle">架构与流程图检视</span>
+    <button type="button" class="diagram-modal-close" id="diagramModalClose" aria-label="关闭">✕ 关闭 (Esc)</button>
+  </div>
+  <div class="diagram-modal-body" id="diagramModalBody"></div>
+</div>
+<script src="../assets/markmap-config.js"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/markmap-autoloader@0.18"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/@highlightjs/cdn-assets@11/highlight.min.js"></script>
+
+<script defer src="../assets/site.js"></script>
+</body>
+</html>

@@ -1,0 +1,357 @@
+<!doctype html>
+<html lang="zh-CN" id="top">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>MiniOB B+Tree 聚簇表存储引擎 · MiniOB 可视化文档</title>
+<link rel="stylesheet" href="../assets/style.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@highlightjs/cdn-assets@11/styles/atom-one-dark.min.css">
+<script src="../assets/theme.js"></script>
+
+</head>
+<body class="">
+<div class="reading-progress" id="readingProgress" aria-hidden="true"></div>
+<header class="topbar">
+  <button class="menu-btn" id="menuBtn" aria-label="切换侧栏" aria-expanded="false">☰</button>
+  <a class="brand" href="../index.html"><span class="brand-mark">M</span><span>MiniOB <em>可视化文档</em></span></a>
+  <div class="top-actions">
+    <a class="top-link" href="../flows.html">动态流程</a>
+    <button class="theme-btn" id="themeBtn" aria-label="切换明暗主题" title="切换明暗主题">◐</button>
+  </div>
+</header>
+<div class="layout has-toc">
+  <aside class="sidebar" id="sidebar"><nav class="site-nav" aria-label="文档目录"><a class="nav-home" href="../index.html"><span class="brand-mark">M</span><span>MiniOB 可视化文档</span></a><details class="nav-group"><summary>快速开始<span>2</span></summary><div class="nav-links"><a href="../how_to_build.html"><span class="nav-link-text">如何编译</span></a><a href="../how_to_run.html"><span class="nav-link-text">如何运行</span></a></div></details><details class="nav-group" open><summary>设计文档<span>21</span></summary><div class="nav-links"><a href="miniob-architecture.html"><span class="nav-link-text">MiniOB代码架构框架设计和说明</span><span class="nav-badge" title="含交互流程图或架构图">图</span></a><a href="miniob-buffer-pool.html"><span class="nav-link-text">MiniOB 存储实现</span><span class="nav-badge" title="含交互流程图或架构图">图</span></a><a href="miniob-double-write-buffer.html"><span class="nav-link-text">MiniOB Double Write Buffer 实现</span><span class="nav-badge" title="含交互流程图或架构图">图</span></a><a href="miniob-transaction.html"><span class="nav-link-text">事务模块</span><span class="nav-badge" title="含交互流程图或架构图">图</span></a><a href="miniob-durability.html"><span class="nav-link-text">持久化</span><span class="nav-badge" title="含交互流程图或架构图">图</span></a><a href="miniob-persistence-files.html"><span class="nav-link-text">持久化文件与恢复路径</span><span class="nav-badge" title="含交互流程图或架构图">图</span></a><a href="miniob-checkpoint-wal.html"><span class="nav-link-text">MiniOB 检查点与 WAL 截断</span><span class="nav-badge" title="含交互流程图或架构图">图</span></a><a href="miniob-sql-parser.html"><span class="nav-link-text">SQL 词法语法分析</span></a><a href="miniob-how-to-add-new-sql.html"><span class="nav-link-text">SQL语句执行流程</span><span class="nav-badge" title="含交互流程图或架构图">图</span></a><a href="miniob-sql-expression.html"><span class="nav-link-text">SQL 表达式</span></a><a href="miniob-bplus-tree.html"><span class="nav-link-text">MiniOB B+Tree 实现</span><span class="nav-badge" title="含交互流程图或架构图">图</span></a><a href="miniob-bplus-tree-concurrency.html"><span class="nav-link-text">B+ 树并发操作</span><span class="nav-badge" title="含交互流程图或架构图">图</span></a><a href="miniob-thread-model.html"><span class="nav-link-text">线程模型</span><span class="nav-badge" title="含交互流程图或架构图">图</span></a><a href="miniob-mysql-protocol.html"><span class="nav-link-text">MySQL 通讯协议</span></a><a href="miniob-pax-storage.html"><span class="nav-link-text">MiniOB PAX 存储格式</span><span class="nav-badge" title="含交互流程图或架构图">图</span></a><a href="miniob-aggregation-and-group-by.html"><span class="nav-link-text">MiniOB 向量化执行 aggregation 和 group by 实现</span></a><a href="miniob-lsm-tree.html"><span class="nav-link-text">MiniOB LSM-Tree 存储引擎</span><span class="nav-badge" title="含交互流程图或架构图">图</span></a><a href="introduction.html"><span class="nav-link-text">功能模块设计说明</span></a><a href="miniob-btree-storage-engine.html" class="active" aria-current="page"><span class="nav-link-text">MiniOB B+Tree 聚簇表存储引擎</span><span class="nav-badge" title="含交互流程图或架构图">图</span></a><a href="miniob-cascade.html"><span class="nav-link-text">Cascade Optimizer(查询优化器)</span><span class="nav-badge" title="含交互流程图或架构图">图</span></a><a href="miniob-update-mvcc-occ.html"><span class="nav-link-text">MiniOB UPDATE、MVCC 与 OCC 方案设计</span><span class="nav-badge" title="含交互流程图或架构图">图</span></a></div></details><details class="nav-group"><summary>课程实验<span>6</span></summary><div class="nav-links"><a href="../db_course_lab/overview.html"><span class="nav-link-text">数据库系统实现原理与实践课程实验</span></a><a href="../db_course_lab/lab0.html"><span class="nav-link-text">LAB#0 C++ 基础</span></a><a href="../db_course_lab/lab1.html"><span class="nav-link-text">LAB#1 LSM-Tree 存储引擎</span></a><a href="../db_course_lab/lab2.html"><span class="nav-link-text">LAB#2 查询引擎</span></a><a href="../db_course_lab/lab3.html"><span class="nav-link-text">LAB#3 事务引擎</span></a><a href="../db_course_lab/lab4.html"><span class="nav-link-text">LAB#4 性能测试</span></a></div></details><details class="nav-group"><summary>简明教程<span>9</span></summary><div class="nav-links"><a href="../lectures/copyright.html"><span class="nav-link-text">版权声明</span></a><a href="../lectures/lecture-1.html"><span class="nav-link-text">第1章 数据库管理系统概述</span></a><a href="../lectures/lecture-2.html"><span class="nav-link-text">第2章 数据库的存储结构</span></a><a href="../lectures/lecture-3.html"><span class="nav-link-text">第3章 索引结构</span></a><a href="../lectures/lecture-4.html"><span class="nav-link-text">第4章 查询处理</span></a><a href="../lectures/lecture-5.html"><span class="nav-link-text">第5章 查询优化</span></a><a href="../lectures/lecture-6.html"><span class="nav-link-text">第6章 事务处理</span></a><a href="../lectures/references.html"><span class="nav-link-text">参考资料</span></a><a href="../lectures/index.html"><span class="nav-link-text">数据库管理系统实现基础讲义</span></a></div></details><details class="nav-group"><summary>开发环境<span>14</span></summary><div class="nav-links"><a href="../dev-env/introduction.html"><span class="nav-link-text">搭建开发环境</span></a><a href="../dev-env/vscode_dev_with_local_virtual_env.html"><span class="nav-link-text">虚拟机+vscode remote开发</span></a><a href="../dev-env/dev_by_online.html"><span class="nav-link-text">使用在线开发环境开发 MiniOB</span></a><a href="../dev-env/how-to-dev-using-docker.html"><span class="nav-link-text">使用Docker开发MiniOB</span></a><a href="../dev-env/how_to_dev_in_docker_container_by_vscode.html"><span class="nav-link-text">使用 Docker 和 VSCode 远程开发 Miniob</span></a><a href="../dev-env/how_to_dev_in_docker_container_by_vscode_on_windows.html"><span class="nav-link-text">在windows上通过docker配置环境并利用vscode调试代码（手把手版）</span></a><a href="../dev-env/how_to_dev_miniob_by_docker_on_windows.html"><span class="nav-link-text">安装Docker</span></a><a href="../dev-env/how_to_dev_miniob_by_vscode.html"><span class="nav-link-text">环境准备</span></a><a href="../dev-env/miniob-how-to-debug.html"><span class="nav-link-text">miniob调试篇</span></a><a href="../dev-env/how_to_submit_for_testing.html"><span class="nav-link-text">训练营平台使用说明</span></a><a href="../dev-env/integration_test.html"><span class="nav-link-text">MiniOB 集成测试使用文档</span></a><a href="../dev-env/cloudlab_setup.html"><span class="nav-link-text">开源学堂在线编程环境开发 MiniOB</span></a><a href="../dev-env/how_to_dev_miniob_by_docker_on_windows_simplified.html"><span class="nav-link-text">在windows上通过docker配置环境并利用vscode编辑、开发、调试代码（简易版）</span></a><a href="../dev-env/how_to_dev_miniob_in_vscodeGUI_by_docker_on_windows.html"><span class="nav-link-text">基于Windows+docker容器在本地利用VSCode编辑、开发及调试miniob</span></a></div></details><details class="nav-group"><summary>大赛与训练<span>9</span></summary><div class="nav-links"><a href="../game/introduction.html"><span class="nav-link-text">OceanBase 数据库大赛</span></a><a href="../game/miniob-output-convention.html"><span class="nav-link-text">输出规范</span></a><a href="../game/debug-output.html"><span class="nav-link-text">输出调试信息</span></a><a href="../game/miniob-memtracer.html"><span class="nav-link-text">MemTracer</span></a><a href="../game/miniob_topics.html"><span class="nav-link-text">OceanBase 数据库大赛2021届题目</span></a><a href="../game/github-introduction.html"><span class="nav-link-text">MiniOB GitHub 在训练营中的使用说明</span></a><a href="../game/gitee-instructions.html"><span class="nav-link-text">MiniOB Gitee 在训练营中的使用说明</span></a><a href="../game/miniob-vectordb.html"><span class="nav-link-text">MiniOB 向量数据库</span></a><a href="../game/git-introduction.html"><span class="nav-link-text">Git 介绍</span></a></div></details><details class="nav-group"><summary>博客<span>2</span></summary><div class="nav-links"><a href="../blog/introduction.html"><span class="nav-link-text">介绍</span></a><a href="../blog/1.html"><span class="nav-link-text">High-Performance Concurrency Control Mechanisms for Main-Memory Databases</span></a></div></details><a class="nav-flows" href="../flows.html"><span class="dot"></span>动态流程<span class="count">13</span></a></nav></aside>
+  <main class="main">
+    
+<nav class="crumbs" aria-label="面包屑导航"><a href="../index.html">首页</a><span>/</span><span>设计文档</span><span>/</span><span aria-current="page">MiniOB B+Tree 聚簇表存储引擎</span></nav>
+<header class="doc-head">
+  <div class="doc-meta-bar">
+    <span class="eyebrow-pill">设计文档</span>
+    <span class="doc-meta-item">9 个章节</span>
+    <span class="doc-meta-sep">·</span>
+    <span class="doc-meta-item">约 5 分钟阅读</span>
+    <span class="doc-meta-sep">·</span>
+    <a class="doc-meta-source" href="../../docs/design/miniob-btree-storage-engine.md">Markdown 源文件 ↗</a>
+  </div>
+  <h1>MiniOB B+Tree 聚簇表存储引擎</h1>
+</header>
+<section class="panel map-panel" id="doc-outline-panel">
+  <div class="panel-head">
+    <div>
+      <h2>章节结构导览</h2>
+      <span>点击任意章节直达正文；支持结构卡片与交互思维导图切换</span>
+    </div>
+    <button type="button" class="map-toggle-btn" data-toggle-markmap aria-expanded="false">⊞ 切换思维导图</button>
+  </div>
+  <div class="tree-view"><div class="tree-grid"><div class="tree-branch"><div class="tree-top"><a class="tree-link" href="#目标与范围"><span class="tree-num">1</span><span>目标与范围</span></a></div></div><div class="tree-branch"><div class="tree-top"><a class="tree-link" href="#叶子布局与-key-编码"><span class="tree-num">2</span><span>叶子布局与 Key 编码</span></a></div></div><div class="tree-branch"><div class="tree-top"><a class="tree-link" href="#二级索引与回表"><span class="tree-num">3</span><span>二级索引与回表</span></a></div></div><div class="tree-branch"><div class="tree-top"><a class="tree-link" href="#rowid-恢复"><span class="tree-num">4</span><span>rowid 恢复</span></a></div></div><div class="tree-branch"><div class="tree-top"><a class="tree-link" href="#崩溃一致性"><span class="tree-num">5</span><span>崩溃一致性</span></a></div></div><div class="tree-branch"><div class="tree-top"><a class="tree-link" href="#约束与未覆盖"><span class="tree-num">6</span><span>约束与未覆盖</span></a></div></div><div class="tree-branch"><div class="tree-top"><a class="tree-link" href="#验证"><span class="tree-num">7</span><span>验证</span></a></div></div><div class="tree-branch"><div class="tree-top"><a class="tree-link" href="#与-heap-的差异"><span class="tree-num">8</span><span>与 heap 的差异</span></a></div></div></div></div>
+  <div class="markmap-wrap" hidden>
+    <div class="markmap"><script type="text/template"># MiniOB B+Tree 聚簇表存储引擎
+  - [目标与范围](#目标与范围)
+  - [叶子布局与 Key 编码](#叶子布局与-key-编码)
+  - [二级索引与回表](#二级索引与回表)
+  - [rowid 恢复](#rowid-恢复)
+  - [崩溃一致性](#崩溃一致性)
+  - [约束与未覆盖](#约束与未覆盖)
+  - [验证](#验证)
+  - [与 heap 的差异](#与-heap-的差异)</script></div>
+  </div>
+</section>
+<div class="flows-inline">
+<figure class="arch-figure" id="arch-miniob-btree-clustered-architecture">
+  <div class="arch-figure-head">
+    <div>
+      <span class="arch-kicker">ARCHITECTURE DIAGRAM · DETERMINISTIC SVG</span>
+      <h3>MiniOB B+Tree 聚簇表存储引擎与四种 Key 编码架构</h3>
+      <p>对比 ENGINE=btree 聚簇表（COMPOSITE / ROWID 叶子存整行）与二级索引（ATTR_MEMCMP_VALUE / ATTR_RID）的编码及回表路径。</p>
+    </div>
+    <div class="arch-actions">
+      <button type="button" class="arch-zoom-btn" data-zoom-diagram aria-label="放大查看架构图">⤢ 放大检视</button>
+      <a class="arch-svg-link" href="../assets/diagrams/miniob-btree-clustered-architecture.svg" target="_blank" rel="noopener">SVG 源文件 ↗</a>
+    </div>
+  </div>
+  <div class="arch-canvas"><svg xmlns="http://www.w3.org/2000/svg" width="1060" height="420" viewBox="0 0 1060 420" role="img" aria-labelledby="miniob-btree-clustered-architecture-title miniob-btree-clustered-architecture-desc" class="toolkit-diagram" data-diagram-id="miniob-btree-clustered-architecture">
+  <title id="miniob-btree-clustered-architecture-title">MiniOB B+Tree 聚簇表存储引擎与四种 Key 模式架构图</title>
+  <desc id="miniob-btree-clustered-architecture-desc">对比 ENGINE=btree 聚簇表（COMPOSITE / ROWID 叶子存整行）与二级索引（ATTR_MEMCMP_VALUE / ATTR_RID）的编码及回表路径。</desc>
+  <defs>
+    <marker id="miniob-btree-clustered-architecture-arrow-ink" viewBox="0 0 10 10" refX="8.6" refY="5" markerWidth="6.8" markerHeight="6.8" orient="auto">
+      <path d="M0 0.8 L9.5 5 L0 9.2 Z" fill="#334155" />
+    </marker>
+    <marker id="miniob-btree-clustered-architecture-arrow-blue" viewBox="0 0 10 10" refX="8.6" refY="5" markerWidth="6.8" markerHeight="6.8" orient="auto">
+      <path d="M0 0.8 L9.5 5 L0 9.2 Z" fill="#2554C7" />
+    </marker>
+    <marker id="miniob-btree-clustered-architecture-arrow-amber" viewBox="0 0 10 10" refX="8.6" refY="5" markerWidth="6.8" markerHeight="6.8" orient="auto">
+      <path d="M0 0.8 L9.5 5 L0 9.2 Z" fill="#B45309" />
+    </marker>
+    <marker id="miniob-btree-clustered-architecture-arrow-teal" viewBox="0 0 10 10" refX="8.6" refY="5" markerWidth="6.8" markerHeight="6.8" orient="auto">
+      <path d="M0 0.8 L9.5 5 L0 9.2 Z" fill="#0F766E" />
+    </marker>
+    <marker id="miniob-btree-clustered-architecture-arrow-purple" viewBox="0 0 10 10" refX="8.6" refY="5" markerWidth="6.8" markerHeight="6.8" orient="auto">
+      <path d="M0 0.8 L9.5 5 L0 9.2 Z" fill="#6D28D9" />
+    </marker>
+    <marker id="miniob-btree-clustered-architecture-arrow-rose" viewBox="0 0 10 10" refX="8.6" refY="5" markerWidth="6.8" markerHeight="6.8" orient="auto">
+      <path d="M0 0.8 L9.5 5 L0 9.2 Z" fill="#BE123C" />
+    </marker>
+    <marker id="miniob-btree-clustered-architecture-arrow-muted" viewBox="0 0 10 10" refX="8.6" refY="5" markerWidth="6.8" markerHeight="6.8" orient="auto">
+      <path d="M0 0.8 L9.5 5 L0 9.2 Z" fill="#64748B" />
+    </marker>
+  </defs>
+  <g class="diag-bg">
+    <rect x="0" y="0" width="1060" height="420" rx="12" fill="#FCFDFE" stroke="none" class="diag-canvas-bg" />
+  </g>
+  <g class="diag-lanes">
+    <g class="diag-lane">
+      <rect x="16" y="16" width="514" height="388" rx="10" fill="#F0F5FF" stroke="#2554C7" stroke-width="1.5" class="diag-lane-rect" />
+      <text x="30" y="38" font-family="&quot;Noto Sans SC&quot;, &quot;PingFang SC&quot;, &quot;Microsoft YaHei&quot;, &quot;Segoe UI&quot;, Arial, sans-serif" font-size="12.8" font-weight="700" fill="#1E40AF" class="diag-lane-title">1. B+Tree 聚簇表主存储 (Clustered B+Tree: Leaf Value = Full Record)</text>
+      <text x="516" y="38" font-family="&quot;JetBrains Mono&quot;, &quot;SFMono-Regular&quot;, Consolas, &quot;Liberation Mono&quot;, monospace" font-size="11.2" font-weight="500" text-anchor="end" fill="#7B89A1" class="diag-lane-sub">IndexFileHeader (v2) · 按主键或隐藏 8B RowID 聚簇存放整行</text>
+    </g>
+    <g class="diag-lane">
+      <rect x="544" y="16" width="500" height="388" rx="10" fill="#F0FDFA" stroke="#0F766E" stroke-width="1.5" class="diag-lane-rect" />
+      <text x="558" y="38" font-family="&quot;Noto Sans SC&quot;, &quot;PingFang SC&quot;, &quot;Microsoft YaHei&quot;, &quot;Segoe UI&quot;, Arial, sans-serif" font-size="12.8" font-weight="700" fill="#115E59" class="diag-lane-title">2. 二级索引与回表路径对比 (Secondary Index &amp; Lookup Path)</text>
+      <text x="1030" y="38" font-family="&quot;JetBrains Mono&quot;, &quot;SFMono-Regular&quot;, Consolas, &quot;Liberation Mono&quot;, monospace" font-size="11.2" font-weight="500" text-anchor="end" fill="#7B89A1" class="diag-lane-sub">BtreePkIndex (主键值回表) vs BplusTreeIndex (Heap RID 回表)</text>
+    </g>
+  </g>
+  <g class="diag-edges">
+    <g class="flow-edge">
+      <path d="M 150.0 158.0 L 150.0 192.0" fill="none" stroke="#2554C7" stroke-width="1.9" stroke-linejoin="round" stroke-linecap="round" class="flow-edge-path" marker-end="url(#miniob-btree-clustered-architecture-arrow-blue)" />
+    </g>
+    <g class="flow-edge">
+      <path d="M 396.0 158.0 L 396.0 192.0" fill="none" stroke="#B45309" stroke-width="1.9" stroke-linejoin="round" stroke-linecap="round" class="flow-edge-path" marker-end="url(#miniob-btree-clustered-architecture-arrow-amber)" />
+    </g>
+    <g class="flow-edge">
+      <path d="M 273.0 278.0 L 273.0 306.0" fill="none" stroke="#6D28D9" stroke-width="1.9" stroke-linejoin="round" stroke-linecap="round" class="flow-edge-path" marker-end="url(#miniob-btree-clustered-architecture-arrow-purple)" />
+    </g>
+    <g class="flow-edge">
+      <path d="M 794.0 158.0 L 794.0 192.0" fill="none" stroke="#0F766E" stroke-width="1.9" stroke-linejoin="round" stroke-linecap="round" class="flow-edge-path" marker-end="url(#miniob-btree-clustered-architecture-arrow-teal)" />
+      <rect x="755.1" y="165.5" width="77.9" height="19.0" rx="5.5" fill="#FFFFFF" stroke="#CBD5E1" stroke-width="1.1" class="flow-edge-pill" />
+      <text x="794.0" y="178.8" font-family="&quot;Noto Sans SC&quot;, &quot;PingFang SC&quot;, &quot;Microsoft YaHei&quot;, &quot;Segoe UI&quot;, Arial, sans-serif" font-size="11.2" font-weight="600" text-anchor="middle" fill="#526077" class="flow-edge-label">返回主键编码</text>
+    </g>
+    <g class="flow-edge">
+      <path d="M 564.0 235.0 L 510.0 235.0" fill="none" stroke="#0F766E" stroke-width="1.9" stroke-linejoin="round" stroke-linecap="round" class="flow-edge-path" marker-end="url(#miniob-btree-clustered-architecture-arrow-teal)" />
+      <rect x="501.5" y="165.5" width="70.9" height="19.0" rx="5.5" fill="#FFFFFF" stroke="#CBD5E1" stroke-width="1.1" class="flow-edge-pill" />
+      <text x="537.0" y="178.8" font-family="&quot;Noto Sans SC&quot;, &quot;PingFang SC&quot;, &quot;Microsoft YaHei&quot;, &quot;Segoe UI&quot;, Arial, sans-serif" font-size="11.2" font-weight="600" text-anchor="middle" fill="#526077" class="flow-edge-label">按 PK 点查</text>
+    </g>
+  </g>
+  <g class="diag-nodes">
+    <g class="flow-node role-blue" data-node-id="bt-comp" aria-label="COMPOSITE 模式 (Key: pk_1 | pk_2 ... · Val: 整行 Record)">
+      <rect x="36" y="66" width="228" height="92" rx="9" fill="#E6EFFD" stroke="#2554C7" stroke-width="1.8" class="flow-node-rect" />
+      <rect x="44" y="72" width="91.4" height="16" rx="4.5" fill="#1E40AF" stroke="none" class="flow-node-badge-bg" />
+      <text x="89.7" y="83.5" font-family="&quot;JetBrains Mono&quot;, &quot;SFMono-Regular&quot;, Consolas, &quot;Liberation Mono&quot;, monospace" font-size="10.2" font-weight="700" text-anchor="middle" fill="#FFFFFF" class="flow-node-badge-text">有主键 btree 表</text>
+      <text x="150.0" y="114.0" font-family="&quot;Noto Sans SC&quot;, &quot;PingFang SC&quot;, &quot;Microsoft YaHei&quot;, &quot;Segoe UI&quot;, Arial, sans-serif" font-size="14.2" font-weight="700" text-anchor="middle" fill="#141E30" class="flow-node-title">COMPOSITE 模式</text>
+      <text x="150.0" y="130.5" font-family="&quot;JetBrains Mono&quot;, &quot;SFMono-Regular&quot;, Consolas, &quot;Liberation Mono&quot;, monospace" font-size="11" font-weight="500" text-anchor="middle" fill="#526077" class="flow-node-sub">Key: pk_1 | pk_2 ... · Val: 整行 Record</text>
+    </g>
+    <g class="flow-node role-amber" data-node-id="bt-rowid" aria-label="ROWID 模式 (Key: 8B 自增 rowid · Val: 整行 Record)">
+      <rect x="282" y="66" width="228" height="92" rx="9" fill="#FEF0C7" stroke="#B45309" stroke-width="1.8" class="flow-node-rect" />
+      <rect x="290" y="72" width="91.4" height="16" rx="4.5" fill="#92400E" stroke="none" class="flow-node-badge-bg" />
+      <text x="335.7" y="83.5" font-family="&quot;JetBrains Mono&quot;, &quot;SFMono-Regular&quot;, Consolas, &quot;Liberation Mono&quot;, monospace" font-size="10.2" font-weight="700" text-anchor="middle" fill="#FFFFFF" class="flow-node-badge-text">无主键 btree 表</text>
+      <text x="396.0" y="114.0" font-family="&quot;Noto Sans SC&quot;, &quot;PingFang SC&quot;, &quot;Microsoft YaHei&quot;, &quot;Segoe UI&quot;, Arial, sans-serif" font-size="14.2" font-weight="700" text-anchor="middle" fill="#141E30" class="flow-node-title">ROWID 模式</text>
+      <text x="396.0" y="130.5" font-family="&quot;JetBrains Mono&quot;, &quot;SFMono-Regular&quot;, Consolas, &quot;Liberation Mono&quot;, monospace" font-size="11" font-weight="500" text-anchor="middle" fill="#526077" class="flow-node-sub">Key: 8B 自增 rowid · Val: 整行 Record</text>
+    </g>
+    <g class="flow-node role-blue" data-node-id="bt-leaf" aria-label="B+Tree 聚簇叶子页 (Clustered Leaf Page) (单列主键时直接包装为共享 BtreePkIndex；插入自动校验 RECORD_DUPLICATE_KEY)">
+      <rect x="36" y="192" width="474" height="86" rx="9" fill="#E6EFFD" stroke="#2554C7" stroke-width="1.8" class="flow-node-rect" />
+      <rect x="44" y="198" width="98.7" height="16" rx="4.5" fill="#1E40AF" stroke="none" class="flow-node-badge-bg" />
+      <text x="93.4" y="209.5" font-family="&quot;JetBrains Mono&quot;, &quot;SFMono-Regular&quot;, Consolas, &quot;Liberation Mono&quot;, monospace" font-size="10.2" font-weight="700" text-anchor="middle" fill="#FFFFFF" class="flow-node-badge-text">Leaf Page (8KB)</text>
+      <text x="273.0" y="237.0" font-family="&quot;Noto Sans SC&quot;, &quot;PingFang SC&quot;, &quot;Microsoft YaHei&quot;, &quot;Segoe UI&quot;, Arial, sans-serif" font-size="14.2" font-weight="700" text-anchor="middle" fill="#141E30" class="flow-node-title">B+Tree 聚簇叶子页 (Clustered Leaf Page)</text>
+      <text x="273.0" y="253.5" font-family="&quot;JetBrains Mono&quot;, &quot;SFMono-Regular&quot;, Consolas, &quot;Liberation Mono&quot;, monospace" font-size="11" font-weight="500" text-anchor="middle" fill="#526077" class="flow-node-sub">单列主键时直接包装为共享 BtreePkIndex；插入自动校验 RECORD_DUPLICATE_KEY</text>
+    </g>
+    <g class="flow-node role-purple" data-node-id="bt-rec" aria-label="崩溃一致性与 RowID 恢复 (复用 BplusTreeMiniTransaction (MTR 日志)；重启取 max(header.next_rowid, max_key+1))">
+      <rect x="36" y="306" width="474" height="76" rx="9" fill="#EDE9FE" stroke="#6D28D9" stroke-width="1.8" class="flow-node-rect" />
+      <rect x="44" y="312" width="94.9" height="16" rx="4.5" fill="#5B21B6" stroke="none" class="flow-node-badge-bg" />
+      <text x="91.4" y="323.5" font-family="&quot;JetBrains Mono&quot;, &quot;SFMono-Regular&quot;, Consolas, &quot;Liberation Mono&quot;, monospace" font-size="10.2" font-weight="700" text-anchor="middle" fill="#FFFFFF" class="flow-node-badge-text">MTR &amp; Recovery</text>
+      <text x="273.0" y="346.0" font-family="&quot;Noto Sans SC&quot;, &quot;PingFang SC&quot;, &quot;Microsoft YaHei&quot;, &quot;Segoe UI&quot;, Arial, sans-serif" font-size="14.2" font-weight="700" text-anchor="middle" fill="#141E30" class="flow-node-title">崩溃一致性与 RowID 恢复</text>
+      <text x="273.0" y="362.5" font-family="&quot;JetBrains Mono&quot;, &quot;SFMono-Regular&quot;, Consolas, &quot;Liberation Mono&quot;, monospace" font-size="11" font-weight="500" text-anchor="middle" fill="#526077" class="flow-node-sub">复用 BplusTreeMiniTransaction (MTR 日志)；重启取 max(header.next_rowid, max_key+1)</text>
+    </g>
+    <g class="flow-node role-teal" data-node-id="bt-sec" aria-label="ATTR_MEMCMP_VALUE 模式 (btree/lsm 二级索引) (Key: [索引属性 | 主键编码] · Value: 主键编码 (PK / RowID))">
+      <rect x="564" y="66" width="460" height="92" rx="9" fill="#CCFBF1" stroke="#0F766E" stroke-width="1.8" class="flow-node-rect" />
+      <rect x="572" y="72" width="81.0" height="16" rx="4.5" fill="#115E59" stroke="none" class="flow-node-badge-bg" />
+      <text x="612.5" y="83.5" font-family="&quot;JetBrains Mono&quot;, &quot;SFMono-Regular&quot;, Consolas, &quot;Liberation Mono&quot;, monospace" font-size="10.2" font-weight="700" text-anchor="middle" fill="#FFFFFF" class="flow-node-badge-text">BtreePkIndex</text>
+      <text x="794.0" y="114.0" font-family="&quot;Noto Sans SC&quot;, &quot;PingFang SC&quot;, &quot;Microsoft YaHei&quot;, &quot;Segoe UI&quot;, Arial, sans-serif" font-size="14.2" font-weight="700" text-anchor="middle" fill="#141E30" class="flow-node-title">ATTR_MEMCMP_VALUE 模式 (btree/lsm 二级索引)</text>
+      <text x="794.0" y="130.5" font-family="&quot;JetBrains Mono&quot;, &quot;SFMono-Regular&quot;, Consolas, &quot;Liberation Mono&quot;, monospace" font-size="11" font-weight="500" text-anchor="middle" fill="#526077" class="flow-node-sub">Key: [索引属性 | 主键编码] · Value: 主键编码 (PK / RowID)</text>
+    </g>
+    <g class="flow-node role-teal" data-node-id="bt-lookup" aria-label="聚簇表回表：Table::get_record_by_key(pk) (二级索引扫出主键编码 → 到聚簇 B+Tree 点查取出整行 Record Bytes)">
+      <rect x="564" y="192" width="460" height="86" rx="9" fill="#CCFBF1" stroke="#0F766E" stroke-width="1.8" class="flow-node-rect" />
+      <rect x="572" y="198" width="63.2" height="16" rx="4.5" fill="#115E59" stroke="none" class="flow-node-badge-bg" />
+      <text x="603.6" y="209.5" font-family="&quot;JetBrains Mono&quot;, &quot;SFMono-Regular&quot;, Consolas, &quot;Liberation Mono&quot;, monospace" font-size="10.2" font-weight="700" text-anchor="middle" fill="#FFFFFF" class="flow-node-badge-text">PK Lookup</text>
+      <text x="794.0" y="237.0" font-family="&quot;Noto Sans SC&quot;, &quot;PingFang SC&quot;, &quot;Microsoft YaHei&quot;, &quot;Segoe UI&quot;, Arial, sans-serif" font-size="14.2" font-weight="700" text-anchor="middle" fill="#141E30" class="flow-node-title">聚簇表回表：Table::get_record_by_key(pk)</text>
+      <text x="794.0" y="253.5" font-family="&quot;JetBrains Mono&quot;, &quot;SFMono-Regular&quot;, Consolas, &quot;Liberation Mono&quot;, monospace" font-size="11" font-weight="500" text-anchor="middle" fill="#526077" class="flow-node-sub">二级索引扫出主键编码 → 到聚簇 B+Tree 点查取出整行 Record Bytes</text>
+    </g>
+    <g class="flow-node role-gray" data-node-id="bt-heap" aria-label="对照：ATTR_RID 模式 (heap 二级索引，v0 兼容) (Key: [索引属性 | RID(page,slot)] · Value: RID → 直接定位 Heap 数据页槽位)">
+      <rect x="564" y="306" width="460" height="76" rx="9" fill="#F1F5F9" stroke="#475569" stroke-width="1.8" class="flow-node-rect" />
+      <rect x="572" y="312" width="98.7" height="16" rx="4.5" fill="#334155" stroke="none" class="flow-node-badge-bg" />
+      <text x="621.4" y="323.5" font-family="&quot;JetBrains Mono&quot;, &quot;SFMono-Regular&quot;, Consolas, &quot;Liberation Mono&quot;, monospace" font-size="10.2" font-weight="700" text-anchor="middle" fill="#FFFFFF" class="flow-node-badge-text">Heap RID Lookup</text>
+      <text x="794.0" y="346.0" font-family="&quot;Noto Sans SC&quot;, &quot;PingFang SC&quot;, &quot;Microsoft YaHei&quot;, &quot;Segoe UI&quot;, Arial, sans-serif" font-size="14.2" font-weight="700" text-anchor="middle" fill="#141E30" class="flow-node-title">对照：ATTR_RID 模式 (heap 二级索引，v0 兼容)</text>
+      <text x="794.0" y="362.5" font-family="&quot;JetBrains Mono&quot;, &quot;SFMono-Regular&quot;, Consolas, &quot;Liberation Mono&quot;, monospace" font-size="11" font-weight="500" text-anchor="middle" fill="#526077" class="flow-node-sub">Key: [索引属性 | RID(page,slot)] · Value: RID → 直接定位 Heap 数据页槽位</text>
+    </g>
+  </g>
+  <g class="diag-labels" />
+</svg></div>
+</figure></div>
+<article class="content"><h1 id="miniob-btree-聚簇表存储引擎">MiniOB B+Tree 聚簇表存储引擎</h1>
+<h2 id="目标与范围">目标与范围</h2>
+<p>新增 <code>ENGINE=btree</code> 表引擎，把整行数据直接存放在 B+树叶子页中（聚簇表），
+而不是 heap 的堆文件。表按主键聚簇；没有主键时使用 8 字节隐藏自增 rowid。
+同时补齐 <code>ENGINE=lsm</code> 的表引擎能力，见 <a href="miniob-lsm-tree.html">MiniOB LSM-Tree 存储引擎</a>。</p>
+<p>存储引擎在三个层次选择：</p>
+<ol>
+<li>启动参数 <code>-E heap|lsm|btree</code> 指定数据库默认引擎（缺省 heap）。</li>
+<li><code>CREATE TABLE ... ENGINE=heap|lsm|btree</code> 覆盖单张表。</li>
+<li>选择的引擎写入 <code>.table</code> 元数据，重开数据库时按元数据恢复。</li>
+</ol>
+<h2 id="叶子布局与-key-编码">叶子布局与 Key 编码</h2>
+<p>B+树仍是 <code>src/observer/storage/index/bplus_tree.*</code> 中的同一份实现，通过头部版本
+（<code>IndexFileHeader::CURRENT_VERSION = 2</code>）与 <code>key_mode</code> 泛化：</p>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>模式</th>
+<th>key</th>
+<th>value</th>
+<th>用途</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>ATTR_RID</code></td>
+<td>属性 + RID</td>
+<td>RID</td>
+<td>heap 二级索引（行为不变）</td>
+</tr>
+<tr>
+<td><code>ATTR_MEMCMP_VALUE</code></td>
+<td>属性 + 主键编码</td>
+<td>主键编码</td>
+<td>btree/lsm 二级索引</td>
+</tr>
+<tr>
+<td><code>COMPOSITE</code></td>
+<td>主键字段按声明顺序拼接</td>
+<td>整行数据</td>
+<td>有主键的 btree 表</td>
+</tr>
+<tr>
+<td><code>ROWID</code></td>
+<td>8 字节自增 rowid</td>
+<td>整行数据</td>
+<td>无主键的 btree 表</td>
+</tr>
+</tbody>
+</table></div>
+<p>旧索引文件头部的版本字段为 0，打开时按 <code>ATTR_RID</code> + <code>sizeof(RID)</code> 解释，
+因此 heap 既有索引文件可直接使用。</p>
+<p>有主键时的编码：</p>
+<pre><code class="language-text">key   = pk_field_1 | pk_field_2 | ...
+value = record bytes（table_meta.record_size()）
+</code></pre>
+<p>比较器按字段的 <code>AttrType</code> 逐个比较主键字段；无主键时按 uint64 rowid 比较。
+主键重复在树插入时返回 <code>RECORD_DUPLICATE_KEY</code>，与 heap 不同（heap 不检查重复）。</p>
+<p>扫描器在 <code>COMPOSITE</code> 单字段时按 CHARS 规则补齐边界键；多字段主键不暴露单字段索引。</p>
+<h2 id="二级索引与回表">二级索引与回表</h2>
+<p><code>BtreePkIndex</code>（<code>src/observer/storage/index/btree_pk_index.*</code>）实现两类索引：</p>
+<ul>
+<li>二级索引：独立 B+树文件，key = 索引属性 + 主键编码，value = 主键编码。
+扫描得到主键编码后调用 <code>Table::get_record_by_key</code> 回到聚簇树取整行。</li>
+<li>主键索引：单列主键时，把聚簇树本身包装成共享 <code>BtreePkIndex</code> 暴露给优化器
+（<code>find_index_by_field</code> 命中主键字段时返回它）。它的叶子 value 是整行，
+<code>get_record</code> 直接复制 value 并用主键字段重建 <code>record.key()</code>，供后续 delete 使用。</li>
+</ul>
+<p><code>create index</code> 的流程与 heap 一致：建树 → 全表扫描回填 → 写回表元数据。
+重启时按 <code>.table</code> 中的索引元数据重开索引文件。</p>
+<h2 id="rowid-恢复">rowid 恢复</h2>
+<p>rowid 模式下 <code>next_rowid</code> 同时存在于内存与树头部：</p>
+<ul>
+<li>每次插入取 <code>next_rowid_++</code>；头部在 <code>sync()</code> 时落盘。</li>
+<li>打开表时取 <code>max(header.next_rowid, 扫描到的最大 rowid + 1)</code>，因此即使崩溃前
+头部未同步，也不会复用已存在的 rowid。</li>
+<li>恢复扫描是全表 O(n)；当前表规模下可接受，后续可改为只读最右叶子。</li>
+</ul>
+<h2 id="崩溃一致性">崩溃一致性</h2>
+<p>聚簇树复用 B+树的 mtr 逻辑日志（<code>LogModule::BPLUS_TREE</code>）：页面修改、分裂、合并
+记录逻辑日志，恢复时按 buffer pool 重放。rowid 与 record 数据在同一棵树中，
+插入/删除要么按日志重做，要么回滚，不存在“数据在但主键编码不在”的分裂状态。</p>
+<p>二级索引与聚簇表的更新不在同一个日志事务里（与 heap 的索引维护相同），
+索引失败时按 heap 的模式回滚已插入项与树记录。当前没有跨索引的原子提交保证。</p>
+<h2 id="约束与未覆盖">约束与未覆盖</h2>
+<ul>
+<li>只支持 vacuous 事务；<code>-t mvcc</code> 下对 btree 表的 insert/delete 返回 <code>UNSUPPORTED</code>。</li>
+<li>不支持 chunk 执行模式（<code>get_chunk_scanner</code> 返回 <code>UNSUPPORTED</code>）。</li>
+<li>不支持 UPDATE（SQL 层没有 update 执行算子）。</li>
+<li>表记录大小 + 主键大小必须能放进叶子页（至少 2 条），否则建表返回 <code>INVALID_ARGUMENT</code>。</li>
+<li>没有实现 <code>get_record(rid)</code>：btree 表没有堆 RID，点查走 <code>get_record_by_key</code>。</li>
+<li>扫描顺序是主键序（无主键时 rowid 序，即插入序），与 heap 的物理序不同。</li>
+</ul>
+<h2 id="验证">验证</h2>
+<ul>
+<li><code>unittest/observer/btree_table_engine_test.cpp</code>：rowid/单列主键/复合主键的
+插入、扫描序、重复主键、删除、二级索引与主键索引扫描、重开数据库。</li>
+<li><code>unittest/observer/bplus_tree_modes_test.cpp</code>：四种 key 模式、<code>get_value</code>、
+旧格式头部兼容。</li>
+<li><code>test/case/test/btree_engine.test</code>：SQL 层的建表、DML、二级索引、隐藏 rowid。</li>
+<li>手工端到端：observer + obclient 验证建表、插入、删除、索引查询与重启。</li>
+</ul>
+<h2 id="与-heap-的差异">与 heap 的差异</h2>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>方面</th>
+<th>heap</th>
+<th>btree</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>行位置</td>
+<td>堆页 + RID</td>
+<td>主键/rowid 聚簇叶子</td>
+</tr>
+<tr>
+<td>扫描顺序</td>
+<td>物理页顺序</td>
+<td>主键序 / 插入序</td>
+</tr>
+<tr>
+<td>重复主键</td>
+<td>允许（无主键约束检查）</td>
+<td><code>RECORD_DUPLICATE_KEY</code></td>
+</tr>
+<tr>
+<td>点查</td>
+<td>RID</td>
+<td>主键编码</td>
+</tr>
+<tr>
+<td>事务</td>
+<td>vacuous/mvcc</td>
+<td>vacuous only</td>
+</tr>
+<tr>
+<td>二级索引 value</td>
+<td>RID</td>
+<td>主键编码</td>
+</tr>
+</tbody>
+</table></div>
+</article>
+<nav class="pager" aria-label="相邻文档导航"><a class="prev" href="introduction.html"><span>← 上一篇</span>功能模块设计说明</a><a class="next" href="miniob-cascade.html"><span>下一篇 →</span>Cascade Optimizer(查询优化器)</a></nav>
+<p class="source-line">源文件：<a href="../../docs/design/miniob-btree-storage-engine.md">design/miniob-btree-storage-engine.md</a></p>
+
+    <footer class="page-footer">
+      <span>由 <code>docs/visual/build.py</code> &amp; <code>draw_diagrams.py</code> 从 <code>docs/docs</code> 生成</span>
+      <span>MiniOB · 可视化技术文档</span>
+    </footer>
+  </main>
+  <aside class="page-toc" aria-label="本页目录"><div class="toc-inner"><p class="toc-title">本页导览</p><ul class="toc-list"><li class="toc-item toc-special"><a href="#arch-miniob-btree-clustered-architecture">◈ MiniOB B+Tree 聚簇表存储引擎与四种 Key 编码架构</a></li><li class="toc-item toc-l2"><a href="#目标与范围">目标与范围</a></li><li class="toc-item toc-l2"><a href="#叶子布局与-key-编码">叶子布局与 Key 编码</a></li><li class="toc-item toc-l2"><a href="#二级索引与回表">二级索引与回表</a></li><li class="toc-item toc-l2"><a href="#rowid-恢复">rowid 恢复</a></li><li class="toc-item toc-l2"><a href="#崩溃一致性">崩溃一致性</a></li><li class="toc-item toc-l2"><a href="#约束与未覆盖">约束与未覆盖</a></li><li class="toc-item toc-l2"><a href="#验证">验证</a></li><li class="toc-item toc-l2"><a href="#与-heap-的差异">与 heap 的差异</a></li></ul><a class="toc-top" href="#top">↑ 回到顶部</a></div></aside>
+</div>
+<div class="nav-scrim" id="navScrim"></div>
+<div class="diagram-modal" id="diagramModal" hidden role="dialog" aria-modal="true" aria-label="图表放大检视">
+  <div class="diagram-modal-bar">
+    <span class="diagram-modal-title" id="diagramModalTitle">架构与流程图检视</span>
+    <button type="button" class="diagram-modal-close" id="diagramModalClose" aria-label="关闭">✕ 关闭 (Esc)</button>
+  </div>
+  <div class="diagram-modal-body" id="diagramModalBody"></div>
+</div>
+<script src="../assets/markmap-config.js"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/markmap-autoloader@0.18"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/@highlightjs/cdn-assets@11/highlight.min.js"></script>
+
+<script defer src="../assets/site.js"></script>
+</body>
+</html>

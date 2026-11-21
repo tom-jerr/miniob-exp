@@ -1,0 +1,413 @@
+<!doctype html>
+<html lang="zh-CN" id="top">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>B+ 树并发操作 · MiniOB 可视化文档</title>
+<link rel="stylesheet" href="../assets/style.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@highlightjs/cdn-assets@11/styles/atom-one-dark.min.css">
+<script src="../assets/theme.js"></script>
+
+</head>
+<body class="">
+<div class="reading-progress" id="readingProgress" aria-hidden="true"></div>
+<header class="topbar">
+  <button class="menu-btn" id="menuBtn" aria-label="切换侧栏" aria-expanded="false">☰</button>
+  <a class="brand" href="../index.html"><span class="brand-mark">M</span><span>MiniOB <em>可视化文档</em></span></a>
+  <div class="top-actions">
+    <a class="top-link" href="../flows.html">动态流程</a>
+    <button class="theme-btn" id="themeBtn" aria-label="切换明暗主题" title="切换明暗主题">◐</button>
+  </div>
+</header>
+<div class="layout has-toc">
+  <aside class="sidebar" id="sidebar"><nav class="site-nav" aria-label="文档目录"><a class="nav-home" href="../index.html"><span class="brand-mark">M</span><span>MiniOB 可视化文档</span></a><details class="nav-group"><summary>快速开始<span>2</span></summary><div class="nav-links"><a href="../how_to_build.html"><span class="nav-link-text">如何编译</span></a><a href="../how_to_run.html"><span class="nav-link-text">如何运行</span></a></div></details><details class="nav-group" open><summary>设计文档<span>21</span></summary><div class="nav-links"><a href="miniob-architecture.html"><span class="nav-link-text">MiniOB代码架构框架设计和说明</span><span class="nav-badge" title="含交互流程图或架构图">图</span></a><a href="miniob-buffer-pool.html"><span class="nav-link-text">MiniOB 存储实现</span><span class="nav-badge" title="含交互流程图或架构图">图</span></a><a href="miniob-double-write-buffer.html"><span class="nav-link-text">MiniOB Double Write Buffer 实现</span><span class="nav-badge" title="含交互流程图或架构图">图</span></a><a href="miniob-transaction.html"><span class="nav-link-text">事务模块</span><span class="nav-badge" title="含交互流程图或架构图">图</span></a><a href="miniob-durability.html"><span class="nav-link-text">持久化</span><span class="nav-badge" title="含交互流程图或架构图">图</span></a><a href="miniob-persistence-files.html"><span class="nav-link-text">持久化文件与恢复路径</span><span class="nav-badge" title="含交互流程图或架构图">图</span></a><a href="miniob-checkpoint-wal.html"><span class="nav-link-text">MiniOB 检查点与 WAL 截断</span><span class="nav-badge" title="含交互流程图或架构图">图</span></a><a href="miniob-sql-parser.html"><span class="nav-link-text">SQL 词法语法分析</span></a><a href="miniob-how-to-add-new-sql.html"><span class="nav-link-text">SQL语句执行流程</span><span class="nav-badge" title="含交互流程图或架构图">图</span></a><a href="miniob-sql-expression.html"><span class="nav-link-text">SQL 表达式</span></a><a href="miniob-bplus-tree.html"><span class="nav-link-text">MiniOB B+Tree 实现</span><span class="nav-badge" title="含交互流程图或架构图">图</span></a><a href="miniob-bplus-tree-concurrency.html" class="active" aria-current="page"><span class="nav-link-text">B+ 树并发操作</span><span class="nav-badge" title="含交互流程图或架构图">图</span></a><a href="miniob-thread-model.html"><span class="nav-link-text">线程模型</span><span class="nav-badge" title="含交互流程图或架构图">图</span></a><a href="miniob-mysql-protocol.html"><span class="nav-link-text">MySQL 通讯协议</span></a><a href="miniob-pax-storage.html"><span class="nav-link-text">MiniOB PAX 存储格式</span><span class="nav-badge" title="含交互流程图或架构图">图</span></a><a href="miniob-aggregation-and-group-by.html"><span class="nav-link-text">MiniOB 向量化执行 aggregation 和 group by 实现</span></a><a href="miniob-lsm-tree.html"><span class="nav-link-text">MiniOB LSM-Tree 存储引擎</span><span class="nav-badge" title="含交互流程图或架构图">图</span></a><a href="introduction.html"><span class="nav-link-text">功能模块设计说明</span></a><a href="miniob-btree-storage-engine.html"><span class="nav-link-text">MiniOB B+Tree 聚簇表存储引擎</span><span class="nav-badge" title="含交互流程图或架构图">图</span></a><a href="miniob-cascade.html"><span class="nav-link-text">Cascade Optimizer(查询优化器)</span><span class="nav-badge" title="含交互流程图或架构图">图</span></a><a href="miniob-update-mvcc-occ.html"><span class="nav-link-text">MiniOB UPDATE、MVCC 与 OCC 方案设计</span><span class="nav-badge" title="含交互流程图或架构图">图</span></a></div></details><details class="nav-group"><summary>课程实验<span>6</span></summary><div class="nav-links"><a href="../db_course_lab/overview.html"><span class="nav-link-text">数据库系统实现原理与实践课程实验</span></a><a href="../db_course_lab/lab0.html"><span class="nav-link-text">LAB#0 C++ 基础</span></a><a href="../db_course_lab/lab1.html"><span class="nav-link-text">LAB#1 LSM-Tree 存储引擎</span></a><a href="../db_course_lab/lab2.html"><span class="nav-link-text">LAB#2 查询引擎</span></a><a href="../db_course_lab/lab3.html"><span class="nav-link-text">LAB#3 事务引擎</span></a><a href="../db_course_lab/lab4.html"><span class="nav-link-text">LAB#4 性能测试</span></a></div></details><details class="nav-group"><summary>简明教程<span>9</span></summary><div class="nav-links"><a href="../lectures/copyright.html"><span class="nav-link-text">版权声明</span></a><a href="../lectures/lecture-1.html"><span class="nav-link-text">第1章 数据库管理系统概述</span></a><a href="../lectures/lecture-2.html"><span class="nav-link-text">第2章 数据库的存储结构</span></a><a href="../lectures/lecture-3.html"><span class="nav-link-text">第3章 索引结构</span></a><a href="../lectures/lecture-4.html"><span class="nav-link-text">第4章 查询处理</span></a><a href="../lectures/lecture-5.html"><span class="nav-link-text">第5章 查询优化</span></a><a href="../lectures/lecture-6.html"><span class="nav-link-text">第6章 事务处理</span></a><a href="../lectures/references.html"><span class="nav-link-text">参考资料</span></a><a href="../lectures/index.html"><span class="nav-link-text">数据库管理系统实现基础讲义</span></a></div></details><details class="nav-group"><summary>开发环境<span>14</span></summary><div class="nav-links"><a href="../dev-env/introduction.html"><span class="nav-link-text">搭建开发环境</span></a><a href="../dev-env/vscode_dev_with_local_virtual_env.html"><span class="nav-link-text">虚拟机+vscode remote开发</span></a><a href="../dev-env/dev_by_online.html"><span class="nav-link-text">使用在线开发环境开发 MiniOB</span></a><a href="../dev-env/how-to-dev-using-docker.html"><span class="nav-link-text">使用Docker开发MiniOB</span></a><a href="../dev-env/how_to_dev_in_docker_container_by_vscode.html"><span class="nav-link-text">使用 Docker 和 VSCode 远程开发 Miniob</span></a><a href="../dev-env/how_to_dev_in_docker_container_by_vscode_on_windows.html"><span class="nav-link-text">在windows上通过docker配置环境并利用vscode调试代码（手把手版）</span></a><a href="../dev-env/how_to_dev_miniob_by_docker_on_windows.html"><span class="nav-link-text">安装Docker</span></a><a href="../dev-env/how_to_dev_miniob_by_vscode.html"><span class="nav-link-text">环境准备</span></a><a href="../dev-env/miniob-how-to-debug.html"><span class="nav-link-text">miniob调试篇</span></a><a href="../dev-env/how_to_submit_for_testing.html"><span class="nav-link-text">训练营平台使用说明</span></a><a href="../dev-env/integration_test.html"><span class="nav-link-text">MiniOB 集成测试使用文档</span></a><a href="../dev-env/cloudlab_setup.html"><span class="nav-link-text">开源学堂在线编程环境开发 MiniOB</span></a><a href="../dev-env/how_to_dev_miniob_by_docker_on_windows_simplified.html"><span class="nav-link-text">在windows上通过docker配置环境并利用vscode编辑、开发、调试代码（简易版）</span></a><a href="../dev-env/how_to_dev_miniob_in_vscodeGUI_by_docker_on_windows.html"><span class="nav-link-text">基于Windows+docker容器在本地利用VSCode编辑、开发及调试miniob</span></a></div></details><details class="nav-group"><summary>大赛与训练<span>9</span></summary><div class="nav-links"><a href="../game/introduction.html"><span class="nav-link-text">OceanBase 数据库大赛</span></a><a href="../game/miniob-output-convention.html"><span class="nav-link-text">输出规范</span></a><a href="../game/debug-output.html"><span class="nav-link-text">输出调试信息</span></a><a href="../game/miniob-memtracer.html"><span class="nav-link-text">MemTracer</span></a><a href="../game/miniob_topics.html"><span class="nav-link-text">OceanBase 数据库大赛2021届题目</span></a><a href="../game/github-introduction.html"><span class="nav-link-text">MiniOB GitHub 在训练营中的使用说明</span></a><a href="../game/gitee-instructions.html"><span class="nav-link-text">MiniOB Gitee 在训练营中的使用说明</span></a><a href="../game/miniob-vectordb.html"><span class="nav-link-text">MiniOB 向量数据库</span></a><a href="../game/git-introduction.html"><span class="nav-link-text">Git 介绍</span></a></div></details><details class="nav-group"><summary>博客<span>2</span></summary><div class="nav-links"><a href="../blog/introduction.html"><span class="nav-link-text">介绍</span></a><a href="../blog/1.html"><span class="nav-link-text">High-Performance Concurrency Control Mechanisms for Main-Memory Databases</span></a></div></details><a class="nav-flows" href="../flows.html"><span class="dot"></span>动态流程<span class="count">13</span></a></nav></aside>
+  <main class="main">
+    
+<nav class="crumbs" aria-label="面包屑导航"><a href="../index.html">首页</a><span>/</span><span>设计文档</span><span>/</span><span aria-current="page">B+ 树并发操作</span></nav>
+<header class="doc-head">
+  <div class="doc-meta-bar">
+    <span class="eyebrow-pill">设计文档</span>
+    <span class="doc-meta-item">13 个章节</span>
+    <span class="doc-meta-sep">·</span>
+    <span class="doc-meta-item">约 10 分钟阅读</span>
+    <span class="doc-meta-sep">·</span>
+    <a class="doc-meta-source" href="../../docs/design/miniob-bplus-tree-concurrency.md">Markdown 源文件 ↗</a>
+  </div>
+  <h1>B+ 树并发操作</h1>
+</header>
+<section class="panel map-panel" id="doc-outline-panel">
+  <div class="panel-head">
+    <div>
+      <h2>章节结构导览</h2>
+      <span>点击任意章节直达正文；支持结构卡片与交互思维导图切换</span>
+    </div>
+    <button type="button" class="map-toggle-btn" data-toggle-markmap aria-expanded="false">⊞ 切换思维导图</button>
+  </div>
+  <div class="tree-view"><div class="tree-grid"><div class="tree-branch"><div class="tree-top"><a class="tree-link" href="#b-树介绍"><span class="tree-num">1</span><span>B+ 树介绍</span></a></div></div><div class="tree-branch"><div class="tree-top"><a class="tree-link" href="#b树的并发操作"><span class="tree-num">2</span><span>B+树的并发操作</span></a></div><ul class="tree-sub"><li><a class="tree-link" href="#crabing-protocol"><span class="tree-num">2.1</span><span>Crabing Protocol</span></a></li><li><a class="tree-link" href="#miniob实现"><span class="tree-num">2.2</span><span>MiniOB实现</span></a></li><li><a class="tree-link" href="#其它"><span class="tree-num">2.3</span><span>其它</span></a></li></ul></div><div class="tree-branch"><div class="tree-top"><a class="tree-link" href="#参考"><span class="tree-num">3</span><span>参考</span></a></div></div></div></div>
+  <div class="markmap-wrap" hidden>
+    <div class="markmap"><script type="text/template"># B+ 树并发操作
+  - [B+ 树介绍](#b-树介绍)
+  - [B+树的并发操作](#b树的并发操作)
+    - [Crabing Protocol](#crabing-protocol)
+    - [MiniOB实现](#miniob实现)
+    - [其它](#其它)
+  - [参考](#参考)</script></div>
+  </div>
+</section>
+<div class="flows-inline">
+<section class="flow-player" id="flow-bplus-tree-concurrency-latching" data-flow="bplus-tree-concurrency-latching" tabindex="0" aria-label="B+ 树并发加锁（蟹行协议） 交互流程播放器">
+  <header class="flow-head">
+    <div>
+      <div class="flow-kicker-row">
+        <span class="flow-kicker">INTERACTIVE MECHANISM · 动态机制流程</span>
+        <span class="flow-step-total">共 8 步</span>
+      </div>
+      <h2>B+ 树并发加锁（蟹行协议）</h2>
+      <p class="flow-summary">蟹行协议：锁根、取子页加锁、安全则释放祖先、叶内修改。</p>
+    </div>
+    <div class="flow-head-actions">
+      <button type="button" class="arch-zoom-btn" data-zoom-diagram aria-label="放大流程图">⤢ 放大</button>
+      <a class="arch-svg-link" href="../assets/diagrams/flow-bplus-tree-concurrency-latching.svg" target="_blank" rel="noopener" title="打开独立 SVG 矢量图">SVG ↗</a>
+      <a class="flow-source" href="miniob-bplus-tree-concurrency.html#crabing-protocol">跳转原文 →</a>
+    </div>
+  </header>
+  <div class="flow-legend" aria-hidden="true">
+    <span><i class="leg-dot leg-active"></i>当前步骤节点与流转路径</span>
+    <span><i class="leg-dot leg-visited"></i>已执行路径</span>
+    <span><i class="leg-dot leg-idle"></i>待执行节点</span>
+    <span class="flow-legend-tip">💡 可直接点击图中节点、下方步骤条，或使用 ← / → 键切换步骤</span>
+  </div>
+  <div class="flow-canvas" role="img" aria-label="B+ 树并发加锁（蟹行协议） 流程图"><svg xmlns="http://www.w3.org/2000/svg" width="1060" height="360" viewBox="0 0 1060 360" role="img" aria-labelledby="flow-bplus-tree-concurrency-latching-title flow-bplus-tree-concurrency-latching-desc" class="toolkit-diagram" data-diagram-id="flow-bplus-tree-concurrency-latching">
+  <title id="flow-bplus-tree-concurrency-latching-title">B+ 树并发加锁（蟹行协议） — 交互式机制流程图</title>
+  <desc id="flow-bplus-tree-concurrency-latching-desc">蟹行协议：锁根、取子页加锁、安全则释放祖先、叶内修改。</desc>
+  <defs>
+    <marker id="flow-bplus-tree-concurrency-latching-arrow-ink" viewBox="0 0 10 10" refX="8.6" refY="5" markerWidth="6.8" markerHeight="6.8" orient="auto">
+      <path d="M0 0.8 L9.5 5 L0 9.2 Z" fill="#334155" />
+    </marker>
+    <marker id="flow-bplus-tree-concurrency-latching-arrow-blue" viewBox="0 0 10 10" refX="8.6" refY="5" markerWidth="6.8" markerHeight="6.8" orient="auto">
+      <path d="M0 0.8 L9.5 5 L0 9.2 Z" fill="#2554C7" />
+    </marker>
+    <marker id="flow-bplus-tree-concurrency-latching-arrow-amber" viewBox="0 0 10 10" refX="8.6" refY="5" markerWidth="6.8" markerHeight="6.8" orient="auto">
+      <path d="M0 0.8 L9.5 5 L0 9.2 Z" fill="#B45309" />
+    </marker>
+    <marker id="flow-bplus-tree-concurrency-latching-arrow-teal" viewBox="0 0 10 10" refX="8.6" refY="5" markerWidth="6.8" markerHeight="6.8" orient="auto">
+      <path d="M0 0.8 L9.5 5 L0 9.2 Z" fill="#0F766E" />
+    </marker>
+    <marker id="flow-bplus-tree-concurrency-latching-arrow-purple" viewBox="0 0 10 10" refX="8.6" refY="5" markerWidth="6.8" markerHeight="6.8" orient="auto">
+      <path d="M0 0.8 L9.5 5 L0 9.2 Z" fill="#6D28D9" />
+    </marker>
+    <marker id="flow-bplus-tree-concurrency-latching-arrow-rose" viewBox="0 0 10 10" refX="8.6" refY="5" markerWidth="6.8" markerHeight="6.8" orient="auto">
+      <path d="M0 0.8 L9.5 5 L0 9.2 Z" fill="#BE123C" />
+    </marker>
+    <marker id="flow-bplus-tree-concurrency-latching-arrow-muted" viewBox="0 0 10 10" refX="8.6" refY="5" markerWidth="6.8" markerHeight="6.8" orient="auto">
+      <path d="M0 0.8 L9.5 5 L0 9.2 Z" fill="#64748B" />
+    </marker>
+  </defs>
+  <g class="diag-bg">
+    <rect x="0" y="0" width="1060" height="360" rx="12" fill="#FCFDFE" stroke="none" class="diag-canvas-bg" />
+  </g>
+  <g class="diag-lanes">
+    <g class="diag-lane">
+      <rect x="16" y="16" width="184" height="328" rx="10" fill="#F4F7FB" stroke="#CBD5E1" stroke-width="1.5" class="diag-lane-rect" />
+      <text x="30" y="38" font-family="&quot;Noto Sans SC&quot;, &quot;PingFang SC&quot;, &quot;Microsoft YaHei&quot;, &quot;Segoe UI&quot;, Arial, sans-serif" font-size="12.8" font-weight="700" fill="#526077" class="diag-lane-title">1. 入口初始化</text>
+      <text x="186" y="38" font-family="&quot;JetBrains Mono&quot;, &quot;SFMono-Regular&quot;, Consolas, &quot;Liberation Mono&quot;, monospace" font-size="11.2" font-weight="500" text-anchor="end" fill="#7B89A1" class="diag-lane-sub">LatchMemo &amp; Root</text>
+    </g>
+    <g class="diag-lane">
+      <rect x="214" y="16" width="488" height="328" rx="10" fill="#F0F5FF" stroke="#2554C7" stroke-width="1.5" class="diag-lane-rect" />
+      <text x="228" y="38" font-family="&quot;Noto Sans SC&quot;, &quot;PingFang SC&quot;, &quot;Microsoft YaHei&quot;, &quot;Segoe UI&quot;, Arial, sans-serif" font-size="12.8" font-weight="700" fill="#1E40AF" class="diag-lane-title">2. 蟹行下探循环 (Crabbing Descent Loop)</text>
+      <text x="688" y="38" font-family="&quot;JetBrains Mono&quot;, &quot;SFMono-Regular&quot;, Consolas, &quot;Liberation Mono&quot;, monospace" font-size="11.2" font-weight="500" text-anchor="end" fill="#7B89A1" class="diag-lane-sub">取子页 pin+1 → 加锁 → 安全则释放祖先</text>
+    </g>
+    <g class="diag-lane">
+      <rect x="716" y="16" width="328" height="328" rx="10" fill="#F0FDFA" stroke="#0F766E" stroke-width="1.5" class="diag-lane-rect" />
+      <text x="730" y="38" font-family="&quot;Noto Sans SC&quot;, &quot;PingFang SC&quot;, &quot;Microsoft YaHei&quot;, &quot;Segoe UI&quot;, Arial, sans-serif" font-size="12.8" font-weight="700" fill="#115E59" class="diag-lane-title">3. 叶内更新与 Memo 统一释放</text>
+      <text x="1030" y="38" font-family="&quot;JetBrains Mono&quot;, &quot;SFMono-Regular&quot;, Consolas, &quot;Liberation Mono&quot;, monospace" font-size="11.2" font-weight="500" text-anchor="end" fill="#7B89A1" class="diag-lane-sub">叶插入/分裂回插 → release_all()</text>
+    </g>
+  </g>
+  <g class="diag-edges">
+    <g class="flow-edge" data-from="lock_root" data-to="crab_child">
+      <path d="M 184.0 112.0 L 234.0 112.0" fill="none" stroke="#2554C7" stroke-width="1.9" stroke-linejoin="round" stroke-linecap="round" class="flow-edge-path" marker-end="url(#flow-bplus-tree-concurrency-latching-arrow-blue)" />
+    </g>
+    <g class="flow-edge" data-from="crab_child" data-to="lock_child">
+      <path d="M 380.0 112.0 L 402.0 112.0" fill="none" stroke="#2554C7" stroke-width="1.9" stroke-linejoin="round" stroke-linecap="round" class="flow-edge-path" marker-end="url(#flow-bplus-tree-concurrency-latching-arrow-blue)" />
+    </g>
+    <g class="flow-edge" data-from="lock_child" data-to="is_safe">
+      <path d="M 546.0 112.0 L 566.0 112.0" fill="none" stroke="#B45309" stroke-width="1.9" stroke-linejoin="round" stroke-linecap="round" class="flow-edge-path" marker-end="url(#flow-bplus-tree-concurrency-latching-arrow-amber)" />
+    </g>
+    <g class="flow-edge" data-from="is_safe" data-to="release_parent">
+      <path d="M 627.0 148.0 L 627.0 224.0" fill="none" stroke="#0F766E" stroke-width="1.9" stroke-linejoin="round" stroke-linecap="round" class="flow-edge-path" marker-end="url(#flow-bplus-tree-concurrency-latching-arrow-teal)" />
+      <rect x="638.0" y="176.5" width="34.0" height="19.0" rx="5.5" fill="#FFFFFF" stroke="#CBD5E1" stroke-width="1.1" class="flow-edge-pill" />
+      <text x="655.0" y="189.8" font-family="&quot;Noto Sans SC&quot;, &quot;PingFang SC&quot;, &quot;Microsoft YaHei&quot;, &quot;Segoe UI&quot;, Arial, sans-serif" font-size="11.2" font-weight="600" text-anchor="middle" fill="#526077" class="flow-edge-label">安全</text>
+    </g>
+    <g class="flow-edge" data-from="is_safe" data-to="descend">
+      <path d="M 585.0 148.0 L 585.0 186.0 L 381.0 186.0 L 381.0 224.0" fill="none" stroke="#B45309" stroke-width="1.9" stroke-linejoin="round" stroke-linecap="round" class="flow-edge-path" marker-end="url(#flow-bplus-tree-concurrency-latching-arrow-amber)" />
+      <rect x="438.6" y="162.5" width="88.8" height="19.0" rx="5.5" fill="#FFFFFF" stroke="#CBD5E1" stroke-width="1.1" class="flow-edge-pill" />
+      <text x="483.0" y="175.8" font-family="&quot;Noto Sans SC&quot;, &quot;PingFang SC&quot;, &quot;Microsoft YaHei&quot;, &quot;Segoe UI&quot;, Arial, sans-serif" font-size="11.2" font-weight="600" text-anchor="middle" fill="#526077" class="flow-edge-label">不安全，保留锁</text>
+    </g>
+    <g class="flow-edge" data-from="release_parent" data-to="descend">
+      <path d="M 542.0 260.0 L 468.0 260.0" fill="none" stroke="#0F766E" stroke-width="1.9" stroke-linejoin="round" stroke-linecap="round" class="flow-edge-path" marker-end="url(#flow-bplus-tree-concurrency-latching-arrow-teal)" />
+    </g>
+    <g class="flow-edge" data-from="descend" data-to="crab_child">
+      <path d="M 294.0 260.0 L 264.0 260.0 L 264.0 148.0" fill="none" stroke="#2554C7" stroke-width="1.9" stroke-linejoin="round" stroke-linecap="round" class="flow-edge-path" marker-end="url(#flow-bplus-tree-concurrency-latching-arrow-blue)" />
+      <rect x="198.0" y="194.5" width="55.9" height="19.0" rx="5.5" fill="#FFFFFF" stroke="#CBD5E1" stroke-width="1.1" class="flow-edge-pill" />
+      <text x="226.0" y="207.8" font-family="&quot;Noto Sans SC&quot;, &quot;PingFang SC&quot;, &quot;Microsoft YaHei&quot;, &quot;Segoe UI&quot;, Arial, sans-serif" font-size="11.2" font-weight="600" text-anchor="middle" fill="#526077" class="flow-edge-label">循环向下</text>
+    </g>
+    <g class="flow-edge" data-from="descend" data-to="leaf_insert">
+      <path d="M 381.0 296.0 L 381.0 322.0 L 710.0 322.0 L 710.0 112.0 L 736.0 112.0" fill="none" stroke="#0F766E" stroke-width="1.9" stroke-linejoin="round" stroke-linecap="round" class="flow-edge-path" marker-end="url(#flow-bplus-tree-concurrency-latching-arrow-teal)" />
+      <rect x="412.1" y="300.5" width="66.9" height="19.0" rx="5.5" fill="#FFFFFF" stroke="#CBD5E1" stroke-width="1.1" class="flow-edge-pill" />
+      <text x="445.5" y="313.8" font-family="&quot;Noto Sans SC&quot;, &quot;PingFang SC&quot;, &quot;Microsoft YaHei&quot;, &quot;Segoe UI&quot;, Arial, sans-serif" font-size="11.2" font-weight="600" text-anchor="middle" fill="#526077" class="flow-edge-label">到达叶结点</text>
+    </g>
+    <g class="flow-edge" data-from="leaf_insert" data-to="split_parent">
+      <path d="M 876.0 112.0 L 894.0 112.0" fill="none" stroke="#B45309" stroke-width="1.9" stroke-linejoin="round" stroke-linecap="round" class="flow-edge-path" marker-end="url(#flow-bplus-tree-concurrency-latching-arrow-amber)" />
+      <rect x="857.0" y="52.5" width="55.9" height="19.0" rx="5.5" fill="#FFFFFF" stroke="#CBD5E1" stroke-width="1.1" class="flow-edge-pill" />
+      <text x="885.0" y="65.8" font-family="&quot;Noto Sans SC&quot;, &quot;PingFang SC&quot;, &quot;Microsoft YaHei&quot;, &quot;Segoe UI&quot;, Arial, sans-serif" font-size="11.2" font-weight="600" text-anchor="middle" fill="#526077" class="flow-edge-label">发生分裂</text>
+    </g>
+    <g class="flow-edge" data-from="leaf_insert" data-to="memo_release">
+      <path d="M 806.0 148.0 L 806.0 224.0" fill="none" stroke="#0F766E" stroke-width="1.9" stroke-linejoin="round" stroke-linecap="round" class="flow-edge-path" marker-end="url(#flow-bplus-tree-concurrency-latching-arrow-teal)" />
+    </g>
+    <g class="flow-edge" data-from="split_parent" data-to="memo_release">
+      <path d="M 962.0 148.0 L 962.0 224.0" fill="none" stroke="#B45309" stroke-width="1.9" stroke-linejoin="round" stroke-linecap="round" class="flow-edge-path" marker-end="url(#flow-bplus-tree-concurrency-latching-arrow-amber)" />
+    </g>
+  </g>
+  <g class="diag-nodes">
+    <g class="flow-node role-gray" data-node-id="lock_root" data-steps="0" tabindex="0" role="button" aria-label="根节点加锁 (LatchMemo 锁根页)">
+      <rect x="32" y="76" width="152" height="72" rx="9" fill="#F1F5F9" stroke="#475569" stroke-width="1.8" class="flow-node-rect" />
+      <rect x="40" y="82" width="22.0" height="16" rx="4.5" fill="#334155" stroke="none" class="flow-node-badge-bg" />
+      <text x="51.0" y="93.5" font-family="&quot;JetBrains Mono&quot;, &quot;SFMono-Regular&quot;, Consolas, &quot;Liberation Mono&quot;, monospace" font-size="10.2" font-weight="700" text-anchor="middle" fill="#FFFFFF" class="flow-node-badge-text">S1</text>
+      <text x="108.0" y="114.0" font-family="&quot;Noto Sans SC&quot;, &quot;PingFang SC&quot;, &quot;Microsoft YaHei&quot;, &quot;Segoe UI&quot;, Arial, sans-serif" font-size="14.2" font-weight="700" text-anchor="middle" fill="#141E30" class="flow-node-title">根节点加锁</text>
+      <text x="108.0" y="130.5" font-family="&quot;JetBrains Mono&quot;, &quot;SFMono-Regular&quot;, Consolas, &quot;Liberation Mono&quot;, monospace" font-size="11" font-weight="500" text-anchor="middle" fill="#526077" class="flow-node-sub">LatchMemo 锁根页</text>
+    </g>
+    <g class="flow-node role-blue" data-node-id="crab_child" data-steps="1" tabindex="0" role="button" aria-label="蟹行取子页 (fetch_page (pin+1))">
+      <rect x="234" y="76" width="146" height="72" rx="9" fill="#E6EFFD" stroke="#2554C7" stroke-width="1.8" class="flow-node-rect" />
+      <rect x="242" y="82" width="22.0" height="16" rx="4.5" fill="#1E40AF" stroke="none" class="flow-node-badge-bg" />
+      <text x="253.0" y="93.5" font-family="&quot;JetBrains Mono&quot;, &quot;SFMono-Regular&quot;, Consolas, &quot;Liberation Mono&quot;, monospace" font-size="10.2" font-weight="700" text-anchor="middle" fill="#FFFFFF" class="flow-node-badge-text">S2</text>
+      <text x="307.0" y="114.0" font-family="&quot;Noto Sans SC&quot;, &quot;PingFang SC&quot;, &quot;Microsoft YaHei&quot;, &quot;Segoe UI&quot;, Arial, sans-serif" font-size="14.2" font-weight="700" text-anchor="middle" fill="#141E30" class="flow-node-title">蟹行取子页</text>
+      <text x="307.0" y="130.5" font-family="&quot;JetBrains Mono&quot;, &quot;SFMono-Regular&quot;, Consolas, &quot;Liberation Mono&quot;, monospace" font-size="11" font-weight="500" text-anchor="middle" fill="#526077" class="flow-node-sub">fetch_page (pin+1)</text>
+    </g>
+    <g class="flow-node role-blue" data-node-id="lock_child" data-steps="1" tabindex="0" role="button" aria-label="子节点加写锁 (frame 加读/写锁)">
+      <rect x="402" y="76" width="144" height="72" rx="9" fill="#E6EFFD" stroke="#2554C7" stroke-width="1.8" class="flow-node-rect" />
+      <rect x="410" y="82" width="22.0" height="16" rx="4.5" fill="#1E40AF" stroke="none" class="flow-node-badge-bg" />
+      <text x="421.0" y="93.5" font-family="&quot;JetBrains Mono&quot;, &quot;SFMono-Regular&quot;, Consolas, &quot;Liberation Mono&quot;, monospace" font-size="10.2" font-weight="700" text-anchor="middle" fill="#FFFFFF" class="flow-node-badge-text">S2</text>
+      <text x="474.0" y="114.0" font-family="&quot;Noto Sans SC&quot;, &quot;PingFang SC&quot;, &quot;Microsoft YaHei&quot;, &quot;Segoe UI&quot;, Arial, sans-serif" font-size="14.2" font-weight="700" text-anchor="middle" fill="#141E30" class="flow-node-title">子节点加写锁</text>
+      <text x="474.0" y="130.5" font-family="&quot;JetBrains Mono&quot;, &quot;SFMono-Regular&quot;, Consolas, &quot;Liberation Mono&quot;, monospace" font-size="11" font-weight="500" text-anchor="middle" fill="#526077" class="flow-node-sub">frame 加读/写锁</text>
+    </g>
+    <g class="flow-node role-amber" data-node-id="is_safe" data-steps="2" tabindex="0" role="button" aria-label="判断节点是否安全 (不会分裂/合并?)">
+      <rect x="566" y="76" width="122" height="72" rx="9" fill="#FEF0C7" stroke="#B45309" stroke-width="1.8" class="flow-node-rect" />
+      <rect x="574" y="82" width="22.0" height="16" rx="4.5" fill="#92400E" stroke="none" class="flow-node-badge-bg" />
+      <text x="585.0" y="93.5" font-family="&quot;JetBrains Mono&quot;, &quot;SFMono-Regular&quot;, Consolas, &quot;Liberation Mono&quot;, monospace" font-size="10.2" font-weight="700" text-anchor="middle" fill="#FFFFFF" class="flow-node-badge-text">S3</text>
+      <text x="627.0" y="114.0" font-family="&quot;Noto Sans SC&quot;, &quot;PingFang SC&quot;, &quot;Microsoft YaHei&quot;, &quot;Segoe UI&quot;, Arial, sans-serif" font-size="14.2" font-weight="700" text-anchor="middle" fill="#141E30" class="flow-node-title">判断节点是否安全</text>
+      <text x="627.0" y="130.5" font-family="&quot;JetBrains Mono&quot;, &quot;SFMono-Regular&quot;, Consolas, &quot;Liberation Mono&quot;, monospace" font-size="11" font-weight="500" text-anchor="middle" fill="#526077" class="flow-node-sub">不会分裂/合并?</text>
+    </g>
+    <g class="flow-node role-teal" data-node-id="release_parent" data-steps="3" tabindex="0" role="button" aria-label="安全则释放祖先 (release_parent())">
+      <rect x="542" y="224" width="146" height="72" rx="9" fill="#CCFBF1" stroke="#0F766E" stroke-width="1.8" class="flow-node-rect" />
+      <rect x="550" y="230" width="22.0" height="16" rx="4.5" fill="#115E59" stroke="none" class="flow-node-badge-bg" />
+      <text x="561.0" y="241.5" font-family="&quot;JetBrains Mono&quot;, &quot;SFMono-Regular&quot;, Consolas, &quot;Liberation Mono&quot;, monospace" font-size="10.2" font-weight="700" text-anchor="middle" fill="#FFFFFF" class="flow-node-badge-text">S4</text>
+      <text x="615.0" y="262.0" font-family="&quot;Noto Sans SC&quot;, &quot;PingFang SC&quot;, &quot;Microsoft YaHei&quot;, &quot;Segoe UI&quot;, Arial, sans-serif" font-size="14.2" font-weight="700" text-anchor="middle" fill="#141E30" class="flow-node-title">安全则释放祖先</text>
+      <text x="615.0" y="278.5" font-family="&quot;JetBrains Mono&quot;, &quot;SFMono-Regular&quot;, Consolas, &quot;Liberation Mono&quot;, monospace" font-size="11" font-weight="500" text-anchor="middle" fill="#526077" class="flow-node-sub">release_parent()</text>
+    </g>
+    <g class="flow-node role-blue" data-node-id="descend" data-steps="4" tabindex="0" role="button" aria-label="非叶结点继续下探 (while (!node.is_leaf))">
+      <rect x="294" y="224" width="174" height="72" rx="9" fill="#E6EFFD" stroke="#2554C7" stroke-width="1.8" class="flow-node-rect" />
+      <rect x="302" y="230" width="22.0" height="16" rx="4.5" fill="#1E40AF" stroke="none" class="flow-node-badge-bg" />
+      <text x="313.0" y="241.5" font-family="&quot;JetBrains Mono&quot;, &quot;SFMono-Regular&quot;, Consolas, &quot;Liberation Mono&quot;, monospace" font-size="10.2" font-weight="700" text-anchor="middle" fill="#FFFFFF" class="flow-node-badge-text">S5</text>
+      <text x="381.0" y="262.0" font-family="&quot;Noto Sans SC&quot;, &quot;PingFang SC&quot;, &quot;Microsoft YaHei&quot;, &quot;Segoe UI&quot;, Arial, sans-serif" font-size="14.2" font-weight="700" text-anchor="middle" fill="#141E30" class="flow-node-title">非叶结点继续下探</text>
+      <text x="381.0" y="278.5" font-family="&quot;JetBrains Mono&quot;, &quot;SFMono-Regular&quot;, Consolas, &quot;Liberation Mono&quot;, monospace" font-size="11" font-weight="500" text-anchor="middle" fill="#526077" class="flow-node-sub">while (!node.is_leaf)</text>
+    </g>
+    <g class="flow-node role-teal" data-node-id="leaf_insert" data-steps="5" tabindex="0" role="button" aria-label="叶结点执行插入 (insert_into_leaf)">
+      <rect x="736" y="76" width="140" height="72" rx="9" fill="#CCFBF1" stroke="#0F766E" stroke-width="1.8" class="flow-node-rect" />
+      <rect x="744" y="82" width="22.0" height="16" rx="4.5" fill="#115E59" stroke="none" class="flow-node-badge-bg" />
+      <text x="755.0" y="93.5" font-family="&quot;JetBrains Mono&quot;, &quot;SFMono-Regular&quot;, Consolas, &quot;Liberation Mono&quot;, monospace" font-size="10.2" font-weight="700" text-anchor="middle" fill="#FFFFFF" class="flow-node-badge-text">S6</text>
+      <text x="806.0" y="114.0" font-family="&quot;Noto Sans SC&quot;, &quot;PingFang SC&quot;, &quot;Microsoft YaHei&quot;, &quot;Segoe UI&quot;, Arial, sans-serif" font-size="14.2" font-weight="700" text-anchor="middle" fill="#141E30" class="flow-node-title">叶结点执行插入</text>
+      <text x="806.0" y="130.5" font-family="&quot;JetBrains Mono&quot;, &quot;SFMono-Regular&quot;, Consolas, &quot;Liberation Mono&quot;, monospace" font-size="11" font-weight="500" text-anchor="middle" fill="#526077" class="flow-node-sub">insert_into_leaf</text>
+    </g>
+    <g class="flow-node role-amber" data-node-id="split_parent" data-steps="6" tabindex="0" role="button" aria-label="分裂则回插父结点 (insert_into_parent)">
+      <rect x="894" y="76" width="136" height="72" rx="9" fill="#FEF0C7" stroke="#B45309" stroke-width="1.8" class="flow-node-rect" />
+      <rect x="902" y="82" width="22.0" height="16" rx="4.5" fill="#92400E" stroke="none" class="flow-node-badge-bg" />
+      <text x="913.0" y="93.5" font-family="&quot;JetBrains Mono&quot;, &quot;SFMono-Regular&quot;, Consolas, &quot;Liberation Mono&quot;, monospace" font-size="10.2" font-weight="700" text-anchor="middle" fill="#FFFFFF" class="flow-node-badge-text">S7</text>
+      <text x="962.0" y="114.0" font-family="&quot;Noto Sans SC&quot;, &quot;PingFang SC&quot;, &quot;Microsoft YaHei&quot;, &quot;Segoe UI&quot;, Arial, sans-serif" font-size="14.2" font-weight="700" text-anchor="middle" fill="#141E30" class="flow-node-title">分裂则回插父结点</text>
+      <text x="962.0" y="130.5" font-family="&quot;JetBrains Mono&quot;, &quot;SFMono-Regular&quot;, Consolas, &quot;Liberation Mono&quot;, monospace" font-size="11" font-weight="500" text-anchor="middle" fill="#526077" class="flow-node-sub">insert_into_parent</text>
+    </g>
+    <g class="flow-node role-purple" data-node-id="memo_release" data-steps="7" tabindex="0" role="button" aria-label="memo 统一释放 (memo.release_all())">
+      <rect x="788" y="224" width="190" height="72" rx="9" fill="#EDE9FE" stroke="#6D28D9" stroke-width="1.8" class="flow-node-rect" />
+      <rect x="796" y="230" width="22.0" height="16" rx="4.5" fill="#5B21B6" stroke="none" class="flow-node-badge-bg" />
+      <text x="807.0" y="241.5" font-family="&quot;JetBrains Mono&quot;, &quot;SFMono-Regular&quot;, Consolas, &quot;Liberation Mono&quot;, monospace" font-size="10.2" font-weight="700" text-anchor="middle" fill="#FFFFFF" class="flow-node-badge-text">S8</text>
+      <text x="883.0" y="262.0" font-family="&quot;Noto Sans SC&quot;, &quot;PingFang SC&quot;, &quot;Microsoft YaHei&quot;, &quot;Segoe UI&quot;, Arial, sans-serif" font-size="14.2" font-weight="700" text-anchor="middle" fill="#141E30" class="flow-node-title">memo 统一释放</text>
+      <text x="883.0" y="278.5" font-family="&quot;JetBrains Mono&quot;, &quot;SFMono-Regular&quot;, Consolas, &quot;Liberation Mono&quot;, monospace" font-size="11" font-weight="500" text-anchor="middle" fill="#526077" class="flow-node-sub">memo.release_all()</text>
+    </g>
+  </g>
+  <g class="diag-labels" />
+</svg></div>
+  <div class="flow-progress-track" aria-hidden="true"><div class="flow-progress-bar" style="width:12.5%"></div></div>
+  <div class="flow-controls-row">
+    <div class="flow-bar">
+      <button type="button" class="flow-btn" data-act="prev" aria-label="上一步" title="上一步 (←)">← 上一步</button>
+      <button type="button" class="flow-btn primary" data-act="play" aria-label="自动播放" title="播放 / 暂停 (Space)">▶ 自动播放</button>
+      <button type="button" class="flow-btn" data-act="next" aria-label="下一步" title="下一步 (→)">下一步 →</button>
+    </div>
+    <span class="flow-count">步骤 1 / 8</span>
+  </div>
+  <div class="flow-steps" role="tablist" aria-label="流程步骤列表"><button type="button" class="step-chip active" data-step="0" title="初始化 LatchMemo 并锁根" aria-label="第 1 步：初始化 LatchMemo 并锁根"><span class="step-chip-num">1</span><span class="step-chip-label">初始化 LatchMemo 并锁根</span></button><button type="button" class="step-chip" data-step="1" title="蟹行取子节点并加锁" aria-label="第 2 步：蟹行取子节点并加锁"><span class="step-chip-num">2</span><span class="step-chip-label">蟹行取子节点并加锁</span></button><button type="button" class="step-chip" data-step="2" title="判断节点是否安全" aria-label="第 3 步：判断节点是否安全"><span class="step-chip-num">3</span><span class="step-chip-label">判断节点是否安全</span></button><button type="button" class="step-chip" data-step="3" title="安全则释放祖先锁" aria-label="第 4 步：安全则释放祖先锁"><span class="step-chip-num">4</span><span class="step-chip-label">安全则释放祖先锁</span></button><button type="button" class="step-chip" data-step="4" title="循环下探到叶结点" aria-label="第 5 步：循环下探到叶结点"><span class="step-chip-num">5</span><span class="step-chip-label">循环下探到叶结点</span></button><button type="button" class="step-chip" data-step="5" title="叶内插入与分裂" aria-label="第 6 步：叶内插入与分裂"><span class="step-chip-num">6</span><span class="step-chip-label">叶内插入与分裂</span></button><button type="button" class="step-chip" data-step="6" title="父结点回插" aria-label="第 7 步：父结点回插"><span class="step-chip-num">7</span><span class="step-chip-label">父结点回插</span></button><button type="button" class="step-chip" data-step="7" title="统一释放资源" aria-label="第 8 步：统一释放资源"><span class="step-chip-num">8</span><span class="step-chip-label">统一释放资源</span></button></div>
+  <div class="flow-desc" aria-live="polite">
+    <div class="flow-desc-head">
+      <span class="flow-desc-badge">STEP 1 / 8</span>
+      <strong class="flow-desc-title">初始化 LatchMemo 并锁根</strong>
+      <div class="flow-desc-tags"><span class="flow-tag">根节点加锁</span></div>
+    </div>
+    <p class="flow-desc-text">find_leaf 是所有操作的基本动作，memo（LatchMemo）先初始化，记录加过的锁与访问过的页面，然后对 root page 加锁。</p>
+  </div>
+  <details class="flow-notes"><summary><span>边界与文档未决点（4 项事实核对）</span></summary><ul><li>文档以问题形式提出“为什么一定要先执行解锁，再执行 unpin”，未给出答案。</li><li>插入/删除伪代码（find_leaf、release_parent、insert_entry_into_parent 等）位于“处理流程”一节，本流程以其为依据，anchor 取协议描述的“Crabing Protocol”。</li><li>根节点数据不被 Frame 的锁保护，需额外加锁并使用独特的“安全”判断，详见“根节点处理”一节。</li><li>扫描/遍历用 try_read_lock，失败即返回 LOCK_WAIT 重试，文档称这种方法很低效；CONCURRENCY=OFF 时所有加解锁为空操作。</li></ul></details>
+</section></div>
+<article class="content"><h1 id="b-树并发操作">B+ 树并发操作</h1>
+<blockquote>
+<p><a target="_blank" rel="noopener" href="https://github.com/oceanbase/miniob">MiniOB</a> 是 <a target="_blank" rel="noopener" href="https://github.com/oceanbase/oceanbase">OceanBase</a> 联合华中科技大学推出的一款用于教学的小型数据库系统，希望能够帮助数据库爱好者系统性的学习数据库原理与实战。</p>
+</blockquote>
+<h2 id="b-树介绍">B+ 树介绍</h2>
+<p>B+ 树是传统数据库中常见的索引数据结构，比如MySQL、PostgreSQL都实现了B+树索引。B+ 树是一个平衡多叉树，层级少（通常只有3层）、数据块（内部节点/叶子节点）大小固定，是一个非常优秀的磁盘数据结构。关于B+ 树的原理和实现，网上有非常多的介绍，就不在此聒噪。这里将介绍如何实现支持并发操作的B+树以及MiniOB中的实现。</p>
+<h2 id="b树的并发操作">B+树的并发操作</h2>
+<p>在多线程并发操作时，通常使用的手段是加锁，这里的实现方法也是这样。不过在学习并发B+树实现原理之前，需要对B+树的实现比较熟悉，有兴趣的同学可以网上搜索一下。</p>
+<h3 id="crabing-protocol">Crabing Protocol</h3>
+<p>在操作B+树时加对应的读写锁是一种最简单粗暴但是有效的方法，只是这样实现效率不高。于是就有一些研究创建了更高效的并发协议，并且会在协议设计上防止死锁的发生。
+<img loading="lazy" src="../../docs/design/images/bplus-tree.jpg" alt="B+树示例" /></p>
+<p>B+树是一个树状的结构，并且所有的数据都是在叶子节点上，每次操作，几乎都是从根节点开始向下遍历，直到找到对应的叶子节点。然后在叶子节点执行相关操作，如果对上层节点会产生影响，必须需要重新平衡，那就反方向回溯调整节点。
+Crabing协议是从根节点开始加锁，找到对应的子节点，就加上子节点的锁。一直循环到叶子节点。在拿到某个子节点锁时，如果当前节点是“安全的”，那就可以释放上级节点的锁。</p>
+<p><strong>什么是“安全的”</strong>
+如果在操作某个节点时，可以确定这个节点上的动作，不会影响到它的父节点，那就说是“安全的”。
+B+树上节点的操作有三个：插入、删除和查询。</p>
+<ul>
+<li>插入：一次仅插入一个数据。如果插入一个数据后，这个节点不需要分裂，就是当前节点元素个数再增加一个，也不会达到一个节点允许容纳的最大个数，那就是安全的。不会分裂就不会影响到父节点。</li>
+<li>删除：一次仅删除一个数据。如果删除一个数据后，这个节点不需要与其它节点合并，就是当前节点元素个数删除一个后，也不会达到节点允许容纳的最小值，那就是安全的。不需要合并就不会影响到父节点。</li>
+<li>查询：读取数据对节点来说永远是安全的。</li>
+</ul>
+<p>B+树的操作除了上述的插入、删除和查询，还有一个扫描操作。比如遍历所有的数据，通常是从根节点，找到最左边的叶子节点，然后从向右依次访问各个叶子节点。此时与加锁的顺序，与之前描述的几种方式是不同的，那为了防止死锁，就需要对遍历做特殊处理。一种简单的方法是，在访问某个叶子节点时，尝试对叶子节点加锁，如果判断需要等待，那就退出本次遍历扫描操作，重新来一遍。当然这种方法很低效，有兴趣的同学可以参考[2]，了解更高效的扫描加锁方案。</p>
+<p>问题：哪种场景下，扫描加锁可能会与更新操作的加锁引起死锁？
+问题：请参考[2]，给出一个遍历时不需要重试的加锁方案。</p>
+<h3 id="miniob实现">MiniOB实现</h3>
+<p>MiniOB的B+树并发实现方案与上个章节描述的方法是一致的。这里介绍一些实现细节。</p>
+<blockquote>
+<p>在这里假设同学们对B+树的实现已经有了一定的了解。</p>
+</blockquote>
+<h4 id="b树与buffer-pool">B+树与Buffer Pool</h4>
+<p>B+树的数据是放在磁盘上的，但是直接读写磁盘是很慢的一个操作，因此这里增加一个内存缓冲层，叫做Buffer Pool。了解数据库实现的同学对这个名词不会陌生。在MiniOB中，Buffer Pool的实现是 <code>class DiskBufferPool</code>。对Buffer Pool实现不太了解也没关系，这里接单介绍一下。</p>
+<p><code>DiskBufferPool</code> 将一个磁盘文件按照页来划分(假设一页是8K，但是不一定)，每次从磁盘中读取文件或者将数据写入到文件，都是以页为单位的。在将文件某个页面加载到内存中时，需要申请一块内存。内存通常会比磁盘要小很多，就需要引入内存管理。在这里引入Frame（页帧）的概念(参考 <code>class Frame</code>)，每个Frame关联一个页面。<code>FrameManager</code>负责分配、释放Frame，并且在没有足够Frame的情况下，淘汰掉一些Frame，然后将这些Frame关联到新的磁盘页面。</p>
+<p>那如何知道某个Frame关联的页面是否可以释放，然后可以与其它页面关联？
+如果这个Frame没有任何人使用，就可以重新关联到其它页面。这里使用的方法是引用计数，称为 <code>pin_count</code>。每次获取某个Frame时，<code>pin_count</code>就加1，操作完释放时，<code>pin_count</code>减1。如果<code>pin_count</code>是0，就可以将页面数据刷新到磁盘（如果需要的话），然后将Frame与磁盘文件的其它数据块关联起来。</p>
+<p>为了支持并发操作，Frame引入了读写锁。操作B+树时，就需要加对应的读写锁。</p>
+<p>B+ 树的数据保存在磁盘，其树节点，包括内部节点和叶子节点，都对应一个页面。当对某个节点操作时，需要申请相应的Frame，<code>pin_count</code>加1，然后加读锁/写锁。由于访问子节点时，父节点的锁可能可以释放，也可能不能释放，那么需要记录下某个某个操作在整个过程中，加了哪些锁，对哪些frame 做了pin操作，以便在合适的时机，能够释放掉所有相关的资源，防止资源泄露。这里引入<code>class LatchMemo</code> 记录当前访问过的页面，加过的锁。</p>
+<p>问题：为什么一定要先执行解锁，再执行unpin(frame引用计数减1)?</p>
+<h4 id="处理流程">处理流程</h4>
+<p>B+树相关的操作一共有4个：插入、删除、查找和遍历/扫描。这里对每个操作的流程都做一个汇总说明，希望能帮助大家了解大致的流程。</p>
+<p><strong>插入操作</strong>
+除了查询和扫描操作需要加读锁，其它操作都是写锁。</p>
+<pre><code class="language-cpp">- leaf_node = find_leaf // 查找叶子节点是所有操作的基本动作
+    memo.init // memo &lt;=&gt; LatchMemo，记录加过的锁、访问过的页面
+    lock root page
+  - node = crabing_protocal_fetch_page(root_page)
+    loop: while node is not leaf // 循环查找，直到找到叶子节点
+      child_page = get_child(node)
+    - node = crabing_protocal_fetch_page(child_page)
+        frame = get_page(child_page, memo)
+        lock_write(memo, frame)
+        node = get_node(frame)
+        // 如果当前节点是安全的，就释放掉所有父节点和祖先节点的锁、pin_count
+        release_parent(memo) if is_safe(node)
+
+- insert_entry_into_leaf(leaf_node)
+  - split if node.size == node.max_size
+  - loop: insert_entry_into_parent // 如果执行过分裂，那么父节点也会受到影响
+
+- memo.release_all // LatchMemo 帮我们做资源释放
+</code></pre>
+<p><strong>删除操作</strong>
+与插入一样，需要对操作的节点加写锁。</p>
+<pre><code class="language-cpp">- leaf_node = find_leaf // 查找的逻辑与插入中的相同
+- leaf_node.remove_entry
+- node = leaf_node
+- loop: coalesce_or_redistribute(node) if node.size &lt; node.min_size and node is not root
+    neighbor_node = get_neighbor(node)
+    // 两个节点间的数据重新分配一下
+    redistribute(node, neighbor_node) if node.size + neighbor_node.size &gt; node.max_size
+    // 合并两个节点
+    coalesce(node, neighbor_node) if node.size + neighbor_node.size &lt;= node.max_size
+
+  memo.release_all
+</code></pre>
+<p><strong>查找操作</strong>
+查找是只读的，所以只加读锁</p>
+<pre><code class="language-cpp">- leaf_node = find_leaf // 与插入的查找叶子节点逻辑相同。不过对所有节点的操作都是安全的
+- return leaf_node.find(entry)
+- memo.release_all
+</code></pre>
+<p><strong>扫描/遍历操作</strong></p>
+<pre><code class="language-cpp">- leaf_node = find_left_node
+  loop: node != nullptr
+      scan node
+      node_right = node-&gt;right // 遍历直接从最左边的叶子节点，一直遍历到最右边
+      return LOCK_WAIT if node_right.try_read_lock // 不直接加锁，而是尝试加锁，一旦失败就返回
+      node = node_right
+      memo.release_last // 释放当前节点之前加到的锁
+</code></pre>
+<h4 id="根节点处理">根节点处理</h4>
+<p>前面描述的几个操作，没有特殊考虑根节点。根节点与其它节点相比有一些特殊的地方：</p>
+<ul>
+<li>B+树有一个单独的数据记录根节点的页面ID，如果根节点发生变更，这个数据也要随着变更。这个数据不是被Frame的锁保护的；</li>
+<li>根节点具有一定的特殊性，它是否“安全”，就是根节点是否需要变更，与普通节点的判断有些不同。</li>
+</ul>
+<p>按照上面的描述，我们在更新（插入/删除）执行时，除了对节点加锁，还需要对记录根节点的数据加锁，并且使用独特的判断是否“安全的”方法。</p>
+<p>在MiniOB中，可以参考<code>LatchMemo</code>，是直接使用xlatch/slatch对Mutex来记录加过的锁，这里可以直接把根节点数据保护锁，告诉LatchMemo，让它来负责相关处理工作。
+判断根节点是否安全，可以参考<code>IndexNodeHandler::is_safe</code>中<code>is_root_node</code>相关的判断。</p>
+<h4 id="如何测试">如何测试</h4>
+<p>想要保证并发实现没有问题是在太困难了，虽然有一些工具来证明自己的逻辑模型没有问题，但是这些工具使用起来也很困难。这里使用了一个比较简单的方法，基于google benchmark框架，编写了一个多线程请求客户端。如果多个客户端在一段时间内，一直能够比较平稳的发起请求与收到应答，就认为B+树的并发没有问题。测试代码在<code>bplus_tree_concurrency_test.cpp</code>文件中，这里包含了多线程插入、删除、查询、扫描以及混合场景测试。</p>
+<h3 id="其它">其它</h3>
+<h4 id="有条件的开启并发">有条件的开启并发</h4>
+<p>MiniOB是一个用来学习的小型数据库，为了简化上手难度，只有使用-DCONCURRENCY=ON时，并发才能生效，可以参考 mutex.h中<code>class Mutex</code>和<code>class SharedMutex</code>的实现。当CONCURRENCY=OFF时，所有的加锁和解锁函数相当于什么都没做。</p>
+<h4 id="并发中的调试">并发中的调试</h4>
+<p>死锁是让人非常头疼的事情，我们给Frame增加了调试日志，并且配合pin_count的动作，每次加锁、解锁以及pin/unpin都会打印相关日志，并在出现非预期的情况下，直接ABORT，以尽早的发现问题。这个调试能力需要在编译时使用条件 <code>-DDEBUG=ON</code> 才会生效。
+以写锁为例：</p>
+<pre><code class="language-cpp">void Frame::write_latch(intptr_t xid)
+{
+  {
+    std::scoped_lock debug_lock(debug_lock_);  // 如果非DEBUG模式编译，什么都不会做
+    ASSERT(pin_count_.load() &gt; 0,   // 加锁时，pin_count必须大于0，可以想想为什么？
+           &quot;frame lock. write lock failed while pin count is invalid. &quot;
+           &quot;this=%p, pin=%d, pageNum=%d, fd=%d, xid=%lx, lbt=%s&quot;, // 这里会打印各种相关的数据，帮助调试
+           this, pin_count_.load(), page_.page_num, file_desc_, xid, lbt()); // lbt会打印出调用栈信息
+
+    ASSERT(write_locker_ != xid, &quot;frame lock write twice.&quot; ...);
+    ASSERT(read_lockers_.find(xid) == read_lockers_.end(),
+           &quot;frame lock write while holding the read lock.&quot; ...);
+  }
+
+  lock_.lock();
+  write_locker_ = xid;
+
+  LOG_DEBUG(&quot;frame write lock success.&quot; ...); // 加锁成功也打印一个日志。注意日志级别是DEBUG
+}
+</code></pre>
+<h2 id="参考">参考</h2>
+<p>[1] <a target="_blank" rel="noopener" href="https://15445.courses.cs.cmu.edu/fall2021/notes/08-indexconcurrency.pdf">15445 indexconcurrency</a></p>
+<p>[2] Concurrency of Operations on B-Trees</p>
+<p>[3] MySQL/MariaDB mini trans相关代码</p>
+</article>
+<nav class="pager" aria-label="相邻文档导航"><a class="prev" href="miniob-bplus-tree.html"><span>← 上一篇</span>MiniOB B+Tree 实现</a><a class="next" href="miniob-thread-model.html"><span>下一篇 →</span>线程模型</a></nav>
+<p class="source-line">源文件：<a href="../../docs/design/miniob-bplus-tree-concurrency.md">design/miniob-bplus-tree-concurrency.md</a></p>
+
+    <footer class="page-footer">
+      <span>由 <code>docs/visual/build.py</code> &amp; <code>draw_diagrams.py</code> 从 <code>docs/docs</code> 生成</span>
+      <span>MiniOB · 可视化技术文档</span>
+    </footer>
+  </main>
+  <aside class="page-toc" aria-label="本页目录"><div class="toc-inner"><p class="toc-title">本页导览</p><ul class="toc-list"><li class="toc-item toc-flow"><a href="#flow-bplus-tree-concurrency-latching">▶ 流程：B+ 树并发加锁（蟹行协议）</a></li><li class="toc-item toc-l2"><a href="#b-树介绍">B+ 树介绍</a></li><li class="toc-item toc-l2"><a href="#b树的并发操作">B+树的并发操作</a></li><li class="toc-item toc-l3"><a href="#crabing-protocol">Crabing Protocol</a></li><li class="toc-item toc-l3"><a href="#miniob实现">MiniOB实现</a></li><li class="toc-item toc-l3"><a href="#其它">其它</a></li><li class="toc-item toc-l2"><a href="#参考">参考</a></li></ul><a class="toc-top" href="#top">↑ 回到顶部</a></div></aside>
+</div>
+<div class="nav-scrim" id="navScrim"></div>
+<div class="diagram-modal" id="diagramModal" hidden role="dialog" aria-modal="true" aria-label="图表放大检视">
+  <div class="diagram-modal-bar">
+    <span class="diagram-modal-title" id="diagramModalTitle">架构与流程图检视</span>
+    <button type="button" class="diagram-modal-close" id="diagramModalClose" aria-label="关闭">✕ 关闭 (Esc)</button>
+  </div>
+  <div class="diagram-modal-body" id="diagramModalBody"></div>
+</div>
+<script src="../assets/markmap-config.js"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/markmap-autoloader@0.18"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/@highlightjs/cdn-assets@11/highlight.min.js"></script>
+<script type="application/json" id="flow-data">[{"id": "bplus-tree-concurrency-latching", "title": "B+ 树并发加锁（蟹行协议）", "source": "design/miniob-bplus-tree-concurrency.md", "anchor": "Crabing Protocol", "nodes": [{"id": "lock_root", "label": "根节点加锁"}, {"id": "crab_child", "label": "蟹行取子页"}, {"id": "lock_child", "label": "子节点加写锁"}, {"id": "is_safe", "label": "判断节点是否安全"}, {"id": "release_parent", "label": "安全则释放祖先"}, {"id": "descend", "label": "非叶结点继续下探"}, {"id": "leaf_insert", "label": "叶结点执行插入"}, {"id": "split_parent", "label": "分裂则回插父结点"}, {"id": "memo_release", "label": "memo 统一释放"}], "edges": [["lock_root", "crab_child"], ["crab_child", "lock_child"], ["lock_child", "is_safe"], ["is_safe", "release_parent", "安全"], ["is_safe", "descend", "不安全，保留锁"], ["release_parent", "descend"], ["descend", "crab_child", "循环向下"], ["descend", "leaf_insert", "到达叶结点"], ["leaf_insert", "split_parent", "发生分裂"], ["leaf_insert", "memo_release"], ["split_parent", "memo_release"]], "steps": [{"title": "初始化 LatchMemo 并锁根", "desc": "find_leaf 是所有操作的基本动作，memo（LatchMemo）先初始化，记录加过的锁与访问过的页面，然后对 root page 加锁。", "highlight": ["lock_root"]}, {"title": "蟹行取子节点并加锁", "desc": "通过 crabing_protocal_fetch_page 取子节点页面（pin_count 加 1），再对 frame 加写锁并取出 node；插入、删除用写锁，查询用读锁。", "highlight": ["crab_child", "lock_child"]}, {"title": "判断节点是否安全", "desc": "节点上的动作不会影响父节点即“安全”：插入不会分裂、删除不会合并，查询对节点永远是安全的。", "highlight": ["is_safe"]}, {"title": "安全则释放祖先锁", "desc": "当前节点安全时调用 release_parent，释放所有父节点和祖先节点的锁与 pin_count，避免资源泄漏。", "highlight": ["release_parent"]}, {"title": "循环下探到叶结点", "desc": "循环条件是 while node is not leaf，不断 get_child 向下，直到拿到叶结点。", "highlight": ["descend"]}, {"title": "叶内插入与分裂", "desc": "在叶结点执行 insert_entry_into_leaf，若 node.size == node.max_size 则先 split。", "highlight": ["leaf_insert"]}, {"title": "父结点回插", "desc": "发生分裂后循环执行 insert_entry_into_parent，父结点插入若再触发分裂则继续向上处理。", "highlight": ["split_parent"]}, {"title": "统一释放资源", "desc": "操作结束由 memo.release_all 释放本次操作记录的所有锁与 pin。", "highlight": ["memo_release"]}], "uncertainties": ["文档以问题形式提出“为什么一定要先执行解锁，再执行 unpin”，未给出答案。", "插入/删除伪代码（find_leaf、release_parent、insert_entry_into_parent 等）位于“处理流程”一节，本流程以其为依据，anchor 取协议描述的“Crabing Protocol”。", "根节点数据不被 Frame 的锁保护，需额外加锁并使用独特的“安全”判断，详见“根节点处理”一节。", "扫描/遍历用 try_read_lock，失败即返回 LOCK_WAIT 重试，文档称这种方法很低效；CONCURRENCY=OFF 时所有加解锁为空操作。"], "summary": "蟹行协议：锁根、取子页加锁、安全则释放祖先、叶内修改。"}]</script>
+<script defer src="../assets/site.js"></script>
+</body>
+</html>

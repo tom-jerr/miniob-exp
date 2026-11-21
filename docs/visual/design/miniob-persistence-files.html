@@ -1,0 +1,730 @@
+<!doctype html>
+<html lang="zh-CN" id="top">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>持久化文件与恢复路径 · MiniOB 可视化文档</title>
+<link rel="stylesheet" href="../assets/style.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@highlightjs/cdn-assets@11/styles/atom-one-dark.min.css">
+<script src="../assets/theme.js"></script>
+
+</head>
+<body class="">
+<div class="reading-progress" id="readingProgress" aria-hidden="true"></div>
+<header class="topbar">
+  <button class="menu-btn" id="menuBtn" aria-label="切换侧栏" aria-expanded="false">☰</button>
+  <a class="brand" href="../index.html"><span class="brand-mark">M</span><span>MiniOB <em>可视化文档</em></span></a>
+  <div class="top-actions">
+    <a class="top-link" href="../flows.html">动态流程</a>
+    <button class="theme-btn" id="themeBtn" aria-label="切换明暗主题" title="切换明暗主题">◐</button>
+  </div>
+</header>
+<div class="layout has-toc">
+  <aside class="sidebar" id="sidebar"><nav class="site-nav" aria-label="文档目录"><a class="nav-home" href="../index.html"><span class="brand-mark">M</span><span>MiniOB 可视化文档</span></a><details class="nav-group"><summary>快速开始<span>2</span></summary><div class="nav-links"><a href="../how_to_build.html"><span class="nav-link-text">如何编译</span></a><a href="../how_to_run.html"><span class="nav-link-text">如何运行</span></a></div></details><details class="nav-group" open><summary>设计文档<span>21</span></summary><div class="nav-links"><a href="miniob-architecture.html"><span class="nav-link-text">MiniOB代码架构框架设计和说明</span><span class="nav-badge" title="含交互流程图或架构图">图</span></a><a href="miniob-buffer-pool.html"><span class="nav-link-text">MiniOB 存储实现</span><span class="nav-badge" title="含交互流程图或架构图">图</span></a><a href="miniob-double-write-buffer.html"><span class="nav-link-text">MiniOB Double Write Buffer 实现</span><span class="nav-badge" title="含交互流程图或架构图">图</span></a><a href="miniob-transaction.html"><span class="nav-link-text">事务模块</span><span class="nav-badge" title="含交互流程图或架构图">图</span></a><a href="miniob-durability.html"><span class="nav-link-text">持久化</span><span class="nav-badge" title="含交互流程图或架构图">图</span></a><a href="miniob-persistence-files.html" class="active" aria-current="page"><span class="nav-link-text">持久化文件与恢复路径</span><span class="nav-badge" title="含交互流程图或架构图">图</span></a><a href="miniob-checkpoint-wal.html"><span class="nav-link-text">MiniOB 检查点与 WAL 截断</span><span class="nav-badge" title="含交互流程图或架构图">图</span></a><a href="miniob-sql-parser.html"><span class="nav-link-text">SQL 词法语法分析</span></a><a href="miniob-how-to-add-new-sql.html"><span class="nav-link-text">SQL语句执行流程</span><span class="nav-badge" title="含交互流程图或架构图">图</span></a><a href="miniob-sql-expression.html"><span class="nav-link-text">SQL 表达式</span></a><a href="miniob-bplus-tree.html"><span class="nav-link-text">MiniOB B+Tree 实现</span><span class="nav-badge" title="含交互流程图或架构图">图</span></a><a href="miniob-bplus-tree-concurrency.html"><span class="nav-link-text">B+ 树并发操作</span><span class="nav-badge" title="含交互流程图或架构图">图</span></a><a href="miniob-thread-model.html"><span class="nav-link-text">线程模型</span><span class="nav-badge" title="含交互流程图或架构图">图</span></a><a href="miniob-mysql-protocol.html"><span class="nav-link-text">MySQL 通讯协议</span></a><a href="miniob-pax-storage.html"><span class="nav-link-text">MiniOB PAX 存储格式</span><span class="nav-badge" title="含交互流程图或架构图">图</span></a><a href="miniob-aggregation-and-group-by.html"><span class="nav-link-text">MiniOB 向量化执行 aggregation 和 group by 实现</span></a><a href="miniob-lsm-tree.html"><span class="nav-link-text">MiniOB LSM-Tree 存储引擎</span><span class="nav-badge" title="含交互流程图或架构图">图</span></a><a href="introduction.html"><span class="nav-link-text">功能模块设计说明</span></a><a href="miniob-btree-storage-engine.html"><span class="nav-link-text">MiniOB B+Tree 聚簇表存储引擎</span><span class="nav-badge" title="含交互流程图或架构图">图</span></a><a href="miniob-cascade.html"><span class="nav-link-text">Cascade Optimizer(查询优化器)</span><span class="nav-badge" title="含交互流程图或架构图">图</span></a><a href="miniob-update-mvcc-occ.html"><span class="nav-link-text">MiniOB UPDATE、MVCC 与 OCC 方案设计</span><span class="nav-badge" title="含交互流程图或架构图">图</span></a></div></details><details class="nav-group"><summary>课程实验<span>6</span></summary><div class="nav-links"><a href="../db_course_lab/overview.html"><span class="nav-link-text">数据库系统实现原理与实践课程实验</span></a><a href="../db_course_lab/lab0.html"><span class="nav-link-text">LAB#0 C++ 基础</span></a><a href="../db_course_lab/lab1.html"><span class="nav-link-text">LAB#1 LSM-Tree 存储引擎</span></a><a href="../db_course_lab/lab2.html"><span class="nav-link-text">LAB#2 查询引擎</span></a><a href="../db_course_lab/lab3.html"><span class="nav-link-text">LAB#3 事务引擎</span></a><a href="../db_course_lab/lab4.html"><span class="nav-link-text">LAB#4 性能测试</span></a></div></details><details class="nav-group"><summary>简明教程<span>9</span></summary><div class="nav-links"><a href="../lectures/copyright.html"><span class="nav-link-text">版权声明</span></a><a href="../lectures/lecture-1.html"><span class="nav-link-text">第1章 数据库管理系统概述</span></a><a href="../lectures/lecture-2.html"><span class="nav-link-text">第2章 数据库的存储结构</span></a><a href="../lectures/lecture-3.html"><span class="nav-link-text">第3章 索引结构</span></a><a href="../lectures/lecture-4.html"><span class="nav-link-text">第4章 查询处理</span></a><a href="../lectures/lecture-5.html"><span class="nav-link-text">第5章 查询优化</span></a><a href="../lectures/lecture-6.html"><span class="nav-link-text">第6章 事务处理</span></a><a href="../lectures/references.html"><span class="nav-link-text">参考资料</span></a><a href="../lectures/index.html"><span class="nav-link-text">数据库管理系统实现基础讲义</span></a></div></details><details class="nav-group"><summary>开发环境<span>14</span></summary><div class="nav-links"><a href="../dev-env/introduction.html"><span class="nav-link-text">搭建开发环境</span></a><a href="../dev-env/vscode_dev_with_local_virtual_env.html"><span class="nav-link-text">虚拟机+vscode remote开发</span></a><a href="../dev-env/dev_by_online.html"><span class="nav-link-text">使用在线开发环境开发 MiniOB</span></a><a href="../dev-env/how-to-dev-using-docker.html"><span class="nav-link-text">使用Docker开发MiniOB</span></a><a href="../dev-env/how_to_dev_in_docker_container_by_vscode.html"><span class="nav-link-text">使用 Docker 和 VSCode 远程开发 Miniob</span></a><a href="../dev-env/how_to_dev_in_docker_container_by_vscode_on_windows.html"><span class="nav-link-text">在windows上通过docker配置环境并利用vscode调试代码（手把手版）</span></a><a href="../dev-env/how_to_dev_miniob_by_docker_on_windows.html"><span class="nav-link-text">安装Docker</span></a><a href="../dev-env/how_to_dev_miniob_by_vscode.html"><span class="nav-link-text">环境准备</span></a><a href="../dev-env/miniob-how-to-debug.html"><span class="nav-link-text">miniob调试篇</span></a><a href="../dev-env/how_to_submit_for_testing.html"><span class="nav-link-text">训练营平台使用说明</span></a><a href="../dev-env/integration_test.html"><span class="nav-link-text">MiniOB 集成测试使用文档</span></a><a href="../dev-env/cloudlab_setup.html"><span class="nav-link-text">开源学堂在线编程环境开发 MiniOB</span></a><a href="../dev-env/how_to_dev_miniob_by_docker_on_windows_simplified.html"><span class="nav-link-text">在windows上通过docker配置环境并利用vscode编辑、开发、调试代码（简易版）</span></a><a href="../dev-env/how_to_dev_miniob_in_vscodeGUI_by_docker_on_windows.html"><span class="nav-link-text">基于Windows+docker容器在本地利用VSCode编辑、开发及调试miniob</span></a></div></details><details class="nav-group"><summary>大赛与训练<span>9</span></summary><div class="nav-links"><a href="../game/introduction.html"><span class="nav-link-text">OceanBase 数据库大赛</span></a><a href="../game/miniob-output-convention.html"><span class="nav-link-text">输出规范</span></a><a href="../game/debug-output.html"><span class="nav-link-text">输出调试信息</span></a><a href="../game/miniob-memtracer.html"><span class="nav-link-text">MemTracer</span></a><a href="../game/miniob_topics.html"><span class="nav-link-text">OceanBase 数据库大赛2021届题目</span></a><a href="../game/github-introduction.html"><span class="nav-link-text">MiniOB GitHub 在训练营中的使用说明</span></a><a href="../game/gitee-instructions.html"><span class="nav-link-text">MiniOB Gitee 在训练营中的使用说明</span></a><a href="../game/miniob-vectordb.html"><span class="nav-link-text">MiniOB 向量数据库</span></a><a href="../game/git-introduction.html"><span class="nav-link-text">Git 介绍</span></a></div></details><details class="nav-group"><summary>博客<span>2</span></summary><div class="nav-links"><a href="../blog/introduction.html"><span class="nav-link-text">介绍</span></a><a href="../blog/1.html"><span class="nav-link-text">High-Performance Concurrency Control Mechanisms for Main-Memory Databases</span></a></div></details><a class="nav-flows" href="../flows.html"><span class="dot"></span>动态流程<span class="count">13</span></a></nav></aside>
+  <main class="main">
+    
+<nav class="crumbs" aria-label="面包屑导航"><a href="../index.html">首页</a><span>/</span><span>设计文档</span><span>/</span><span aria-current="page">持久化文件与恢复路径</span></nav>
+<header class="doc-head">
+  <div class="doc-meta-bar">
+    <span class="eyebrow-pill">设计文档</span>
+    <span class="doc-meta-item">22 个章节</span>
+    <span class="doc-meta-sep">·</span>
+    <span class="doc-meta-item">约 18 分钟阅读</span>
+    <span class="doc-meta-sep">·</span>
+    <a class="doc-meta-source" href="../../docs/design/miniob-persistence-files.md">Markdown 源文件 ↗</a>
+  </div>
+  <h1>持久化文件与恢复路径</h1>
+</header>
+<section class="panel map-panel" id="doc-outline-panel">
+  <div class="panel-head">
+    <div>
+      <h2>章节结构导览</h2>
+      <span>点击任意章节直达正文；支持结构卡片与交互思维导图切换</span>
+    </div>
+    <button type="button" class="map-toggle-btn" data-toggle-markmap aria-expanded="false">⊞ 切换思维导图</button>
+  </div>
+  <div class="tree-view"><div class="tree-grid"><div class="tree-branch"><div class="tree-top"><a class="tree-link" href="#1-数据目录"><span class="tree-num">1</span><span>1. 数据目录</span></a></div></div><div class="tree-branch"><div class="tree-top"><a class="tree-link" href="#2-文件逐一说明"><span class="tree-num">2</span><span>2. 文件逐一说明</span></a></div><ul class="tree-sub"><li><a class="tree-link" href="#21-sysdb控制文件"><span class="tree-num">2.1</span><span>2.1 sys.db：控制文件</span></a></li><li><a class="tree-link" href="#22-table表-schema"><span class="tree-num">2.2</span><span>2.2 *.table：表 schema</span></a></li><li><a class="tree-link" href="#23-dataheap-表数据页"><span class="tree-num">2.3</span><span>2.3 *.data：heap 表数据页</span></a></li><li><a class="tree-link" href="#24-indexbtree-索引页"><span class="tree-num">2.4</span><span>2.4 *.index：B+tree 索引页</span></a></li><li><a class="tree-link" href="#25-dblwrdbdouble-write-buffer"><span class="tree-num">2.5</span><span>2.5 dblwr.db：double write buffer</span></a></li><li><a class="tree-link" href="#26-clogclog_first_lsnlogwal"><span class="tree-num">2.6</span><span>2.6 clog/clog_&lt;first_lsn&gt;.log：WAL</span></a></li><li><a class="tree-link" href="#27-lsm"><span class="tree-num">2.7</span><span>2.7 lsm/</span></a></li></ul></div><div class="tree-branch"><div class="tree-top"><a class="tree-link" href="#3-写入路径"><span class="tree-num">3</span><span>3. 写入路径</span></a></div><ul class="tree-sub"><li><a class="tree-link" href="#31-建表"><span class="tree-num">3.1</span><span>3.1 建表</span></a></li><li><a class="tree-link" href="#32-insert"><span class="tree-num">3.2</span><span>3.2 INSERT</span></a></li><li><a class="tree-link" href="#33-update-delete"><span class="tree-num">3.3</span><span>3.3 UPDATE / DELETE</span></a></li><li><a class="tree-link" href="#34-commit"><span class="tree-num">3.4</span><span>3.4 COMMIT</span></a></li><li><a class="tree-link" href="#35-刷脏页"><span class="tree-num">3.5</span><span>3.5 刷脏页</span></a></li></ul></div><div class="tree-branch"><div class="tree-top"><a class="tree-link" href="#4-恢复路径"><span class="tree-num">4</span><span>4. 恢复路径</span></a></div><ul class="tree-sub"><li><a class="tree-link" href="#41-wal-重放"><span class="tree-num">4.1</span><span>4.1 WAL 重放</span></a></li><li><a class="tree-link" href="#42-一个完整例子"><span class="tree-num">4.2</span><span>4.2 一个完整例子</span></a></li></ul></div><div class="tree-branch"><div class="tree-top"><a class="tree-link" href="#5-checkpoint-与-wal"><span class="tree-num">5</span><span>5. checkpoint 与 WAL</span></a></div></div><div class="tree-branch"><div class="tree-top"><a class="tree-link" href="#6-各层职责与边界"><span class="tree-num">6</span><span>6. 各层职责与边界</span></a></div></div><div class="tree-branch"><div class="tree-top"><a class="tree-link" href="#7-代码与测试索引"><span class="tree-num">7</span><span>7. 代码与测试索引</span></a></div></div></div></div>
+  <div class="markmap-wrap" hidden>
+    <div class="markmap"><script type="text/template"># 持久化文件与恢复路径
+  - [1. 数据目录](#1-数据目录)
+  - [2. 文件逐一说明](#2-文件逐一说明)
+    - [2.1 sys.db：控制文件](#21-sysdb控制文件)
+    - [2.2 *.table：表 schema](#22-table表-schema)
+    - [2.3 *.data：heap 表数据页](#23-dataheap-表数据页)
+    - [2.4 *.index：B+tree 索引页](#24-indexbtree-索引页)
+    - [2.5 dblwr.db：double write buffer](#25-dblwrdbdouble-write-buffer)
+    - [2.6 clog/clog_<first_lsn>.log：WAL](#26-clogclog_first_lsnlogwal)
+    - [2.7 lsm/](#27-lsm)
+  - [3. 写入路径](#3-写入路径)
+    - [3.1 建表](#31-建表)
+    - [3.2 INSERT](#32-insert)
+    - [3.3 UPDATE / DELETE](#33-update-delete)
+    - [3.4 COMMIT](#34-commit)
+    - [3.5 刷脏页](#35-刷脏页)
+  - [4. 恢复路径](#4-恢复路径)
+    - [4.1 WAL 重放](#41-wal-重放)
+    - [4.2 一个完整例子](#42-一个完整例子)
+  - [5. checkpoint 与 WAL](#5-checkpoint-与-wal)
+  - [6. 各层职责与边界](#6-各层职责与边界)
+  - [7. 代码与测试索引](#7-代码与测试索引)</script></div>
+  </div>
+</section>
+<div class="flows-inline">
+<figure class="arch-figure" id="arch-miniob-persistence-architecture">
+  <div class="arch-figure-head">
+    <div>
+      <span class="arch-kicker">ARCHITECTURE DIAGRAM · DETERMINISTIC SVG</span>
+      <h3>MiniOB 存储文件、缓冲池与 WAL / Double Write Buffer 恢复架构</h3>
+      <p>内存 Buffer Pool、WAL 缓冲、TxnStatusTable 与磁盘控制文件 sys.db、表数据 *.data、索引 *.index、双写缓冲 dblwr.db 的整体协作关系。</p>
+    </div>
+    <div class="arch-actions">
+      <button type="button" class="arch-zoom-btn" data-zoom-diagram aria-label="放大查看架构图">⤢ 放大检视</button>
+      <a class="arch-svg-link" href="../assets/diagrams/miniob-persistence-architecture.svg" target="_blank" rel="noopener">SVG 源文件 ↗</a>
+    </div>
+  </div>
+  <div class="arch-canvas"><svg xmlns="http://www.w3.org/2000/svg" width="1060" height="470" viewBox="0 0 1060 470" role="img" aria-labelledby="miniob-persistence-architecture-title miniob-persistence-architecture-desc" class="toolkit-diagram" data-diagram-id="miniob-persistence-architecture">
+  <title id="miniob-persistence-architecture-title">MiniOB 存储文件、缓冲池与 WAL/DWB 恢复架构图</title>
+  <desc id="miniob-persistence-architecture-desc">展示内存 Buffer Pool、日志缓冲区、Double Write Buffer 与磁盘 sys.db、*.table、*.data、*.index、clog 文件的写入与恢复关系。</desc>
+  <defs>
+    <marker id="miniob-persistence-architecture-arrow-ink" viewBox="0 0 10 10" refX="8.6" refY="5" markerWidth="6.8" markerHeight="6.8" orient="auto">
+      <path d="M0 0.8 L9.5 5 L0 9.2 Z" fill="#334155" />
+    </marker>
+    <marker id="miniob-persistence-architecture-arrow-blue" viewBox="0 0 10 10" refX="8.6" refY="5" markerWidth="6.8" markerHeight="6.8" orient="auto">
+      <path d="M0 0.8 L9.5 5 L0 9.2 Z" fill="#2554C7" />
+    </marker>
+    <marker id="miniob-persistence-architecture-arrow-amber" viewBox="0 0 10 10" refX="8.6" refY="5" markerWidth="6.8" markerHeight="6.8" orient="auto">
+      <path d="M0 0.8 L9.5 5 L0 9.2 Z" fill="#B45309" />
+    </marker>
+    <marker id="miniob-persistence-architecture-arrow-teal" viewBox="0 0 10 10" refX="8.6" refY="5" markerWidth="6.8" markerHeight="6.8" orient="auto">
+      <path d="M0 0.8 L9.5 5 L0 9.2 Z" fill="#0F766E" />
+    </marker>
+    <marker id="miniob-persistence-architecture-arrow-purple" viewBox="0 0 10 10" refX="8.6" refY="5" markerWidth="6.8" markerHeight="6.8" orient="auto">
+      <path d="M0 0.8 L9.5 5 L0 9.2 Z" fill="#6D28D9" />
+    </marker>
+    <marker id="miniob-persistence-architecture-arrow-rose" viewBox="0 0 10 10" refX="8.6" refY="5" markerWidth="6.8" markerHeight="6.8" orient="auto">
+      <path d="M0 0.8 L9.5 5 L0 9.2 Z" fill="#BE123C" />
+    </marker>
+    <marker id="miniob-persistence-architecture-arrow-muted" viewBox="0 0 10 10" refX="8.6" refY="5" markerWidth="6.8" markerHeight="6.8" orient="auto">
+      <path d="M0 0.8 L9.5 5 L0 9.2 Z" fill="#64748B" />
+    </marker>
+  </defs>
+  <g class="diag-bg">
+    <rect x="0" y="0" width="1060" height="470" rx="12" fill="#FCFDFE" stroke="none" class="diag-canvas-bg" />
+  </g>
+  <g class="diag-lanes">
+    <g class="diag-lane">
+      <rect x="16" y="16" width="504" height="250" rx="10" fill="#F0F5FF" stroke="#2554C7" stroke-width="1.5" class="diag-lane-rect" />
+      <text x="30" y="38" font-family="&quot;Noto Sans SC&quot;, &quot;PingFang SC&quot;, &quot;Microsoft YaHei&quot;, &quot;Segoe UI&quot;, Arial, sans-serif" font-size="12.8" font-weight="700" fill="#1E40AF" class="diag-lane-title">内存运行态 (In-Memory Buffer &amp; Transaction State)</text>
+      <text x="506" y="38" font-family="&quot;JetBrains Mono&quot;, &quot;SFMono-Regular&quot;, Consolas, &quot;Liberation Mono&quot;, monospace" font-size="11.2" font-weight="500" text-anchor="end" fill="#7B89A1" class="diag-lane-sub">Buffer Pool + Log Buffer + TxnStatusTable</text>
+    </g>
+    <g class="diag-lane">
+      <rect x="536" y="16" width="508" height="250" rx="10" fill="#FFF9EB" stroke="#B45309" stroke-width="1.5" class="diag-lane-rect" />
+      <text x="550" y="38" font-family="&quot;Noto Sans SC&quot;, &quot;PingFang SC&quot;, &quot;Microsoft YaHei&quot;, &quot;Segoe UI&quot;, Arial, sans-serif" font-size="12.8" font-weight="700" fill="#92400E" class="diag-lane-title">持久化屏障与双写缓冲 (Durability &amp; Torn-Page Protection)</text>
+      <text x="1030" y="38" font-family="&quot;JetBrains Mono&quot;, &quot;SFMono-Regular&quot;, Consolas, &quot;Liberation Mono&quot;, monospace" font-size="11.2" font-weight="500" text-anchor="end" fill="#7B89A1" class="diag-lane-sub">WAL Write-Ahead + Double Write Buffer + Db::sync()</text>
+    </g>
+    <g class="diag-lane">
+      <rect x="16" y="286" width="1028" height="168" rx="10" fill="#F0FDFA" stroke="#0F766E" stroke-width="1.5" class="diag-lane-rect" />
+      <text x="30" y="308" font-family="&quot;Noto Sans SC&quot;, &quot;PingFang SC&quot;, &quot;Microsoft YaHei&quot;, &quot;Segoe UI&quot;, Arial, sans-serif" font-size="12.8" font-weight="700" fill="#115E59" class="diag-lane-title">数据库磁盘目录结构 (miniob/db/sys/ Physical Files &amp; Page Layout)</text>
+      <text x="1030" y="308" font-family="&quot;JetBrains Mono&quot;, &quot;SFMono-Regular&quot;, Consolas, &quot;Liberation Mono&quot;, monospace" font-size="11.2" font-weight="500" text-anchor="end" fill="#7B89A1" class="diag-lane-sub">8KB Page {lsn, check_sum, data} · Atomic Control File sys.db</text>
+    </g>
+  </g>
+  <g class="diag-edges">
+    <g class="flow-edge">
+      <path d="M 144.0 130.0 L 144.0 172.0" fill="none" stroke="#6D28D9" stroke-width="1.9" stroke-linejoin="round" stroke-linecap="round" class="flow-edge-path" marker-end="url(#miniob-persistence-architecture-arrow-purple)" />
+      <rect x="110.8" y="141.5" width="66.4" height="19.0" rx="5.5" fill="#FFFFFF" stroke="#CBD5E1" stroke-width="1.1" class="flow-edge-pill" />
+      <text x="144.0" y="154.8" font-family="&quot;Noto Sans SC&quot;, &quot;PingFang SC&quot;, &quot;Microsoft YaHei&quot;, &quot;Segoe UI&quot;, Arial, sans-serif" font-size="11.2" font-weight="600" text-anchor="middle" fill="#526077" class="flow-edge-label">产生 redo</text>
+    </g>
+    <g class="flow-edge">
+      <path d="M 144.0 172.0 L 144.0 151.0 L 528.0 151.0 L 528.0 94.0 L 556.0 94.0" fill="none" stroke="#6D28D9" stroke-width="1.9" stroke-linejoin="round" stroke-linecap="round" class="flow-edge-path" marker-end="url(#miniob-persistence-architecture-arrow-purple)" />
+      <rect x="336.3" y="141.5" width="103.4" height="19.0" rx="5.5" fill="#FFFFFF" stroke="#CBD5E1" stroke-width="1.1" class="flow-edge-pill" />
+      <text x="388.0" y="154.8" font-family="&quot;Noto Sans SC&quot;, &quot;PingFang SC&quot;, &quot;Microsoft YaHei&quot;, &quot;Segoe UI&quot;, Arial, sans-serif" font-size="11.2" font-weight="600" text-anchor="middle" fill="#526077" class="flow-edge-label">刷盘前 wait_lsn</text>
+    </g>
+    <g class="flow-edge">
+      <path d="M 782.0 94.0 L 800.0 94.0" fill="none" stroke="#B45309" stroke-width="1.9" stroke-linejoin="round" stroke-linecap="round" class="flow-edge-path" marker-end="url(#miniob-persistence-architecture-arrow-amber)" />
+    </g>
+    <g class="flow-edge">
+      <path d="M 791.0 244.0 L 791.0 274.0 L 128.0 274.0 L 128.0 342.0" fill="none" stroke="#B45309" stroke-width="1.9" stroke-linejoin="round" stroke-linecap="round" class="flow-edge-path" marker-end="url(#miniob-persistence-architecture-arrow-amber)" />
+      <rect x="262.0" y="264.5" width="115.9" height="19.0" rx="5.5" fill="#FFFFFF" stroke="#CBD5E1" stroke-width="1.1" class="flow-edge-pill" />
+      <text x="320.0" y="277.8" font-family="&quot;Noto Sans SC&quot;, &quot;PingFang SC&quot;, &quot;Microsoft YaHei&quot;, &quot;Segoe UI&quot;, Arial, sans-serif" font-size="11.2" font-weight="600" text-anchor="middle" fill="#526077" class="flow-edge-label">tmp+fsync+rename</text>
+    </g>
+    <g class="flow-edge">
+      <path d="M 913.0 130.0 L 913.0 151.0 L 528.0 151.0 L 528.0 342.0" fill="none" stroke="#0F766E" stroke-width="1.9" stroke-linejoin="round" stroke-linecap="round" class="flow-edge-path" marker-end="url(#miniob-persistence-architecture-arrow-teal)" />
+      <rect x="483.6" y="264.5" width="88.8" height="19.0" rx="5.5" fill="#FFFFFF" stroke="#CBD5E1" stroke-width="1.1" class="flow-edge-pill" />
+      <text x="528.0" y="277.8" font-family="&quot;Noto Sans SC&quot;, &quot;PingFang SC&quot;, &quot;Microsoft YaHei&quot;, &quot;Segoe UI&quot;, Arial, sans-serif" font-size="11.2" font-weight="600" text-anchor="middle" fill="#526077" class="flow-edge-label">写回真实数据页</text>
+    </g>
+    <g class="flow-edge">
+      <path d="M 669.0 130.0 L 669.0 151.0 L 928.0 151.0 L 928.0 342.0" fill="none" stroke="#6D28D9" stroke-width="1.9" stroke-linejoin="round" stroke-linecap="round" class="flow-edge-path" marker-end="url(#miniob-persistence-architecture-arrow-purple)" />
+      <rect x="880.3" y="264.5" width="95.3" height="19.0" rx="5.5" fill="#FFFFFF" stroke="#CBD5E1" stroke-width="1.1" class="flow-edge-pill" />
+      <text x="928.0" y="277.8" font-family="&quot;Noto Sans SC&quot;, &quot;PingFang SC&quot;, &quot;Microsoft YaHei&quot;, &quot;Segoe UI&quot;, Arial, sans-serif" font-size="11.2" font-weight="600" text-anchor="middle" fill="#526077" class="flow-edge-label">持久化副本/日志</text>
+    </g>
+  </g>
+  <g class="diag-nodes">
+    <g class="flow-node role-blue" data-node-id="pa-rec" aria-label="Record &amp; B+Tree Pages (Dirty Frame: page.lsn + slot bitmap)">
+      <rect x="34" y="58" width="220" height="72" rx="9" fill="#E6EFFD" stroke="#2554C7" stroke-width="1.8" class="flow-node-rect" />
+      <rect x="42" y="64" width="94.9" height="16" rx="4.5" fill="#1E40AF" stroke="none" class="flow-node-badge-bg" />
+      <text x="89.4" y="75.5" font-family="&quot;JetBrains Mono&quot;, &quot;SFMono-Regular&quot;, Consolas, &quot;Liberation Mono&quot;, monospace" font-size="10.2" font-weight="700" text-anchor="middle" fill="#FFFFFF" class="flow-node-badge-text">BPFrameManager</text>
+      <text x="144.0" y="96.0" font-family="&quot;Noto Sans SC&quot;, &quot;PingFang SC&quot;, &quot;Microsoft YaHei&quot;, &quot;Segoe UI&quot;, Arial, sans-serif" font-size="14.2" font-weight="700" text-anchor="middle" fill="#141E30" class="flow-node-title">Record &amp; B+Tree Pages</text>
+      <text x="144.0" y="112.5" font-family="&quot;JetBrains Mono&quot;, &quot;SFMono-Regular&quot;, Consolas, &quot;Liberation Mono&quot;, monospace" font-size="11" font-weight="500" text-anchor="middle" fill="#526077" class="flow-node-sub">Dirty Frame: page.lsn + slot bitmap</text>
+    </g>
+    <g class="flow-node role-purple" data-node-id="pa-trx" aria-label="MvccTrx &amp; TxnStatusTable (begin_xid / end_xid (-T → commit_seq))">
+      <rect x="274" y="58" width="228" height="72" rx="9" fill="#EDE9FE" stroke="#6D28D9" stroke-width="1.8" class="flow-node-rect" />
+      <rect x="282" y="64" width="45.5" height="16" rx="4.5" fill="#5B21B6" stroke="none" class="flow-node-badge-bg" />
+      <text x="304.7" y="75.5" font-family="&quot;JetBrains Mono&quot;, &quot;SFMono-Regular&quot;, Consolas, &quot;Liberation Mono&quot;, monospace" font-size="10.2" font-weight="700" text-anchor="middle" fill="#FFFFFF" class="flow-node-badge-text">8B XID</text>
+      <text x="388.0" y="96.0" font-family="&quot;Noto Sans SC&quot;, &quot;PingFang SC&quot;, &quot;Microsoft YaHei&quot;, &quot;Segoe UI&quot;, Arial, sans-serif" font-size="14.2" font-weight="700" text-anchor="middle" fill="#141E30" class="flow-node-title">MvccTrx &amp; TxnStatusTable</text>
+      <text x="388.0" y="112.5" font-family="&quot;JetBrains Mono&quot;, &quot;SFMono-Regular&quot;, Consolas, &quot;Liberation Mono&quot;, monospace" font-size="11" font-weight="500" text-anchor="middle" fill="#526077" class="flow-node-sub">begin_xid / end_xid (-T → commit_seq)</text>
+    </g>
+    <g class="flow-node role-purple" data-node-id="pa-logbuf" aria-label="LogEntryBuffer (WAL 缓冲) (RECORD / BPLUS_TREE / TRX)">
+      <rect x="34" y="172" width="220" height="72" rx="9" fill="#EDE9FE" stroke="#6D28D9" stroke-width="1.8" class="flow-node-rect" />
+      <rect x="42" y="178" width="57.3" height="16" rx="4.5" fill="#5B21B6" stroke="none" class="flow-node-badge-bg" />
+      <text x="70.7" y="189.5" font-family="&quot;JetBrains Mono&quot;, &quot;SFMono-Regular&quot;, Consolas, &quot;Liberation Mono&quot;, monospace" font-size="10.2" font-weight="700" text-anchor="middle" fill="#FFFFFF" class="flow-node-badge-text">append()</text>
+      <text x="144.0" y="210.0" font-family="&quot;Noto Sans SC&quot;, &quot;PingFang SC&quot;, &quot;Microsoft YaHei&quot;, &quot;Segoe UI&quot;, Arial, sans-serif" font-size="14.2" font-weight="700" text-anchor="middle" fill="#141E30" class="flow-node-title">LogEntryBuffer (WAL 缓冲)</text>
+      <text x="144.0" y="226.5" font-family="&quot;JetBrains Mono&quot;, &quot;SFMono-Regular&quot;, Consolas, &quot;Liberation Mono&quot;, monospace" font-size="11" font-weight="500" text-anchor="middle" fill="#526077" class="flow-node-sub">RECORD / BPLUS_TREE / TRX</text>
+    </g>
+    <g class="flow-node role-teal" data-node-id="pa-gc" aria-label="MvccGc (水位垃圾回收) (回填已提交 -T &amp; 清理死版本+旧索引)">
+      <rect x="274" y="172" width="228" height="72" rx="9" fill="#CCFBF1" stroke="#0F766E" stroke-width="1.8" class="flow-node-rect" />
+      <rect x="282" y="178" width="65.3" height="16" rx="4.5" fill="#115E59" stroke="none" class="flow-node-badge-bg" />
+      <text x="314.6" y="189.5" font-family="&quot;JetBrains Mono&quot;, &quot;SFMono-Regular&quot;, Consolas, &quot;Liberation Mono&quot;, monospace" font-size="10.2" font-weight="700" text-anchor="middle" fill="#FFFFFF" class="flow-node-badge-text">Watermark</text>
+      <text x="388.0" y="210.0" font-family="&quot;Noto Sans SC&quot;, &quot;PingFang SC&quot;, &quot;Microsoft YaHei&quot;, &quot;Segoe UI&quot;, Arial, sans-serif" font-size="14.2" font-weight="700" text-anchor="middle" fill="#141E30" class="flow-node-title">MvccGc (水位垃圾回收)</text>
+      <text x="388.0" y="226.5" font-family="&quot;JetBrains Mono&quot;, &quot;SFMono-Regular&quot;, Consolas, &quot;Liberation Mono&quot;, monospace" font-size="11" font-weight="500" text-anchor="middle" fill="#526077" class="flow-node-sub">回填已提交 -T &amp; 清理死版本+旧索引</text>
+    </g>
+    <g class="flow-node role-purple" data-node-id="pa-wal" aria-label="DiskLogHandler (CLog) (wait_lsn(page.lsn / commit_lsn))">
+      <rect x="556" y="58" width="226" height="72" rx="9" fill="#EDE9FE" stroke="#6D28D9" stroke-width="1.8" class="flow-node-rect" />
+      <rect x="564" y="64" width="83.0" height="16" rx="4.5" fill="#5B21B6" stroke="none" class="flow-node-badge-bg" />
+      <text x="605.5" y="75.5" font-family="&quot;JetBrains Mono&quot;, &quot;SFMono-Regular&quot;, Consolas, &quot;Liberation Mono&quot;, monospace" font-size="10.2" font-weight="700" text-anchor="middle" fill="#FFFFFF" class="flow-node-badge-text">1. WAL First</text>
+      <text x="669.0" y="96.0" font-family="&quot;Noto Sans SC&quot;, &quot;PingFang SC&quot;, &quot;Microsoft YaHei&quot;, &quot;Segoe UI&quot;, Arial, sans-serif" font-size="14.2" font-weight="700" text-anchor="middle" fill="#141E30" class="flow-node-title">DiskLogHandler (CLog)</text>
+      <text x="669.0" y="112.5" font-family="&quot;JetBrains Mono&quot;, &quot;SFMono-Regular&quot;, Consolas, &quot;Liberation Mono&quot;, monospace" font-size="11" font-weight="500" text-anchor="middle" fill="#526077" class="flow-node-sub">wait_lsn(page.lsn / commit_lsn)</text>
+    </g>
+    <g class="flow-node role-amber" data-node-id="pa-dwb" aria-label="DiskDoubleWriteBuffer (add_page → fsync(dblwr) → 写数据页)">
+      <rect x="800" y="58" width="226" height="72" rx="9" fill="#FEF0C7" stroke="#B45309" stroke-width="1.8" class="flow-node-rect" />
+      <rect x="808" y="64" width="83.0" height="16" rx="4.5" fill="#92400E" stroke="none" class="flow-node-badge-bg" />
+      <text x="849.5" y="75.5" font-family="&quot;JetBrains Mono&quot;, &quot;SFMono-Regular&quot;, Consolas, &quot;Liberation Mono&quot;, monospace" font-size="10.2" font-weight="700" text-anchor="middle" fill="#FFFFFF" class="flow-node-badge-text">2. DWB Flush</text>
+      <text x="913.0" y="96.0" font-family="&quot;Noto Sans SC&quot;, &quot;PingFang SC&quot;, &quot;Microsoft YaHei&quot;, &quot;Segoe UI&quot;, Arial, sans-serif" font-size="14.2" font-weight="700" text-anchor="middle" fill="#141E30" class="flow-node-title">DiskDoubleWriteBuffer</text>
+      <text x="913.0" y="112.5" font-family="&quot;JetBrains Mono&quot;, &quot;SFMono-Regular&quot;, Consolas, &quot;Liberation Mono&quot;, monospace" font-size="11" font-weight="500" text-anchor="middle" fill="#526077" class="flow-node-sub">add_page → fsync(dblwr) → 写数据页</text>
+    </g>
+    <g class="flow-node role-teal" data-node-id="pa-ckpt" aria-label="Db::sync() 检查点与 Db::init() 恢复 (冻结门禁 → GC → 采样 target_lsn → DWB/数据 fsync → rename sys.db)">
+      <rect x="556" y="172" width="470" height="72" rx="9" fill="#CCFBF1" stroke="#0F766E" stroke-width="1.8" class="flow-node-rect" />
+      <rect x="564" y="178" width="86.9" height="16" rx="4.5" fill="#115E59" stroke="none" class="flow-node-badge-bg" />
+      <text x="607.5" y="189.5" font-family="&quot;JetBrains Mono&quot;, &quot;SFMono-Regular&quot;, Consolas, &quot;Liberation Mono&quot;, monospace" font-size="10.2" font-weight="700" text-anchor="middle" fill="#FFFFFF" class="flow-node-badge-text">3. Checkpoint</text>
+      <text x="791.0" y="210.0" font-family="&quot;Noto Sans SC&quot;, &quot;PingFang SC&quot;, &quot;Microsoft YaHei&quot;, &quot;Segoe UI&quot;, Arial, sans-serif" font-size="14.2" font-weight="700" text-anchor="middle" fill="#141E30" class="flow-node-title">Db::sync() 检查点与 Db::init() 恢复</text>
+      <text x="791.0" y="226.5" font-family="&quot;JetBrains Mono&quot;, &quot;SFMono-Regular&quot;, Consolas, &quot;Liberation Mono&quot;, monospace" font-size="11" font-weight="500" text-anchor="middle" fill="#526077" class="flow-node-sub">冻结门禁 → GC → 采样 target_lsn → DWB/数据 fsync → rename sys.db</text>
+    </g>
+    <g class="flow-node role-amber" data-node-id="pa-f1" aria-label="sys.db (控制文件) (&lt;checkpoint_lsn&gt; &lt;commit_seq&gt;)">
+      <rect x="34" y="342" width="188" height="90" rx="9" fill="#FEF0C7" stroke="#B45309" stroke-width="1.8" class="flow-node-rect" />
+      <text x="128.0" y="383.0" font-family="&quot;Noto Sans SC&quot;, &quot;PingFang SC&quot;, &quot;Microsoft YaHei&quot;, &quot;Segoe UI&quot;, Arial, sans-serif" font-size="14.2" font-weight="700" text-anchor="middle" fill="#141E30" class="flow-node-title">sys.db (控制文件)</text>
+      <text x="128.0" y="399.5" font-family="&quot;JetBrains Mono&quot;, &quot;SFMono-Regular&quot;, Consolas, &quot;Liberation Mono&quot;, monospace" font-size="11" font-weight="500" text-anchor="middle" fill="#526077" class="flow-node-sub">&lt;checkpoint_lsn&gt; &lt;commit_seq&gt;</text>
+    </g>
+    <g class="flow-node role-gray" data-node-id="pa-f2" aria-label="*.table (Schema JSON) (字段偏移 + __trx_xid_begin/end)">
+      <rect x="234" y="342" width="188" height="90" rx="9" fill="#F1F5F9" stroke="#475569" stroke-width="1.8" class="flow-node-rect" />
+      <text x="328.0" y="383.0" font-family="&quot;Noto Sans SC&quot;, &quot;PingFang SC&quot;, &quot;Microsoft YaHei&quot;, &quot;Segoe UI&quot;, Arial, sans-serif" font-size="14.2" font-weight="700" text-anchor="middle" fill="#141E30" class="flow-node-title">*.table (Schema JSON)</text>
+      <text x="328.0" y="399.5" font-family="&quot;JetBrains Mono&quot;, &quot;SFMono-Regular&quot;, Consolas, &quot;Liberation Mono&quot;, monospace" font-size="11" font-weight="500" text-anchor="middle" fill="#526077" class="flow-node-sub">字段偏移 + __trx_xid_begin/end</text>
+    </g>
+    <g class="flow-node role-teal" data-node-id="pa-f3" aria-label="*.data (Heap 8KB 页) (Page 0 Bitmap + Record Pages)">
+      <rect x="434" y="342" width="188" height="90" rx="9" fill="#CCFBF1" stroke="#0F766E" stroke-width="1.8" class="flow-node-rect" />
+      <text x="528.0" y="383.0" font-family="&quot;Noto Sans SC&quot;, &quot;PingFang SC&quot;, &quot;Microsoft YaHei&quot;, &quot;Segoe UI&quot;, Arial, sans-serif" font-size="14.2" font-weight="700" text-anchor="middle" fill="#141E30" class="flow-node-title">*.data (Heap 8KB 页)</text>
+      <text x="528.0" y="399.5" font-family="&quot;JetBrains Mono&quot;, &quot;SFMono-Regular&quot;, Consolas, &quot;Liberation Mono&quot;, monospace" font-size="11" font-weight="500" text-anchor="middle" fill="#526077" class="flow-node-sub">Page 0 Bitmap + Record Pages</text>
+    </g>
+    <g class="flow-node role-teal" data-node-id="pa-f4" aria-label="*.index (B+Tree 8KB 页) (IndexFileHeader + 索引结点页)">
+      <rect x="634" y="342" width="188" height="90" rx="9" fill="#CCFBF1" stroke="#0F766E" stroke-width="1.8" class="flow-node-rect" />
+      <text x="728.0" y="383.0" font-family="&quot;Noto Sans SC&quot;, &quot;PingFang SC&quot;, &quot;Microsoft YaHei&quot;, &quot;Segoe UI&quot;, Arial, sans-serif" font-size="14.2" font-weight="700" text-anchor="middle" fill="#141E30" class="flow-node-title">*.index (B+Tree 8KB 页)</text>
+      <text x="728.0" y="399.5" font-family="&quot;JetBrains Mono&quot;, &quot;SFMono-Regular&quot;, Consolas, &quot;Liberation Mono&quot;, monospace" font-size="11" font-weight="500" text-anchor="middle" fill="#526077" class="flow-node-sub">IndexFileHeader + 索引结点页</text>
+    </g>
+    <g class="flow-node role-purple" data-node-id="pa-f5" aria-label="dblwr.db &amp; clog_*.log (16页双写副本 + 分段 WAL 日志)">
+      <rect x="834" y="342" width="188" height="90" rx="9" fill="#EDE9FE" stroke="#6D28D9" stroke-width="1.8" class="flow-node-rect" />
+      <text x="928.0" y="383.0" font-family="&quot;Noto Sans SC&quot;, &quot;PingFang SC&quot;, &quot;Microsoft YaHei&quot;, &quot;Segoe UI&quot;, Arial, sans-serif" font-size="14.2" font-weight="700" text-anchor="middle" fill="#141E30" class="flow-node-title">dblwr.db &amp; clog_*.log</text>
+      <text x="928.0" y="399.5" font-family="&quot;JetBrains Mono&quot;, &quot;SFMono-Regular&quot;, Consolas, &quot;Liberation Mono&quot;, monospace" font-size="11" font-weight="500" text-anchor="middle" fill="#526077" class="flow-node-sub">16页双写副本 + 分段 WAL 日志</text>
+    </g>
+  </g>
+  <g class="diag-labels" />
+</svg></div>
+</figure></div>
+<article class="content"><h1 id="持久化文件与恢复路径">持久化文件与恢复路径</h1>
+<p>本文回答三个问题：</p>
+<ol>
+<li>MiniOB 的一个数据库目录里，<code>sys.db</code>、<code>dblwr.db</code>、<code>*.data</code>、<code>*.index</code>、<code>clog</code> 分别保存什么？</li>
+<li>一次 INSERT / UPDATE / COMMIT 怎样经过 WAL、buffer pool、double write buffer 变成磁盘状态？</li>
+<li>进程崩溃重启后，恢复为什么先做 dblwr、再做 WAL 重放，<code>page.lsn</code> 又解决了什么重复问题？</li>
+</ol>
+<p>结论先放在前面：</p>
+<ul>
+<li><code>.data</code> / <code>.index</code> 是<strong>页式物理数据</strong>，<code>page.lsn</code> 和 checksum 让重做可以跳过已落盘页；</li>
+<li><code>clog</code> 是<strong>逻辑 + 物理混合 WAL</strong>，负责页重做和事务状态重建；</li>
+<li><code>dblwr.db</code> 只保证<strong>单页写的原子性</strong>，不保证事务原子性；</li>
+<li><code>sys.db</code> 只是控制文件，保存 <code>checkpoint_lsn</code> 和持久化 <code>commit_seq</code>；</li>
+<li>当前 <strong>WAL 没有 fsync，也没有截断</strong>，所以“进程崩溃恢复”和“掉电持久化”不能混为一谈。</li>
+</ul>
+<hr />
+<h2 id="1-数据目录">1. 数据目录</h2>
+<p>一个数据库（默认 <code>sys</code>）大致包含：</p>
+<pre><code class="language-text">miniob/db/sys/
+├── sys.db                  # DB 控制文件
+├── dblwr.db                # double write buffer 共享文件
+├── t.table                 # 表 schema/元数据
+├── t.data                  # heap 表数据页
+├── i_v.index               # B+tree 索引页
+├── clog/
+│   ├── clog_0.log          # 文件名是段内第一条日志的 LSN
+│   └── clog_1000.log
+└── lsm/
+    ├── CURRENT
+    ├── 0.mf                # manifest
+    ├── 0.wal
+    └── *.sst
+</code></pre>
+<p>命名规则来自 <code>src/observer/storage/common/meta_util.h</code>：</p>
+<pre><code class="language-cpp">DB_META_SUFFIX    = &quot;.db&quot;;
+TABLE_META_SUFFIX = &quot;.table&quot;;
+TABLE_DATA_SUFFIX = &quot;.data&quot;;
+TABLE_INDEX_SUFFIX = &quot;.index&quot;;
+</code></pre>
+<p><code>sys.db</code> 不是“系统表数据”，而是数据库控制文件；真正的表数据在 <code>*.data</code>。</p>
+<hr />
+<h2 id="2-文件逐一说明">2. 文件逐一说明</h2>
+<h3 id="21-sysdb控制文件">2.1 <code>sys.db</code>：控制文件</h3>
+<p>代码：<code>Db::init_meta()</code>、<code>Db::flush_meta()</code>。</p>
+<p>内容当前是文本：</p>
+<pre><code class="language-text">&lt;checkpoint_lsn&gt; &lt;persisted_commit_seq&gt;
+</code></pre>
+<p>例子：</p>
+<pre><code class="language-text">800 120
+</code></pre>
+<ul>
+<li><code>checkpoint_lsn</code>：恢复日志的起点；</li>
+<li><code>persisted_commit_seq</code>：上次持久化的 MVCC 提交序号；</li>
+<li>旧格式只有第一个数字，读取时兼容。</li>
+</ul>
+<p>写入方式：</p>
+<pre><code class="language-text">写 sys.db.tmp
+fsync(sys.db.tmp)
+rename(sys.db.tmp, sys.db)
+fsync(数据库目录)
+</code></pre>
+<p>这个顺序解决的是“控制文件要么是旧版本，要么是新版本，不能是半个文件”。
+它没有控制页 checksum，也没有双副本；依赖文件系统 rename 的原子性。</p>
+<h3 id="22-table表-schema">2.2 <code>*.table</code>：表 schema</h3>
+<p>代码：<code>TableMeta::serialize()</code> / <code>Table::create()</code> / <code>Db::open_all_tables()</code>。</p>
+<p>内容为 JSON，主要包括：</p>
+<pre><code class="language-json">{
+  &quot;table_id&quot;: 1,
+  &quot;table_name&quot;: &quot;t&quot;,
+  &quot;storage_format&quot;: 0,
+  &quot;storage_engine&quot;: 0,
+  &quot;fields&quot;: [...],
+  &quot;indexes&quot;: [...],
+  &quot;primary_keys&quot;: [...]
+}
+</code></pre>
+<p><code>fields</code> 不只包含用户列，还包含 MVCC 隐藏列：</p>
+<pre><code class="language-text">__trx_xid_begin
+__trx_xid_end
+</code></pre>
+<p>字段元数据（offset、len、type）是解析 <code>t.data</code> 中二进制行的唯一依据。
+<code>table_id</code> 还会被 WAL 用来定位表和 buffer pool。</p>
+<p>当前 <code>.table</code> 是直接 <code>fstream</code> 写出，<strong>没有 tmp + fsync + rename</strong>；
+DDL 后的 <code>Db::sync</code> 也不会 fsync <code>.table</code>。因此表结构本身的掉电持久化
+弱于 <code>sys.db</code>。</p>
+<h3 id="23-dataheap-表数据页">2.3 <code>*.data</code>：heap 表数据页</h3>
+<p>文件按固定页组织，<code>BP_PAGE_SIZE = 8192</code> 字节：</p>
+<pre><code class="language-cpp">struct Page {
+  LSN      lsn;       // 页面最后一条 WAL 的 LSN
+  CheckSum check_sum; // 页校验和
+  char     data[BP_PAGE_DATA_SIZE];
+};
+</code></pre>
+<ul>
+<li>页 0 是 <code>BPFileHeader</code>：页总数、已分配页数、页面分配 bitmap；</li>
+<li>其它页是记录页。</li>
+</ul>
+<p>记录页布局：</p>
+<pre><code class="language-text">+-------------+-------------------+----------------------+
+| PageHeader  | slot 分配 bitmap  | 定长 record 数据区    |
++-------------+-------------------+----------------------+
+</code></pre>
+<p><code>PageHeader</code> 记录 <code>record_num</code>、<code>record_size</code>、<code>record_capacity</code>、
+<code>data_offset</code> 等。行用 <code>RID(page_num, slot_num)</code> 定位，slot 是否有效看 bitmap。</p>
+<p>MVCC 的多版本都在记录数据里：</p>
+<pre><code class="language-text">旧 RID：begin=1, end=C     // 被提交的 UPDATE/DELETE 标记为死版本
+新 RID：begin=C, end=INF   // 活版本
+</code></pre>
+<p>UPDATE 不做原地覆盖，而是写新行；旧行直到 GC 才释放。</p>
+<h3 id="24-indexbtree-索引页">2.4 <code>*.index</code>：B+tree 索引页</h3>
+<p>文件同样是 8KB 页，页 0 是 <code>IndexFileHeader</code>：</p>
+<pre><code class="language-cpp">struct IndexFileHeader {
+  PageNum  root_page;
+  int32_t  internal_max_size;
+  int32_t  leaf_max_size;
+  int32_t  attr_length;
+  int32_t  key_length;
+  AttrType attr_type;
+  int32_t  format_version;
+  int32_t  value_size;
+  int32_t  key_mode;
+  int64_t  next_rowid;
+};
+</code></pre>
+<p>heap 表的二级索引保存：</p>
+<pre><code class="language-text">key   = 索引列值
+value = RID
+</code></pre>
+<p>例如：</p>
+<pre><code class="language-text">(10 -&gt; 1:0)
+(99 -&gt; 1:1)
+</code></pre>
+<p>索引本身<strong>不保存 MVCC 可见性</strong>。扫描索引得到 RID 后，仍然要回表并调用
+<code>trx-&gt;visit_record()</code>；不可见版本会被过滤。</p>
+<p>所以 UPDATE 的索引策略是：</p>
+<ul>
+<li>旧版本的索引项先保留，给老快照回表；</li>
+<li>新版本插入新索引项；</li>
+<li>GC 删除旧版本时，删除旧索引项；</li>
+<li>删除索引项因此必须容忍“已经不存在”。</li>
+</ul>
+<h3 id="25-dblwrdbdouble-write-buffer">2.5 <code>dblwr.db</code>：double write buffer</h3>
+<p>代码：<code>DiskDoubleWriteBuffer</code>。</p>
+<p>解决的问题不是事务原子性，而是<strong>单页写的 torn page</strong>：</p>
+<blockquote>
+<p>8KB 页可能只写了一部分就掉电，checksum 失败后不能直接拿它做 WAL 重做。</p>
+</blockquote>
+<p>文件布局：</p>
+<pre><code class="language-text">+----------------------------+
+| DoubleWriteBufferHeader    |  page_cnt
++----------------------------+
+| DoubleWritePage 0          |
+|   key {buffer_pool_id,page_num}
+|   page_index
+|   valid
+|   Page {lsn,checksum,data} |
++----------------------------+
+| DoubleWritePage 1          |
+...
+</code></pre>
+<p>它是<strong>所有数据/索引 buffer pool 共享</strong>的，内存默认最多缓存 16 页。</p>
+<p>刷脏页流程：</p>
+<pre><code class="language-text">DiskBufferPool::flush_page_internal(frame)
+  -&gt; 等待 page.lsn 对应 WAL 至少写入
+  -&gt; dblwr.add_page() 把整页写入 dblwr.db
+  -&gt; frame 清除 dirty
+
+DiskDoubleWriteBuffer::flush_page()
+  -&gt; fsync(dblwr.db)
+  -&gt; 把 dblwr 页写到真实 t.data / *.index
+  -&gt; 标记 dblwr 页 valid=false
+</code></pre>
+<p>恢复时：</p>
+<pre><code class="language-text">dblwr.load_pages()
+  -&gt; 读 header.page_cnt
+  -&gt; 每个 DoubleWritePage 校验 Page checksum
+  -&gt; 只保留有效页
+
+dblwr.recover() == flush_page()
+  -&gt; 在 WAL 重放之前，把有效页写回数据/索引文件
+</code></pre>
+<p>顺序是：</p>
+<pre><code class="language-text">dblwr 修复 torn page
+  -&gt; WAL 从 checkpoint 重放
+  -&gt; page.lsn 跳过已经落盘的日志
+</code></pre>
+<p><code>dblwr</code> 不解决“事务提交了一半”这种问题；那属于 WAL + 事务状态表。</p>
+<h3 id="26-clogclog_first_lsnlogwal">2.6 <code>clog/clog_&lt;first_lsn&gt;.log</code>：WAL</h3>
+<p>代码：<code>DiskLogHandler</code>、<code>LogFileManager</code>、<code>LogFileWriter</code>。</p>
+<ul>
+<li>文件名是该文件第一条日志的 LSN，例如 <code>clog_1000.log</code>；</li>
+<li>一个文件默认最多 1000 条日志；</li>
+<li>每条日志：</li>
+</ul>
+<pre><code class="language-cpp">struct LogHeader {
+  LSN     lsn;
+  int32_t size;       // payload 大小
+  int32_t module_id;
+};
++ payload
+</code></pre>
+<p>模块：</p>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>module</th>
+<th>作用</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>BUFFER_POOL</code></td>
+<td>页分配/释放</td>
+</tr>
+<tr>
+<td><code>RECORD_MANAGER</code></td>
+<td>页面/记录的 INSERT、DELETE、UPDATE、INIT_PAGE</td>
+</tr>
+<tr>
+<td><code>BPLUS_TREE</code></td>
+<td>B+tree 页分裂、合并、root 更新等</td>
+</tr>
+<tr>
+<td><code>TRANSACTION</code></td>
+<td>MVCC 的 INSERT/DELETE/COMMIT/ROLLBACK</td>
+</tr>
+</tbody>
+</table></div>
+<p>几个细节决定了恢复行为：</p>
+<ul>
+<li><code>RECORD_MANAGER</code> 的 INSERT/UPDATE payload 包含完整 record；</li>
+<li>DELETE 只包含 RID；</li>
+<li>页上保存最后一条 WAL 的 LSN，用于 <code>page.lsn &gt;= log.lsn</code> 跳过；</li>
+<li>当前<strong>没有删除日志文件的接口</strong>，所有 <code>clog_*.log</code> 保留。</li>
+</ul>
+<div class="callout callout-warning" role="note"><div class="callout-title">警告 · WARNING</div><div class="callout-body"><p><code>LogFileWriter::write()</code> 当前只调用 <code>write(2)</code>，没有 <code>fsync/fdatasync</code>。
+<code>DiskLogHandler::wait_lsn()</code> 等待的是写入完成，不是持久化完成。
+因此“进程崩溃恢复”成立，但“掉电后 COMMIT 仍然持久”没有保证。
+这也是 WAL 截断不能贸然实现的前置原因。</p>
+</div></div>
+<h3 id="27-lsm">2.7 <code>lsm/</code></h3>
+<p><code>lsm/</code> 是 ObLsm 的文件：</p>
+<pre><code class="language-text">CURRENT
+0.mf
+0.wal
+*.sst
+</code></pre>
+<p>heap/MVCC 行数据不走这些文件；但 <code>Db::init()</code> 总会打开 ObLsm，所以每个 DB
+目录都有 <code>lsm/</code>。LSM 表引擎使用独立的一套 manifest/WAL/SST 持久化路径，
+不在 heap 的 <code>.data + dblwr + clog</code> 恢复链里。</p>
+<hr />
+<h2 id="3-写入路径">3. 写入路径</h2>
+<h3 id="31-建表">3.1 建表</h3>
+<pre><code class="language-text">CREATE TABLE t(...)
+  -&gt; Table::create()
+     -&gt; 写 t.table（JSON schema）
+     -&gt; 创建 t.data，页 0 是 BPFileHeader
+     -&gt; 创建 HeapTableEngine
+  -&gt; DDL 后 CommandExecutor 自动执行 Db::sync()
+</code></pre>
+<h3 id="32-insert">3.2 INSERT</h3>
+<pre><code class="language-text">MvccTrx::insert_record()
+  1. record 写入 begin_xid=-T, end_xid=INF
+  2. table-&gt;insert_record()
+     -&gt; RecordPageHandler 找一个空闲 slot
+     -&gt; RecordLogHandler::insert_record()
+          WAL: module=RECORD_MANAGER
+               page_num, slot_num, 整条 record
+          frame-&gt;set_lsn(lsn)
+     -&gt; 修改 bitmap 和 record 数据
+     -&gt; frame-&gt;mark_dirty()
+     -&gt; 插入索引项，B+tree 写自己的 WAL
+  3. MvccTrxLogHandler 写 TRANSACTION INSERT 日志
+</code></pre>
+<p>此时行还在 buffer pool，事务未提交，<code>begin_xid=-T</code>。</p>
+<h3 id="33-update-delete">3.3 UPDATE / DELETE</h3>
+<p>MVCC UPDATE：</p>
+<pre><code class="language-text">旧行：end_xid = -T
+新行：begin_xid = -T, end_xid = INF
+operations_ = [DELETE(old_rid), INSERT(new_rid)]
+</code></pre>
+<p>旧索引项不立即删，留给老快照；新版本插入新索引项。</p>
+<p>DELETE 同样只改 <code>end_xid</code>，不物理删除。</p>
+<h3 id="34-commit">3.4 COMMIT</h3>
+<pre><code class="language-text">MvccTrx::commit()
+  -&gt; 提交锁
+  -&gt; 分配 commit_seq
+  -&gt; 写 TRANSACTION COMMIT 日志
+  -&gt; wait_lsn(commit_seq)       // 当前只等 write，不等 fsync
+  -&gt; TxnStatusTable.commit
+  -&gt; 发布 published_commit_seq
+  -&gt; 回填 begin/end 的 -T 为 commit_seq
+</code></pre>
+<p>提交点先建立在 WAL + 状态表；数据页可以晚点刷。</p>
+<h3 id="35-刷脏页">3.5 刷脏页</h3>
+<pre><code class="language-text">DiskBufferPool::flush_page_internal(frame)
+  -&gt; log_handler_.flush_page(page)
+       wait_lsn(page.lsn)       // 保证页面的 WAL 至少写入
+  -&gt; dblwr.add_page()
+  -&gt; frame.clear_dirty()
+</code></pre>
+<p>真正写数据文件由 <code>dblwr.flush_page()</code> 完成：</p>
+<pre><code class="language-text">fsync(dblwr.db)
+  -&gt; 逐页写回 t.data / *.index
+  -&gt; invalid 标记
+</code></pre>
+<p>所以页面在落盘前，先有完整副本在 dblwr；即使真实页只写了一半，
+重启也能用 dblwr 的 checksum 有效副本修复。</p>
+<hr />
+<h2 id="4-恢复路径">4. 恢复路径</h2>
+<p><code>Db::init()</code> 的顺序：</p>
+<pre><code class="language-text">1. 打开 ObLsm
+2. 创建 TrxKit
+3. 打开 clog
+4. init_meta(): 读 sys.db 的 checkpoint_lsn / commit_seq
+5. open_all_tables(): 扫描 *.table，打开 *.data / *.index
+6. init_dblwr_buffer():
+     dblwr.load_pages()
+     dblwr.recover() = flush_page()
+        把有效 dblwr 页写回数据/索引文件
+7. recover():
+     WAL 从 checkpoint_lsn 开始 replay
+8. log_handler.start()
+9. log_replayer.on_done()
+     没有 COMMIT 的事务 rollback
+10. MvccGc 修复/回收 -T 死版本
+</code></pre>
+<h3 id="41-wal-重放">4.1 WAL 重放</h3>
+<p><code>IntegratedLogReplayer</code> 按模块分发：</p>
+<pre><code class="language-text">BUFFER_POOL
+  -&gt; redo_allocate_page / redo_deallocate_page
+
+RECORD_MANAGER
+  -&gt; 取 page
+  -&gt; if page.lsn &gt;= log.lsn: skip
+  -&gt; INIT_PAGE / INSERT / DELETE / UPDATE
+  -&gt; frame-&gt;set_lsn(log.lsn)
+
+BPLUS_TREE
+  -&gt; 重做索引页/root 修改
+
+TRANSACTION
+  -&gt; 重建 MvccTrx 的 operations/status
+  -&gt; COMMIT 标记 committed
+  -&gt; 无 COMMIT 的事务在 on_done 回滚
+</code></pre>
+<p>核心幂等条件：</p>
+<pre><code class="language-cpp">if (frame_lsn &gt;= entry.lsn()) {
+  return RC::SUCCESS;  // 页已经包含这条日志的修改
+}
+</code></pre>
+<h3 id="42-一个完整例子">4.2 一个完整例子</h3>
+<pre><code class="language-text">checkpoint = 800
+
+T950: update id=2 v=20; commit;
+U980: update id=3 v=99; -- 未提交
+sync target = 1000
+kill -9
+</code></pre>
+<p>如果 U980 仍然活跃，checkpoint gate 会检测到 active transaction，
+只刷页、不推进 checkpoint；<code>sys.db</code> 仍是 800。</p>
+<p>重启：</p>
+<pre><code class="language-text">读 sys.db -&gt; checkpoint=800
+dblwr 恢复有效页（可能已包含 LSN 1000）
+WAL replay(800):
+  - T950/U980 的 record redo
+  - page.lsn &gt;= log.lsn 的页跳过
+TRANSACTION replay:
+  - T950 有 COMMIT
+  - U980 没有 COMMIT
+on_done:
+  - U980 rollback，删除新版本，恢复旧版本 end
+结果:
+  id=2 v=20 可见
+  id=3 v=99 不可见
+</code></pre>
+<hr />
+<h2 id="5-checkpoint-与-wal">5. checkpoint 与 WAL</h2>
+<p>完整 checkpoint 的步骤和每个崩溃点见
+<a href="miniob-checkpoint-wal.html"><code>miniob-checkpoint-wal.md</code></a>。这里只强调与文件的关系：</p>
+<pre><code class="language-text">MvccGc 回填/清理
+  -&gt; 采样 target_lsn
+  -&gt; 刷所有表页到 dblwr
+  -&gt; dblwr.flush_page()
+  -&gt; fsync 所有数据/索引文件
+  -&gt; wait_lsn(target)
+  -&gt; 写 sys.db + fsync 文件/目录
+</code></pre>
+<p>当前<strong>不删除 WAL</strong>。<code>LogFileManager</code> 没有 <code>remove/truncate</code> 接口；
+<code>LSN &lt; checkpoint_lsn</code> 的日志仍然保留，所以恢复可以回退到旧 checkpoint 重放。</p>
+<hr />
+<h2 id="6-各层职责与边界">6. 各层职责与边界</h2>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>组件</th>
+<th>保证</th>
+<th>不保证</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>*.table</code></td>
+<td>schema、字段 offset、索引定义</td>
+<td>掉电时无 fsync 的表元数据</td>
+</tr>
+<tr>
+<td><code>*.data</code> / <code>*.index</code></td>
+<td>页级数据 + page LSN/checksum</td>
+<td>事务原子性、跨页原子性</td>
+</tr>
+<tr>
+<td><code>dblwr.db</code></td>
+<td>单页写的 torn-page 修复</td>
+<td>事务回滚、WAL 持久化</td>
+</tr>
+<tr>
+<td><code>clog</code></td>
+<td>页 redo、事务操作/状态重建</td>
+<td>当前没有 fsync、没有尾部半写恢复</td>
+</tr>
+<tr>
+<td><code>sys.db</code></td>
+<td>checkpoint 起点、commit_seq</td>
+<td>表清单、行数据</td>
+</tr>
+<tr>
+<td><code>TxnStatusTable</code></td>
+<td><code>-T</code> 的 COMMITTED/ACTIVE/ABORTED 解析</td>
+<td>掉电后自身不持久，需日志重建</td>
+</tr>
+<tr>
+<td><code>MvccGc</code></td>
+<td>回填 <code>-T</code>、回收死版本</td>
+<td>页面级并发安全的形式化证明</td>
+</tr>
+</tbody>
+</table></div>
+<p>当前仍然存在的关键缺口：</p>
+<ol>
+<li><strong>WAL 没有 fsync</strong>：<code>wait_lsn</code> 不是掉电持久化屏障；</li>
+<li><strong>WAL 没有半写/尾部截断恢复</strong>：只写了一半的日志会阻断恢复；</li>
+<li><strong><code>.table</code> 没有 tmp+fsync+rename</strong>；</li>
+<li><strong>LSM 文件</strong>没有纳入 heap checkpoint 的统一 fsync；</li>
+<li><strong>WAL 不截断</strong>，日志只增不减；</li>
+<li>dblwr invalid 标记与真实页写入之间没有独立的 fsync 屏障，当前靠旧 checkpoint
+和完整 WAL 兜底。</li>
+</ol>
+<hr />
+<h2 id="7-代码与测试索引">7. 代码与测试索引</h2>
+<ul>
+<li>文件命名：<code>src/observer/storage/common/meta_util.h</code></li>
+<li>控制文件：<code>src/observer/storage/db/db.cpp</code> 的 <code>init_meta/flush_meta</code></li>
+<li>表元数据：<code>src/observer/storage/table/table_meta.cpp</code></li>
+<li>记录页：<code>src/observer/storage/record/record_manager.h/.cpp</code></li>
+<li>记录 WAL：<code>src/observer/storage/record/record_log.cpp</code></li>
+<li>页/缓冲池：<code>src/observer/storage/buffer/disk_buffer_pool.*</code></li>
+<li>double write：<code>src/observer/storage/buffer/double_write_buffer.*</code></li>
+<li>WAL：<code>src/observer/storage/clog/*</code></li>
+<li>checkpoint：<code>docs/docs/design/miniob-checkpoint-wal.md</code></li>
+<li>恢复/检查点测试：<code>unittest/observer/mvcc_recovery_atomic_test.cpp</code></li>
+<li>并发压力：<code>test/case/concurrency/mvcc_concurrency_test.py</code></li>
+</ul>
+<p>Skipped: 未做真实掉电、WAL 尾部半写和 LSM 文件 fsync 的故障注入。
+Risk: 当前恢复证明的是“进程崩溃 + 保留 WAL”，不是“掉电后 COMMIT 仍持久”。</p>
+</article>
+<nav class="pager" aria-label="相邻文档导航"><a class="prev" href="miniob-durability.html"><span>← 上一篇</span>持久化</a><a class="next" href="miniob-checkpoint-wal.html"><span>下一篇 →</span>MiniOB 检查点与 WAL 截断</a></nav>
+<p class="source-line">源文件：<a href="../../docs/design/miniob-persistence-files.md">design/miniob-persistence-files.md</a></p>
+
+    <footer class="page-footer">
+      <span>由 <code>docs/visual/build.py</code> &amp; <code>draw_diagrams.py</code> 从 <code>docs/docs</code> 生成</span>
+      <span>MiniOB · 可视化技术文档</span>
+    </footer>
+  </main>
+  <aside class="page-toc" aria-label="本页目录"><div class="toc-inner"><p class="toc-title">本页导览</p><ul class="toc-list"><li class="toc-item toc-special"><a href="#arch-miniob-persistence-architecture">◈ MiniOB 存储文件、缓冲池与 WAL / Double Write Buffer 恢复架构</a></li><li class="toc-item toc-l2"><a href="#1-数据目录">1. 数据目录</a></li><li class="toc-item toc-l2"><a href="#2-文件逐一说明">2. 文件逐一说明</a></li><li class="toc-item toc-l3"><a href="#21-sysdb控制文件">2.1 sys.db：控制文件</a></li><li class="toc-item toc-l3"><a href="#22-table表-schema">2.2 *.table：表 schema</a></li><li class="toc-item toc-l3"><a href="#23-dataheap-表数据页">2.3 *.data：heap 表数据页</a></li><li class="toc-item toc-l3"><a href="#24-indexbtree-索引页">2.4 *.index：B+tree 索引页</a></li><li class="toc-item toc-l3"><a href="#25-dblwrdbdouble-write-buffer">2.5 dblwr.db：double write buffer</a></li><li class="toc-item toc-l3"><a href="#26-clogclog_first_lsnlogwal">2.6 clog/clog_&lt;first_lsn&gt;.log：WAL</a></li><li class="toc-item toc-l3"><a href="#27-lsm">2.7 lsm/</a></li><li class="toc-item toc-l2"><a href="#3-写入路径">3. 写入路径</a></li><li class="toc-item toc-l3"><a href="#31-建表">3.1 建表</a></li><li class="toc-item toc-l3"><a href="#32-insert">3.2 INSERT</a></li><li class="toc-item toc-l3"><a href="#33-update-delete">3.3 UPDATE / DELETE</a></li><li class="toc-item toc-l3"><a href="#34-commit">3.4 COMMIT</a></li><li class="toc-item toc-l3"><a href="#35-刷脏页">3.5 刷脏页</a></li><li class="toc-item toc-l2"><a href="#4-恢复路径">4. 恢复路径</a></li><li class="toc-item toc-l3"><a href="#41-wal-重放">4.1 WAL 重放</a></li><li class="toc-item toc-l3"><a href="#42-一个完整例子">4.2 一个完整例子</a></li><li class="toc-item toc-l2"><a href="#5-checkpoint-与-wal">5. checkpoint 与 WAL</a></li><li class="toc-item toc-l2"><a href="#6-各层职责与边界">6. 各层职责与边界</a></li><li class="toc-item toc-l2"><a href="#7-代码与测试索引">7. 代码与测试索引</a></li></ul><a class="toc-top" href="#top">↑ 回到顶部</a></div></aside>
+</div>
+<div class="nav-scrim" id="navScrim"></div>
+<div class="diagram-modal" id="diagramModal" hidden role="dialog" aria-modal="true" aria-label="图表放大检视">
+  <div class="diagram-modal-bar">
+    <span class="diagram-modal-title" id="diagramModalTitle">架构与流程图检视</span>
+    <button type="button" class="diagram-modal-close" id="diagramModalClose" aria-label="关闭">✕ 关闭 (Esc)</button>
+  </div>
+  <div class="diagram-modal-body" id="diagramModalBody"></div>
+</div>
+<script src="../assets/markmap-config.js"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/markmap-autoloader@0.18"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/@highlightjs/cdn-assets@11/highlight.min.js"></script>
+
+<script defer src="../assets/site.js"></script>
+</body>
+</html>

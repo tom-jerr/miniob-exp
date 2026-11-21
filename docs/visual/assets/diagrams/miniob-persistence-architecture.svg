@@ -1,0 +1,155 @@
+<?xml version='1.0' encoding='utf-8'?>
+<svg xmlns="http://www.w3.org/2000/svg" width="1060" height="470" viewBox="0 0 1060 470" role="img" aria-labelledby="miniob-persistence-architecture-title miniob-persistence-architecture-desc" class="toolkit-diagram" data-diagram-id="miniob-persistence-architecture">
+  <title id="miniob-persistence-architecture-title">MiniOB 存储文件、缓冲池与 WAL/DWB 恢复架构图</title>
+  <desc id="miniob-persistence-architecture-desc">展示内存 Buffer Pool、日志缓冲区、Double Write Buffer 与磁盘 sys.db、*.table、*.data、*.index、clog 文件的写入与恢复关系。</desc>
+  <defs>
+    <marker id="miniob-persistence-architecture-arrow-ink" viewBox="0 0 10 10" refX="8.6" refY="5" markerWidth="6.8" markerHeight="6.8" orient="auto">
+      <path d="M0 0.8 L9.5 5 L0 9.2 Z" fill="#334155" />
+    </marker>
+    <marker id="miniob-persistence-architecture-arrow-blue" viewBox="0 0 10 10" refX="8.6" refY="5" markerWidth="6.8" markerHeight="6.8" orient="auto">
+      <path d="M0 0.8 L9.5 5 L0 9.2 Z" fill="#2554C7" />
+    </marker>
+    <marker id="miniob-persistence-architecture-arrow-amber" viewBox="0 0 10 10" refX="8.6" refY="5" markerWidth="6.8" markerHeight="6.8" orient="auto">
+      <path d="M0 0.8 L9.5 5 L0 9.2 Z" fill="#B45309" />
+    </marker>
+    <marker id="miniob-persistence-architecture-arrow-teal" viewBox="0 0 10 10" refX="8.6" refY="5" markerWidth="6.8" markerHeight="6.8" orient="auto">
+      <path d="M0 0.8 L9.5 5 L0 9.2 Z" fill="#0F766E" />
+    </marker>
+    <marker id="miniob-persistence-architecture-arrow-purple" viewBox="0 0 10 10" refX="8.6" refY="5" markerWidth="6.8" markerHeight="6.8" orient="auto">
+      <path d="M0 0.8 L9.5 5 L0 9.2 Z" fill="#6D28D9" />
+    </marker>
+    <marker id="miniob-persistence-architecture-arrow-rose" viewBox="0 0 10 10" refX="8.6" refY="5" markerWidth="6.8" markerHeight="6.8" orient="auto">
+      <path d="M0 0.8 L9.5 5 L0 9.2 Z" fill="#BE123C" />
+    </marker>
+    <marker id="miniob-persistence-architecture-arrow-muted" viewBox="0 0 10 10" refX="8.6" refY="5" markerWidth="6.8" markerHeight="6.8" orient="auto">
+      <path d="M0 0.8 L9.5 5 L0 9.2 Z" fill="#64748B" />
+    </marker>
+  </defs>
+  <g class="diag-bg">
+    <rect x="0" y="0" width="1060" height="470" rx="12" fill="#FCFDFE" stroke="none" class="diag-canvas-bg" />
+  </g>
+  <g class="diag-lanes">
+    <g class="diag-lane">
+      <rect x="16" y="16" width="504" height="250" rx="10" fill="#F0F5FF" stroke="#2554C7" stroke-width="1.5" class="diag-lane-rect" />
+      <text x="30" y="38" font-family="&quot;Noto Sans SC&quot;, &quot;PingFang SC&quot;, &quot;Microsoft YaHei&quot;, &quot;Segoe UI&quot;, Arial, sans-serif" font-size="12.8" font-weight="700" fill="#1E40AF" class="diag-lane-title">内存运行态 (In-Memory Buffer &amp; Transaction State)</text>
+      <text x="506" y="38" font-family="&quot;JetBrains Mono&quot;, &quot;SFMono-Regular&quot;, Consolas, &quot;Liberation Mono&quot;, monospace" font-size="11.2" font-weight="500" text-anchor="end" fill="#7B89A1" class="diag-lane-sub">Buffer Pool + Log Buffer + TxnStatusTable</text>
+    </g>
+    <g class="diag-lane">
+      <rect x="536" y="16" width="508" height="250" rx="10" fill="#FFF9EB" stroke="#B45309" stroke-width="1.5" class="diag-lane-rect" />
+      <text x="550" y="38" font-family="&quot;Noto Sans SC&quot;, &quot;PingFang SC&quot;, &quot;Microsoft YaHei&quot;, &quot;Segoe UI&quot;, Arial, sans-serif" font-size="12.8" font-weight="700" fill="#92400E" class="diag-lane-title">持久化屏障与双写缓冲 (Durability &amp; Torn-Page Protection)</text>
+      <text x="1030" y="38" font-family="&quot;JetBrains Mono&quot;, &quot;SFMono-Regular&quot;, Consolas, &quot;Liberation Mono&quot;, monospace" font-size="11.2" font-weight="500" text-anchor="end" fill="#7B89A1" class="diag-lane-sub">WAL Write-Ahead + Double Write Buffer + Db::sync()</text>
+    </g>
+    <g class="diag-lane">
+      <rect x="16" y="286" width="1028" height="168" rx="10" fill="#F0FDFA" stroke="#0F766E" stroke-width="1.5" class="diag-lane-rect" />
+      <text x="30" y="308" font-family="&quot;Noto Sans SC&quot;, &quot;PingFang SC&quot;, &quot;Microsoft YaHei&quot;, &quot;Segoe UI&quot;, Arial, sans-serif" font-size="12.8" font-weight="700" fill="#115E59" class="diag-lane-title">数据库磁盘目录结构 (miniob/db/sys/ Physical Files &amp; Page Layout)</text>
+      <text x="1030" y="308" font-family="&quot;JetBrains Mono&quot;, &quot;SFMono-Regular&quot;, Consolas, &quot;Liberation Mono&quot;, monospace" font-size="11.2" font-weight="500" text-anchor="end" fill="#7B89A1" class="diag-lane-sub">8KB Page {lsn, check_sum, data} · Atomic Control File sys.db</text>
+    </g>
+  </g>
+  <g class="diag-edges">
+    <g class="flow-edge">
+      <path d="M 144.0 130.0 L 144.0 172.0" fill="none" stroke="#6D28D9" stroke-width="1.9" stroke-linejoin="round" stroke-linecap="round" class="flow-edge-path" marker-end="url(#miniob-persistence-architecture-arrow-purple)" />
+      <rect x="110.8" y="141.5" width="66.4" height="19.0" rx="5.5" fill="#FFFFFF" stroke="#CBD5E1" stroke-width="1.1" class="flow-edge-pill" />
+      <text x="144.0" y="154.8" font-family="&quot;Noto Sans SC&quot;, &quot;PingFang SC&quot;, &quot;Microsoft YaHei&quot;, &quot;Segoe UI&quot;, Arial, sans-serif" font-size="11.2" font-weight="600" text-anchor="middle" fill="#526077" class="flow-edge-label">产生 redo</text>
+    </g>
+    <g class="flow-edge">
+      <path d="M 144.0 172.0 L 144.0 151.0 L 528.0 151.0 L 528.0 94.0 L 556.0 94.0" fill="none" stroke="#6D28D9" stroke-width="1.9" stroke-linejoin="round" stroke-linecap="round" class="flow-edge-path" marker-end="url(#miniob-persistence-architecture-arrow-purple)" />
+      <rect x="336.3" y="141.5" width="103.4" height="19.0" rx="5.5" fill="#FFFFFF" stroke="#CBD5E1" stroke-width="1.1" class="flow-edge-pill" />
+      <text x="388.0" y="154.8" font-family="&quot;Noto Sans SC&quot;, &quot;PingFang SC&quot;, &quot;Microsoft YaHei&quot;, &quot;Segoe UI&quot;, Arial, sans-serif" font-size="11.2" font-weight="600" text-anchor="middle" fill="#526077" class="flow-edge-label">刷盘前 wait_lsn</text>
+    </g>
+    <g class="flow-edge">
+      <path d="M 782.0 94.0 L 800.0 94.0" fill="none" stroke="#B45309" stroke-width="1.9" stroke-linejoin="round" stroke-linecap="round" class="flow-edge-path" marker-end="url(#miniob-persistence-architecture-arrow-amber)" />
+    </g>
+    <g class="flow-edge">
+      <path d="M 791.0 244.0 L 791.0 274.0 L 128.0 274.0 L 128.0 342.0" fill="none" stroke="#B45309" stroke-width="1.9" stroke-linejoin="round" stroke-linecap="round" class="flow-edge-path" marker-end="url(#miniob-persistence-architecture-arrow-amber)" />
+      <rect x="262.0" y="264.5" width="115.9" height="19.0" rx="5.5" fill="#FFFFFF" stroke="#CBD5E1" stroke-width="1.1" class="flow-edge-pill" />
+      <text x="320.0" y="277.8" font-family="&quot;Noto Sans SC&quot;, &quot;PingFang SC&quot;, &quot;Microsoft YaHei&quot;, &quot;Segoe UI&quot;, Arial, sans-serif" font-size="11.2" font-weight="600" text-anchor="middle" fill="#526077" class="flow-edge-label">tmp+fsync+rename</text>
+    </g>
+    <g class="flow-edge">
+      <path d="M 913.0 130.0 L 913.0 151.0 L 528.0 151.0 L 528.0 342.0" fill="none" stroke="#0F766E" stroke-width="1.9" stroke-linejoin="round" stroke-linecap="round" class="flow-edge-path" marker-end="url(#miniob-persistence-architecture-arrow-teal)" />
+      <rect x="483.6" y="264.5" width="88.8" height="19.0" rx="5.5" fill="#FFFFFF" stroke="#CBD5E1" stroke-width="1.1" class="flow-edge-pill" />
+      <text x="528.0" y="277.8" font-family="&quot;Noto Sans SC&quot;, &quot;PingFang SC&quot;, &quot;Microsoft YaHei&quot;, &quot;Segoe UI&quot;, Arial, sans-serif" font-size="11.2" font-weight="600" text-anchor="middle" fill="#526077" class="flow-edge-label">写回真实数据页</text>
+    </g>
+    <g class="flow-edge">
+      <path d="M 669.0 130.0 L 669.0 151.0 L 928.0 151.0 L 928.0 342.0" fill="none" stroke="#6D28D9" stroke-width="1.9" stroke-linejoin="round" stroke-linecap="round" class="flow-edge-path" marker-end="url(#miniob-persistence-architecture-arrow-purple)" />
+      <rect x="880.3" y="264.5" width="95.3" height="19.0" rx="5.5" fill="#FFFFFF" stroke="#CBD5E1" stroke-width="1.1" class="flow-edge-pill" />
+      <text x="928.0" y="277.8" font-family="&quot;Noto Sans SC&quot;, &quot;PingFang SC&quot;, &quot;Microsoft YaHei&quot;, &quot;Segoe UI&quot;, Arial, sans-serif" font-size="11.2" font-weight="600" text-anchor="middle" fill="#526077" class="flow-edge-label">持久化副本/日志</text>
+    </g>
+  </g>
+  <g class="diag-nodes">
+    <g class="flow-node role-blue" data-node-id="pa-rec" aria-label="Record &amp; B+Tree Pages (Dirty Frame: page.lsn + slot bitmap)">
+      <rect x="34" y="58" width="220" height="72" rx="9" fill="#E6EFFD" stroke="#2554C7" stroke-width="1.8" class="flow-node-rect" />
+      <rect x="42" y="64" width="94.9" height="16" rx="4.5" fill="#1E40AF" stroke="none" class="flow-node-badge-bg" />
+      <text x="89.4" y="75.5" font-family="&quot;JetBrains Mono&quot;, &quot;SFMono-Regular&quot;, Consolas, &quot;Liberation Mono&quot;, monospace" font-size="10.2" font-weight="700" text-anchor="middle" fill="#FFFFFF" class="flow-node-badge-text">BPFrameManager</text>
+      <text x="144.0" y="96.0" font-family="&quot;Noto Sans SC&quot;, &quot;PingFang SC&quot;, &quot;Microsoft YaHei&quot;, &quot;Segoe UI&quot;, Arial, sans-serif" font-size="14.2" font-weight="700" text-anchor="middle" fill="#141E30" class="flow-node-title">Record &amp; B+Tree Pages</text>
+      <text x="144.0" y="112.5" font-family="&quot;JetBrains Mono&quot;, &quot;SFMono-Regular&quot;, Consolas, &quot;Liberation Mono&quot;, monospace" font-size="11" font-weight="500" text-anchor="middle" fill="#526077" class="flow-node-sub">Dirty Frame: page.lsn + slot bitmap</text>
+    </g>
+    <g class="flow-node role-purple" data-node-id="pa-trx" aria-label="MvccTrx &amp; TxnStatusTable (begin_xid / end_xid (-T → commit_seq))">
+      <rect x="274" y="58" width="228" height="72" rx="9" fill="#EDE9FE" stroke="#6D28D9" stroke-width="1.8" class="flow-node-rect" />
+      <rect x="282" y="64" width="45.5" height="16" rx="4.5" fill="#5B21B6" stroke="none" class="flow-node-badge-bg" />
+      <text x="304.7" y="75.5" font-family="&quot;JetBrains Mono&quot;, &quot;SFMono-Regular&quot;, Consolas, &quot;Liberation Mono&quot;, monospace" font-size="10.2" font-weight="700" text-anchor="middle" fill="#FFFFFF" class="flow-node-badge-text">8B XID</text>
+      <text x="388.0" y="96.0" font-family="&quot;Noto Sans SC&quot;, &quot;PingFang SC&quot;, &quot;Microsoft YaHei&quot;, &quot;Segoe UI&quot;, Arial, sans-serif" font-size="14.2" font-weight="700" text-anchor="middle" fill="#141E30" class="flow-node-title">MvccTrx &amp; TxnStatusTable</text>
+      <text x="388.0" y="112.5" font-family="&quot;JetBrains Mono&quot;, &quot;SFMono-Regular&quot;, Consolas, &quot;Liberation Mono&quot;, monospace" font-size="11" font-weight="500" text-anchor="middle" fill="#526077" class="flow-node-sub">begin_xid / end_xid (-T → commit_seq)</text>
+    </g>
+    <g class="flow-node role-purple" data-node-id="pa-logbuf" aria-label="LogEntryBuffer (WAL 缓冲) (RECORD / BPLUS_TREE / TRX)">
+      <rect x="34" y="172" width="220" height="72" rx="9" fill="#EDE9FE" stroke="#6D28D9" stroke-width="1.8" class="flow-node-rect" />
+      <rect x="42" y="178" width="57.3" height="16" rx="4.5" fill="#5B21B6" stroke="none" class="flow-node-badge-bg" />
+      <text x="70.7" y="189.5" font-family="&quot;JetBrains Mono&quot;, &quot;SFMono-Regular&quot;, Consolas, &quot;Liberation Mono&quot;, monospace" font-size="10.2" font-weight="700" text-anchor="middle" fill="#FFFFFF" class="flow-node-badge-text">append()</text>
+      <text x="144.0" y="210.0" font-family="&quot;Noto Sans SC&quot;, &quot;PingFang SC&quot;, &quot;Microsoft YaHei&quot;, &quot;Segoe UI&quot;, Arial, sans-serif" font-size="14.2" font-weight="700" text-anchor="middle" fill="#141E30" class="flow-node-title">LogEntryBuffer (WAL 缓冲)</text>
+      <text x="144.0" y="226.5" font-family="&quot;JetBrains Mono&quot;, &quot;SFMono-Regular&quot;, Consolas, &quot;Liberation Mono&quot;, monospace" font-size="11" font-weight="500" text-anchor="middle" fill="#526077" class="flow-node-sub">RECORD / BPLUS_TREE / TRX</text>
+    </g>
+    <g class="flow-node role-teal" data-node-id="pa-gc" aria-label="MvccGc (水位垃圾回收) (回填已提交 -T &amp; 清理死版本+旧索引)">
+      <rect x="274" y="172" width="228" height="72" rx="9" fill="#CCFBF1" stroke="#0F766E" stroke-width="1.8" class="flow-node-rect" />
+      <rect x="282" y="178" width="65.3" height="16" rx="4.5" fill="#115E59" stroke="none" class="flow-node-badge-bg" />
+      <text x="314.6" y="189.5" font-family="&quot;JetBrains Mono&quot;, &quot;SFMono-Regular&quot;, Consolas, &quot;Liberation Mono&quot;, monospace" font-size="10.2" font-weight="700" text-anchor="middle" fill="#FFFFFF" class="flow-node-badge-text">Watermark</text>
+      <text x="388.0" y="210.0" font-family="&quot;Noto Sans SC&quot;, &quot;PingFang SC&quot;, &quot;Microsoft YaHei&quot;, &quot;Segoe UI&quot;, Arial, sans-serif" font-size="14.2" font-weight="700" text-anchor="middle" fill="#141E30" class="flow-node-title">MvccGc (水位垃圾回收)</text>
+      <text x="388.0" y="226.5" font-family="&quot;JetBrains Mono&quot;, &quot;SFMono-Regular&quot;, Consolas, &quot;Liberation Mono&quot;, monospace" font-size="11" font-weight="500" text-anchor="middle" fill="#526077" class="flow-node-sub">回填已提交 -T &amp; 清理死版本+旧索引</text>
+    </g>
+    <g class="flow-node role-purple" data-node-id="pa-wal" aria-label="DiskLogHandler (CLog) (wait_lsn(page.lsn / commit_lsn))">
+      <rect x="556" y="58" width="226" height="72" rx="9" fill="#EDE9FE" stroke="#6D28D9" stroke-width="1.8" class="flow-node-rect" />
+      <rect x="564" y="64" width="83.0" height="16" rx="4.5" fill="#5B21B6" stroke="none" class="flow-node-badge-bg" />
+      <text x="605.5" y="75.5" font-family="&quot;JetBrains Mono&quot;, &quot;SFMono-Regular&quot;, Consolas, &quot;Liberation Mono&quot;, monospace" font-size="10.2" font-weight="700" text-anchor="middle" fill="#FFFFFF" class="flow-node-badge-text">1. WAL First</text>
+      <text x="669.0" y="96.0" font-family="&quot;Noto Sans SC&quot;, &quot;PingFang SC&quot;, &quot;Microsoft YaHei&quot;, &quot;Segoe UI&quot;, Arial, sans-serif" font-size="14.2" font-weight="700" text-anchor="middle" fill="#141E30" class="flow-node-title">DiskLogHandler (CLog)</text>
+      <text x="669.0" y="112.5" font-family="&quot;JetBrains Mono&quot;, &quot;SFMono-Regular&quot;, Consolas, &quot;Liberation Mono&quot;, monospace" font-size="11" font-weight="500" text-anchor="middle" fill="#526077" class="flow-node-sub">wait_lsn(page.lsn / commit_lsn)</text>
+    </g>
+    <g class="flow-node role-amber" data-node-id="pa-dwb" aria-label="DiskDoubleWriteBuffer (add_page → fsync(dblwr) → 写数据页)">
+      <rect x="800" y="58" width="226" height="72" rx="9" fill="#FEF0C7" stroke="#B45309" stroke-width="1.8" class="flow-node-rect" />
+      <rect x="808" y="64" width="83.0" height="16" rx="4.5" fill="#92400E" stroke="none" class="flow-node-badge-bg" />
+      <text x="849.5" y="75.5" font-family="&quot;JetBrains Mono&quot;, &quot;SFMono-Regular&quot;, Consolas, &quot;Liberation Mono&quot;, monospace" font-size="10.2" font-weight="700" text-anchor="middle" fill="#FFFFFF" class="flow-node-badge-text">2. DWB Flush</text>
+      <text x="913.0" y="96.0" font-family="&quot;Noto Sans SC&quot;, &quot;PingFang SC&quot;, &quot;Microsoft YaHei&quot;, &quot;Segoe UI&quot;, Arial, sans-serif" font-size="14.2" font-weight="700" text-anchor="middle" fill="#141E30" class="flow-node-title">DiskDoubleWriteBuffer</text>
+      <text x="913.0" y="112.5" font-family="&quot;JetBrains Mono&quot;, &quot;SFMono-Regular&quot;, Consolas, &quot;Liberation Mono&quot;, monospace" font-size="11" font-weight="500" text-anchor="middle" fill="#526077" class="flow-node-sub">add_page → fsync(dblwr) → 写数据页</text>
+    </g>
+    <g class="flow-node role-teal" data-node-id="pa-ckpt" aria-label="Db::sync() 检查点与 Db::init() 恢复 (冻结门禁 → GC → 采样 target_lsn → DWB/数据 fsync → rename sys.db)">
+      <rect x="556" y="172" width="470" height="72" rx="9" fill="#CCFBF1" stroke="#0F766E" stroke-width="1.8" class="flow-node-rect" />
+      <rect x="564" y="178" width="86.9" height="16" rx="4.5" fill="#115E59" stroke="none" class="flow-node-badge-bg" />
+      <text x="607.5" y="189.5" font-family="&quot;JetBrains Mono&quot;, &quot;SFMono-Regular&quot;, Consolas, &quot;Liberation Mono&quot;, monospace" font-size="10.2" font-weight="700" text-anchor="middle" fill="#FFFFFF" class="flow-node-badge-text">3. Checkpoint</text>
+      <text x="791.0" y="210.0" font-family="&quot;Noto Sans SC&quot;, &quot;PingFang SC&quot;, &quot;Microsoft YaHei&quot;, &quot;Segoe UI&quot;, Arial, sans-serif" font-size="14.2" font-weight="700" text-anchor="middle" fill="#141E30" class="flow-node-title">Db::sync() 检查点与 Db::init() 恢复</text>
+      <text x="791.0" y="226.5" font-family="&quot;JetBrains Mono&quot;, &quot;SFMono-Regular&quot;, Consolas, &quot;Liberation Mono&quot;, monospace" font-size="11" font-weight="500" text-anchor="middle" fill="#526077" class="flow-node-sub">冻结门禁 → GC → 采样 target_lsn → DWB/数据 fsync → rename sys.db</text>
+    </g>
+    <g class="flow-node role-amber" data-node-id="pa-f1" aria-label="sys.db (控制文件) (&lt;checkpoint_lsn&gt; &lt;commit_seq&gt;)">
+      <rect x="34" y="342" width="188" height="90" rx="9" fill="#FEF0C7" stroke="#B45309" stroke-width="1.8" class="flow-node-rect" />
+      <text x="128.0" y="383.0" font-family="&quot;Noto Sans SC&quot;, &quot;PingFang SC&quot;, &quot;Microsoft YaHei&quot;, &quot;Segoe UI&quot;, Arial, sans-serif" font-size="14.2" font-weight="700" text-anchor="middle" fill="#141E30" class="flow-node-title">sys.db (控制文件)</text>
+      <text x="128.0" y="399.5" font-family="&quot;JetBrains Mono&quot;, &quot;SFMono-Regular&quot;, Consolas, &quot;Liberation Mono&quot;, monospace" font-size="11" font-weight="500" text-anchor="middle" fill="#526077" class="flow-node-sub">&lt;checkpoint_lsn&gt; &lt;commit_seq&gt;</text>
+    </g>
+    <g class="flow-node role-gray" data-node-id="pa-f2" aria-label="*.table (Schema JSON) (字段偏移 + __trx_xid_begin/end)">
+      <rect x="234" y="342" width="188" height="90" rx="9" fill="#F1F5F9" stroke="#475569" stroke-width="1.8" class="flow-node-rect" />
+      <text x="328.0" y="383.0" font-family="&quot;Noto Sans SC&quot;, &quot;PingFang SC&quot;, &quot;Microsoft YaHei&quot;, &quot;Segoe UI&quot;, Arial, sans-serif" font-size="14.2" font-weight="700" text-anchor="middle" fill="#141E30" class="flow-node-title">*.table (Schema JSON)</text>
+      <text x="328.0" y="399.5" font-family="&quot;JetBrains Mono&quot;, &quot;SFMono-Regular&quot;, Consolas, &quot;Liberation Mono&quot;, monospace" font-size="11" font-weight="500" text-anchor="middle" fill="#526077" class="flow-node-sub">字段偏移 + __trx_xid_begin/end</text>
+    </g>
+    <g class="flow-node role-teal" data-node-id="pa-f3" aria-label="*.data (Heap 8KB 页) (Page 0 Bitmap + Record Pages)">
+      <rect x="434" y="342" width="188" height="90" rx="9" fill="#CCFBF1" stroke="#0F766E" stroke-width="1.8" class="flow-node-rect" />
+      <text x="528.0" y="383.0" font-family="&quot;Noto Sans SC&quot;, &quot;PingFang SC&quot;, &quot;Microsoft YaHei&quot;, &quot;Segoe UI&quot;, Arial, sans-serif" font-size="14.2" font-weight="700" text-anchor="middle" fill="#141E30" class="flow-node-title">*.data (Heap 8KB 页)</text>
+      <text x="528.0" y="399.5" font-family="&quot;JetBrains Mono&quot;, &quot;SFMono-Regular&quot;, Consolas, &quot;Liberation Mono&quot;, monospace" font-size="11" font-weight="500" text-anchor="middle" fill="#526077" class="flow-node-sub">Page 0 Bitmap + Record Pages</text>
+    </g>
+    <g class="flow-node role-teal" data-node-id="pa-f4" aria-label="*.index (B+Tree 8KB 页) (IndexFileHeader + 索引结点页)">
+      <rect x="634" y="342" width="188" height="90" rx="9" fill="#CCFBF1" stroke="#0F766E" stroke-width="1.8" class="flow-node-rect" />
+      <text x="728.0" y="383.0" font-family="&quot;Noto Sans SC&quot;, &quot;PingFang SC&quot;, &quot;Microsoft YaHei&quot;, &quot;Segoe UI&quot;, Arial, sans-serif" font-size="14.2" font-weight="700" text-anchor="middle" fill="#141E30" class="flow-node-title">*.index (B+Tree 8KB 页)</text>
+      <text x="728.0" y="399.5" font-family="&quot;JetBrains Mono&quot;, &quot;SFMono-Regular&quot;, Consolas, &quot;Liberation Mono&quot;, monospace" font-size="11" font-weight="500" text-anchor="middle" fill="#526077" class="flow-node-sub">IndexFileHeader + 索引结点页</text>
+    </g>
+    <g class="flow-node role-purple" data-node-id="pa-f5" aria-label="dblwr.db &amp; clog_*.log (16页双写副本 + 分段 WAL 日志)">
+      <rect x="834" y="342" width="188" height="90" rx="9" fill="#EDE9FE" stroke="#6D28D9" stroke-width="1.8" class="flow-node-rect" />
+      <text x="928.0" y="383.0" font-family="&quot;Noto Sans SC&quot;, &quot;PingFang SC&quot;, &quot;Microsoft YaHei&quot;, &quot;Segoe UI&quot;, Arial, sans-serif" font-size="14.2" font-weight="700" text-anchor="middle" fill="#141E30" class="flow-node-title">dblwr.db &amp; clog_*.log</text>
+      <text x="928.0" y="399.5" font-family="&quot;JetBrains Mono&quot;, &quot;SFMono-Regular&quot;, Consolas, &quot;Liberation Mono&quot;, monospace" font-size="11" font-weight="500" text-anchor="middle" fill="#526077" class="flow-node-sub">16页双写副本 + 分段 WAL 日志</text>
+    </g>
+  </g>
+  <g class="diag-labels" />
+</svg>

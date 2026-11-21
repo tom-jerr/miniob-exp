@@ -1,0 +1,228 @@
+<!doctype html>
+<html lang="zh-CN" id="top">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>LAB#2 查询引擎 · MiniOB 可视化文档</title>
+<link rel="stylesheet" href="../assets/style.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@highlightjs/cdn-assets@11/styles/atom-one-dark.min.css">
+<script src="../assets/theme.js"></script>
+<script>window.MathJax={tex:{inlineMath:[["$","$"],["\\(","\\)"]]}};</script><script defer src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+</head>
+<body class="">
+<div class="reading-progress" id="readingProgress" aria-hidden="true"></div>
+<header class="topbar">
+  <button class="menu-btn" id="menuBtn" aria-label="切换侧栏" aria-expanded="false">☰</button>
+  <a class="brand" href="../index.html"><span class="brand-mark">M</span><span>MiniOB <em>可视化文档</em></span></a>
+  <div class="top-actions">
+    <a class="top-link" href="../flows.html">动态流程</a>
+    <button class="theme-btn" id="themeBtn" aria-label="切换明暗主题" title="切换明暗主题">◐</button>
+  </div>
+</header>
+<div class="layout has-toc">
+  <aside class="sidebar" id="sidebar"><nav class="site-nav" aria-label="文档目录"><a class="nav-home" href="../index.html"><span class="brand-mark">M</span><span>MiniOB 可视化文档</span></a><details class="nav-group"><summary>快速开始<span>2</span></summary><div class="nav-links"><a href="../how_to_build.html"><span class="nav-link-text">如何编译</span></a><a href="../how_to_run.html"><span class="nav-link-text">如何运行</span></a></div></details><details class="nav-group"><summary>设计文档<span>21</span></summary><div class="nav-links"><a href="../design/miniob-architecture.html"><span class="nav-link-text">MiniOB代码架构框架设计和说明</span><span class="nav-badge" title="含交互流程图或架构图">图</span></a><a href="../design/miniob-buffer-pool.html"><span class="nav-link-text">MiniOB 存储实现</span><span class="nav-badge" title="含交互流程图或架构图">图</span></a><a href="../design/miniob-double-write-buffer.html"><span class="nav-link-text">MiniOB Double Write Buffer 实现</span><span class="nav-badge" title="含交互流程图或架构图">图</span></a><a href="../design/miniob-transaction.html"><span class="nav-link-text">事务模块</span><span class="nav-badge" title="含交互流程图或架构图">图</span></a><a href="../design/miniob-durability.html"><span class="nav-link-text">持久化</span><span class="nav-badge" title="含交互流程图或架构图">图</span></a><a href="../design/miniob-persistence-files.html"><span class="nav-link-text">持久化文件与恢复路径</span><span class="nav-badge" title="含交互流程图或架构图">图</span></a><a href="../design/miniob-checkpoint-wal.html"><span class="nav-link-text">MiniOB 检查点与 WAL 截断</span><span class="nav-badge" title="含交互流程图或架构图">图</span></a><a href="../design/miniob-sql-parser.html"><span class="nav-link-text">SQL 词法语法分析</span></a><a href="../design/miniob-how-to-add-new-sql.html"><span class="nav-link-text">SQL语句执行流程</span><span class="nav-badge" title="含交互流程图或架构图">图</span></a><a href="../design/miniob-sql-expression.html"><span class="nav-link-text">SQL 表达式</span></a><a href="../design/miniob-bplus-tree.html"><span class="nav-link-text">MiniOB B+Tree 实现</span><span class="nav-badge" title="含交互流程图或架构图">图</span></a><a href="../design/miniob-bplus-tree-concurrency.html"><span class="nav-link-text">B+ 树并发操作</span><span class="nav-badge" title="含交互流程图或架构图">图</span></a><a href="../design/miniob-thread-model.html"><span class="nav-link-text">线程模型</span><span class="nav-badge" title="含交互流程图或架构图">图</span></a><a href="../design/miniob-mysql-protocol.html"><span class="nav-link-text">MySQL 通讯协议</span></a><a href="../design/miniob-pax-storage.html"><span class="nav-link-text">MiniOB PAX 存储格式</span><span class="nav-badge" title="含交互流程图或架构图">图</span></a><a href="../design/miniob-aggregation-and-group-by.html"><span class="nav-link-text">MiniOB 向量化执行 aggregation 和 group by 实现</span></a><a href="../design/miniob-lsm-tree.html"><span class="nav-link-text">MiniOB LSM-Tree 存储引擎</span><span class="nav-badge" title="含交互流程图或架构图">图</span></a><a href="../design/introduction.html"><span class="nav-link-text">功能模块设计说明</span></a><a href="../design/miniob-btree-storage-engine.html"><span class="nav-link-text">MiniOB B+Tree 聚簇表存储引擎</span><span class="nav-badge" title="含交互流程图或架构图">图</span></a><a href="../design/miniob-cascade.html"><span class="nav-link-text">Cascade Optimizer(查询优化器)</span><span class="nav-badge" title="含交互流程图或架构图">图</span></a><a href="../design/miniob-update-mvcc-occ.html"><span class="nav-link-text">MiniOB UPDATE、MVCC 与 OCC 方案设计</span><span class="nav-badge" title="含交互流程图或架构图">图</span></a></div></details><details class="nav-group" open><summary>课程实验<span>6</span></summary><div class="nav-links"><a href="overview.html"><span class="nav-link-text">数据库系统实现原理与实践课程实验</span></a><a href="lab0.html"><span class="nav-link-text">LAB#0 C++ 基础</span></a><a href="lab1.html"><span class="nav-link-text">LAB#1 LSM-Tree 存储引擎</span></a><a href="lab2.html" class="active" aria-current="page"><span class="nav-link-text">LAB#2 查询引擎</span></a><a href="lab3.html"><span class="nav-link-text">LAB#3 事务引擎</span></a><a href="lab4.html"><span class="nav-link-text">LAB#4 性能测试</span></a></div></details><details class="nav-group"><summary>简明教程<span>9</span></summary><div class="nav-links"><a href="../lectures/copyright.html"><span class="nav-link-text">版权声明</span></a><a href="../lectures/lecture-1.html"><span class="nav-link-text">第1章 数据库管理系统概述</span></a><a href="../lectures/lecture-2.html"><span class="nav-link-text">第2章 数据库的存储结构</span></a><a href="../lectures/lecture-3.html"><span class="nav-link-text">第3章 索引结构</span></a><a href="../lectures/lecture-4.html"><span class="nav-link-text">第4章 查询处理</span></a><a href="../lectures/lecture-5.html"><span class="nav-link-text">第5章 查询优化</span></a><a href="../lectures/lecture-6.html"><span class="nav-link-text">第6章 事务处理</span></a><a href="../lectures/references.html"><span class="nav-link-text">参考资料</span></a><a href="../lectures/index.html"><span class="nav-link-text">数据库管理系统实现基础讲义</span></a></div></details><details class="nav-group"><summary>开发环境<span>14</span></summary><div class="nav-links"><a href="../dev-env/introduction.html"><span class="nav-link-text">搭建开发环境</span></a><a href="../dev-env/vscode_dev_with_local_virtual_env.html"><span class="nav-link-text">虚拟机+vscode remote开发</span></a><a href="../dev-env/dev_by_online.html"><span class="nav-link-text">使用在线开发环境开发 MiniOB</span></a><a href="../dev-env/how-to-dev-using-docker.html"><span class="nav-link-text">使用Docker开发MiniOB</span></a><a href="../dev-env/how_to_dev_in_docker_container_by_vscode.html"><span class="nav-link-text">使用 Docker 和 VSCode 远程开发 Miniob</span></a><a href="../dev-env/how_to_dev_in_docker_container_by_vscode_on_windows.html"><span class="nav-link-text">在windows上通过docker配置环境并利用vscode调试代码（手把手版）</span></a><a href="../dev-env/how_to_dev_miniob_by_docker_on_windows.html"><span class="nav-link-text">安装Docker</span></a><a href="../dev-env/how_to_dev_miniob_by_vscode.html"><span class="nav-link-text">环境准备</span></a><a href="../dev-env/miniob-how-to-debug.html"><span class="nav-link-text">miniob调试篇</span></a><a href="../dev-env/how_to_submit_for_testing.html"><span class="nav-link-text">训练营平台使用说明</span></a><a href="../dev-env/integration_test.html"><span class="nav-link-text">MiniOB 集成测试使用文档</span></a><a href="../dev-env/cloudlab_setup.html"><span class="nav-link-text">开源学堂在线编程环境开发 MiniOB</span></a><a href="../dev-env/how_to_dev_miniob_by_docker_on_windows_simplified.html"><span class="nav-link-text">在windows上通过docker配置环境并利用vscode编辑、开发、调试代码（简易版）</span></a><a href="../dev-env/how_to_dev_miniob_in_vscodeGUI_by_docker_on_windows.html"><span class="nav-link-text">基于Windows+docker容器在本地利用VSCode编辑、开发及调试miniob</span></a></div></details><details class="nav-group"><summary>大赛与训练<span>9</span></summary><div class="nav-links"><a href="../game/introduction.html"><span class="nav-link-text">OceanBase 数据库大赛</span></a><a href="../game/miniob-output-convention.html"><span class="nav-link-text">输出规范</span></a><a href="../game/debug-output.html"><span class="nav-link-text">输出调试信息</span></a><a href="../game/miniob-memtracer.html"><span class="nav-link-text">MemTracer</span></a><a href="../game/miniob_topics.html"><span class="nav-link-text">OceanBase 数据库大赛2021届题目</span></a><a href="../game/github-introduction.html"><span class="nav-link-text">MiniOB GitHub 在训练营中的使用说明</span></a><a href="../game/gitee-instructions.html"><span class="nav-link-text">MiniOB Gitee 在训练营中的使用说明</span></a><a href="../game/miniob-vectordb.html"><span class="nav-link-text">MiniOB 向量数据库</span></a><a href="../game/git-introduction.html"><span class="nav-link-text">Git 介绍</span></a></div></details><details class="nav-group"><summary>博客<span>2</span></summary><div class="nav-links"><a href="../blog/introduction.html"><span class="nav-link-text">介绍</span></a><a href="../blog/1.html"><span class="nav-link-text">High-Performance Concurrency Control Mechanisms for Main-Memory Databases</span></a></div></details><a class="nav-flows" href="../flows.html"><span class="dot"></span>动态流程<span class="count">13</span></a></nav></aside>
+  <main class="main">
+    
+<nav class="crumbs" aria-label="面包屑导航"><a href="../index.html">首页</a><span>/</span><span>课程实验</span><span>/</span><span aria-current="page">LAB#2 查询引擎</span></nav>
+<header class="doc-head">
+  <div class="doc-meta-bar">
+    <span class="eyebrow-pill">课程实验</span>
+    <span class="doc-meta-item">16 个章节</span>
+    <span class="doc-meta-sep">·</span>
+    <span class="doc-meta-item">约 11 分钟阅读</span>
+    <span class="doc-meta-sep">·</span>
+    <a class="doc-meta-source" href="../../docs/db_course_lab/lab2.md">Markdown 源文件 ↗</a>
+  </div>
+  <h1>LAB#2 查询引擎</h1>
+</header>
+<section class="panel map-panel" id="doc-outline-panel">
+  <div class="panel-head">
+    <div>
+      <h2>章节结构导览</h2>
+      <span>点击任意章节直达正文；支持结构卡片与交互思维导图切换</span>
+    </div>
+    <button type="button" class="map-toggle-btn" data-toggle-markmap aria-expanded="false">⊞ 切换思维导图</button>
+  </div>
+  <div class="tree-view"><div class="tree-grid"><div class="tree-branch"><div class="tree-top"><a class="tree-link" href="#实验"><span class="tree-num">1</span><span>实验</span></a></div><ul class="tree-sub"><li><a class="tree-link" href="#任务1-select-查询支持-order-by-语法"><span class="tree-num">1.1</span><span>任务1: Select 查询（支持 order by 语法）</span></a></li><li><a class="tree-link" href="#任务2-join-算子实现"><span class="tree-num">1.2</span><span>任务2: Join 算子实现</span></a></li><li><a class="tree-link" href="#任务3-查询优化针对-join-算子进行查询优化"><span class="tree-num">1.3</span><span>任务3: 查询优化（针对 Join 算子进行查询优化）</span></a></li></ul></div></div></div>
+  <div class="markmap-wrap" hidden>
+    <div class="markmap"><script type="text/template"># LAB#2 查询引擎
+  - [实验](#实验)
+    - [任务1: Select 查询（支持 order by 语法）](#任务1-select-查询支持-order-by-语法)
+    - [任务2: Join 算子实现](#任务2-join-算子实现)
+    - [任务3: 查询优化（针对 Join 算子进行查询优化）](#任务3-查询优化针对-join-算子进行查询优化)</script></div>
+  </div>
+</section>
+
+<article class="content"><blockquote>
+<p>请不要将代码提交到公开仓库（包括提交带有题解的 Pull Request），同时也请不要抄袭其他同学或网络上可能存在的代码。</p>
+</blockquote>
+<h1 id="lab2-查询引擎">LAB#2 查询引擎</h1>
+<p>每次实验代码更新，需要将代码从远端仓库拉取下来，大家需要从 miniob 的 github 仓库上把代码拉取到本地。</p>
+<pre><code>1. git remote add origin_ob https://github.com/oceanbase/miniob.git
+2. git pull origin_ob
+3. git merge origin_ob/main
+4. 解决git冲突
+5. 实现代码，推送到自己的github仓库上
+</code></pre>
+<p>在数据库系统实现原理与实践课程的 <a href="lab1.html">LAB#1</a> 中，你已经完成了数据库系统中的存储引擎（基于 LSM-Tree 的存储引擎）。在这个实验中，你将实现数据库系统中的查询引擎（基于 MiniOB）。你需要根据此文档的指导，完成 MiniOB 查询引擎中的语法解析，查询优化，查询执行等模块。</p>
+<h2 id="实验">实验</h2>
+<p>本实验包含如下几个子任务：</p>
+<ul>
+<li>任务1: Select 查询（支持 order by 语法）</li>
+<li>任务2: Join 算子实现（实现 hash join 算子）</li>
+<li>任务3: 查询优化（针对 Join 算子进行查询优化）</li>
+</ul>
+<h3 id="任务1-select-查询支持-order-by-语法">任务1: Select 查询（支持 order by 语法）</h3>
+<h4 id="背景介绍">背景介绍</h4>
+<p>排序是数据库系统的一个基本功能，可以将查询的结果按照指定的条件表达式和顺序进行排序。
+<code>ORDER BY</code> 子句用于对结果进行排序，以升序或降序顺序排序。默认情况下按升序对结果进行排序。如果要按降序进行排序，需要显式指定 <code>DESC</code> 关键字。</p>
+<p>ORDER BY 子句语法格式如下：</p>
+<pre><code>select_stmt:
+    SELECT 
+        select_expr_list
+        [FROM from_list]
+        [WHERE where_condition]
+        ...
+        [ORDER BY order_by_condition_list];
+
+order_by_condition_list:
+    order_by_condition [, order_by_condition ...]
+
+order_by_condition:
+    expression [ASC | DESC]
+</code></pre>
+<p>其中：</p>
+<p><code>expression [ASC | DESC]</code> 表示对结果集排序的条件表达式，<strong>expression 只支持字段名即可</strong>。</p>
+<p><code>ASC | DESC</code> 为可选参数，用于指定排序的顺序。ASC 表示升序（默认），DESC 表示降序。</p>
+<p><code>ORDER BY</code> 语法示例如下：</p>
+<p>查询表 tbl1 的数据，根据 col3 按降序（DESC）输出查询结果。</p>
+<pre><code class="language-sql">SELECT * FROM tbl1
+  ORDER BY col3 DESC;
+</code></pre>
+<h4 id="实现">实现</h4>
+<p>请实现 <code>ORDER BY</code> 子句的语法。可参考 <code>docs/docs/design/miniob-how-to-add-new-sql.md</code> 中关于如何添加新的 SQL 语法的文档，实现 <code>ORDER BY</code> 子句。</p>
+<p><strong>提示</strong></p>
+<ul>
+<li><code>ORDER BY</code> 子句中的表达式只支持字段名即可，即只需支持 <code>ORDER BY col3 DESC;</code>，其中 <code>col3</code> 是字段名，不需要支持类似 <code>ORDER BY col3 + 1 DESC;</code> 的语法。</li>
+<li>可以使用 <code>test/test/case/miniob_test.py</code>工具进行 SQL 功能性的测试，相关使用文档位于 <code>test/test/case/README.md</code>，部分测试用例可参考 <code>test/case/test/primary-order-by.test</code>。</li>
+</ul>
+<h3 id="任务2-join-算子实现">任务2: Join 算子实现</h3>
+<h4 id="背景介绍-1">背景介绍</h4>
+<p>连接（Join）操作被用来将两个或多个关系表的数据组合起来。</p>
+<p>Nested Loop Join（NLJ）算法通过双层循环来输出结果，其中左表为外循环，右表为内循环。目前 MiniOB 中已经实现了 Nested Loop Join 算子（相关实现位于 <code>src/observer/sql/operator/join_physical_operator.h</code>）。</p>
+<p>基于哈希的连接（Hash Join）算法其执行过程分为两个阶段：构建阶段和探测阶段。哈希连接在两个关系表上执行，假设这两个关系表分别为 R 表和 S 表。在构建阶段，会遍历其中一个关系表（通常是基数较小的表，如图中的 R 表），以参与连接的属性列为键在一个哈希表中存储。在探测阶段，会遍历另一个关系表 S 的所有记录，以参与连接的属性列为键在哈希表中探测，当探测到具有相同键的记录则将结果输出。
+<img loading="lazy" src="../../docs/db_course_lab/images/hashjoin.png" alt="hashjoin" /></p>
+<p>在 MiniOB 中，你需要实现基于火山模型的 HashJoin 算子即可，在火山模型中，每个查询计划操作符（operator）都实现了一个 <code>next()</code> 函数。在每次调用时，操作符要么返回一个元组(tuple)，要么在没有更多元组时返回一个空结果。每个操作符在它的子运算符调用 <code>next()</code> 来获取元组，然后对它们进行处理，并向上返回结果。</p>
+<h4 id="实现-1">实现</h4>
+<p>请在 <code>src/observer/sql/operator/hash_join_physical_operator.h</code> 中实现 HashJoin 算子，可以参考 Nested Loop Join 算子的实现。</p>
+<p>除了实现 HashJoin 算子外，你还需要实现 INNER JOIN 语法。</p>
+<p>语法示例如下：</p>
+<pre><code class="language-sql">SELECT * FROM tbl1 INNER JOIN tbl2 ON tbl1.col3 = tbl2.col4;
+</code></pre>
+<p>在没有完成 <code>任务3: 查询优化</code> 之前，你可以通过配置项来指定是否使用 Hash Join 算子。将 <code>hash_join</code> 配置项设置为 1，且满足 HashJoin 的条件时，MiniOB 将使用 Hash Join 算子进行 Join 计算。
+配置项设置如下：</p>
+<pre><code>set hash_join=1;
+</code></pre>
+<p><strong>提示</strong></p>
+<ul>
+<li>你的修改可能不止包含 <code>src/observer/sql/operator/hash_join_physical_operator.h/.cpp</code> 中的代码。</li>
+<li>可以参考 Nested Loop Join 算子的实现。</li>
+<li>需要实现 INNER JOIN 语法，并将 <code>INNER JOIN table ON expr</code> 中的条件表达式 <code>expr</code> 放到 <code>Hash Join</code> 算子中，支持 <code>expr</code> 中包含单个等值条件即可。</li>
+<li>可以通过 <code>Explain</code> 语句来查看你的执行计划。</li>
+<li>可以使用 <code>test/test/case/miniob_test.py</code>工具进行 SQL 功能性的测试，相关使用文档位于 <code>test/test/case/README.md</code>，部分测试用例可参考 <code>test/case/test/dblab-hash-join.test</code>。</li>
+<li>需要补充 <code>PhysicalPlanGenerator::can_use_hash_join</code> 函数，在等值比较条件下使用 hashjoin 算子。</li>
+</ul>
+<h3 id="任务3-查询优化针对-join-算子进行查询优化">任务3: 查询优化（针对 Join 算子进行查询优化）</h3>
+<h4 id="背景">背景</h4>
+<p>查询优化负责将 SQL 转换为数据库系统可以执行的最优的物理执行计划。优化器对整个数据库系统的性能影响很大，因此优化器是数据库系统中最重要的部分之一。
+目前在 MiniOB 中，我们将优化器的执行分为两层：查询改写（基于规则的优化）和基于代价的优化（CBO）。即先执行基于规则的查询改写，基于规则的查询改写只会做逻辑算子到逻辑算子的转换；之后再执行基于代价的优化，基于代价的优化目前只会做逻辑算子到物理算子的转换。</p>
+<h5 id="查询改写基于规则">查询改写（基于规则）</h5>
+<p>目前 MiniOB 中查询改写的实现比较简单，我们定义了若干静态规则（本质上是 <code>if-else</code> 子句，相关代码位于 <code>src/observer/sql/optimizer/rewriter.h</code>），这些规则将逻辑算子转换为逻辑算子而无需进行基于成本的搜索。例如谓词下推，谓词条件重写等。</p>
+<h5 id="查询物理优化基于代价">查询物理优化（基于代价）</h5>
+<p>目前 MiniOB 中基于代价的优化采用了 <code>cascade</code> 优化器框架，执行自顶向下的搜索来找到最优的物理执行计划。</p>
+<p>MiniOB 中的 <code>Cascade Optimizer</code> 设计文档可参考 <code>src/observer/optimizer/cascade/README.md</code>， MiniOB 中的实现主要参考了 <a target="_blank" rel="noopener" href="https://github.com/yongwen/columbia">columbia</a> 和 <a target="_blank" rel="noopener" href="https://github.com/cmu-db/noisepage">noisepage</a> 的实现。</p>
+<p>关于 cascade 优化器原理的更多细节可以参考相关论文：</p>
+<ol>
+<li><a target="_blank" rel="noopener" href="https://15721.courses.cs.cmu.edu/spring2016/papers/graefe-ieee1995.pdf">cascade 论文</a></li>
+<li><a target="_blank" rel="noopener" href="https://15721.courses.cs.cmu.edu/spring2019/papers/22-optimizer1/xu-columbia-thesis1998.pdf">columbia 论文</a></li>
+</ol>
+<h4 id="实现-2">实现</h4>
+<p>在这一任务中，你需要实现基于规则的谓词下推优化规则将 where 子句中的条件下推到 join 算子或 join 算子的子节点上，需要实现基于代价的 Join 物理算子选择（Nested Loop Join 或 Hash Join）。</p>
+<h5 id="查询改写">查询改写</h5>
+<p>在任务2中，你已经实现了 Hash Join 算子，并且所有的测试 SQL 语句都是 INNER JOIN 语法。在本任务中，Join 的连接条件可能出现在 where 子句中，你需要从 where 条件中提取谓词条件，将可以进行谓词下推的条件下推到 Join 算子，或者Join 算子的子节点中。</p>
+<p>举例1：</p>
+<pre><code class="language-sql">SELECT * FROM tbl1, tbl2 where tbl1.col3 = tbl2.col4 AND tbl1.col5 &gt; 100;
+</code></pre>
+<p>上述语句中，<code>tbl1.col5 &gt; 100</code> 可以下推到 tbl1 对应的 TableScan 算子中，<code>tbl1.col3 = tbl2.col4</code> 可以下推到 Join 算子中。</p>
+<p>举例2：</p>
+<pre><code class="language-sql">SELECT * FROM tbl1, tbl2, tbl3 WHERE tbl1.a = tbl2.a AND tbl2.a &gt; tbl3.a AND tbl3.a &gt; 100;
+</code></pre>
+<p>上述语句中，<code>tbl3.a &gt; 100</code> 可以下推到 tbl3 对应的 TableScan 算子中，<code>tbl2.a &gt; tbl3.a</code> 和 <code>tbl1.a = tbl2.a</code> 可以下推到对应的 Join 算子中。</p>
+<p><strong>提示</strong></p>
+<ul>
+<li>不需要考虑 OR 条件。</li>
+<li>谓词下推的规则在 <code>src/observer/sql/optimizer/predicate_to_join_rule.h</code> 中实现。</li>
+<li>部分测试用例可参考 <code>test/case/test/dblab-optimizer.test</code></li>
+<li>如何确定什么时候谓词可以下推到 join 算子/ join 算子的子节点？可以在每个算子节点中存一下涉及到的表名/表ID，同时在每个谓词表达式中也存储涉及到的表名/表ID，然后可以通过判断谓词涉及到的表名/表ID 是否在算子节点中出现来确定。</li>
+<li>需要考虑谓词条件下推到 JOIN 子节点后，如果可以继续下推，需要将谓词条件继续下推，并尽可能消除谓词过滤（Predicate）算子。（例如对于 <code>select * from tbl1, tbl2 where tbl1.a &gt; 1</code>，需要将 <code>tbl1.a &gt; 1</code> 下推到 TableScan 算子）</li>
+</ul>
+<h5 id="查询物理优化">查询物理优化</h5>
+<p>你需要基于 Cascade Optimizer（主要代码位于 <code>src/observer/sql/optimizer/cascade</code> 中）实现 Join 物理算子选择，即选择 HashJoin 或 NestedLoopJoin 作为 Join 算子的物理算子。你需要根据参与Join 表的基数和谓词条件来计算两个算子的代价，并选择代价较低的 Join 物理算子。</p>
+<p>代价计算规则如下：</p>
+<ol>
+<li>NestedLoopJoin 算子的代价计算公式如下：
+$$
+cost_{nlj} = left \times right \times CPU + output \times CPU
+$$</li>
+</ol>
+<p>其中  left 表示左边算子的基数，right 表示右边算子的基数，output 表示输出的基数，CPU 表示一次 CPU 操作的代价。
+2. HashJoin 算子的代价计算公式如下：
+$$
+cost_{hashjoin} = left * hash_cost + right * hash_probe + output * CPU
+$$
+其中，left 表示左边算子的基数，right 表示右边算子的基数，hash_cost 表示构建阶段的一次插入哈希表操作的代价，hash_probe 表示探测阶段一次探测（probe）的代价，output 表示输出的基数，CPU 表示一次 CPU 操作的代价。</p>
+<p><strong>提示</strong></p>
+<ul>
+<li>可参考 <code>src/observer/sql/optimizer/cascade/README.md</code> 文档添加新的转换规则。</li>
+<li>需要先完成任务2 以及谓词条件下推改写规则。</li>
+<li>请不要修改 <code>src/observer/sql/optimizer/cascade/cost_model.h</code></li>
+</ul>
+<h4 id="测试">测试</h4>
+<p>为了使用 Cascade Optimizer，你需要首先设置 cascade 配置项：</p>
+<pre><code>set use_cascade = 1;
+</code></pre>
+<p>在执行 SQL 之前，你需要首先收集对应表的统计信息，当前的统计信息主要是表的基数（表中记录的行数）。</p>
+<p>收集统计信息的语法如下：</p>
+<pre><code class="language-sql">analyze table tbl1;
+</code></pre>
+<p>上述语句会收集表 <code>tbl1</code> 的统计信息，并将统计信息存储在内存中。</p>
+<p>提示：</p>
+<ul>
+<li>部分测试用例可参考 <code>test/case/test/dblab-optimizer.test</code>。</li>
+</ul>
+</article>
+<nav class="pager" aria-label="相邻文档导航"><a class="prev" href="lab1.html"><span>← 上一篇</span>LAB#1 LSM-Tree 存储引擎</a><a class="next" href="lab3.html"><span>下一篇 →</span>LAB#3 事务引擎</a></nav>
+<p class="source-line">源文件：<a href="../../docs/db_course_lab/lab2.md">db_course_lab/lab2.md</a></p>
+
+    <footer class="page-footer">
+      <span>由 <code>docs/visual/build.py</code> &amp; <code>draw_diagrams.py</code> 从 <code>docs/docs</code> 生成</span>
+      <span>MiniOB · 可视化技术文档</span>
+    </footer>
+  </main>
+  <aside class="page-toc" aria-label="本页目录"><div class="toc-inner"><p class="toc-title">本页导览</p><ul class="toc-list"><li class="toc-item toc-l2"><a href="#实验">实验</a></li><li class="toc-item toc-l3"><a href="#任务1-select-查询支持-order-by-语法">任务1: Select 查询（支持 order by 语法）</a></li><li class="toc-item toc-l3"><a href="#任务2-join-算子实现">任务2: Join 算子实现</a></li><li class="toc-item toc-l3"><a href="#任务3-查询优化针对-join-算子进行查询优化">任务3: 查询优化（针对 Join 算子进行查询优化）</a></li></ul><a class="toc-top" href="#top">↑ 回到顶部</a></div></aside>
+</div>
+<div class="nav-scrim" id="navScrim"></div>
+<div class="diagram-modal" id="diagramModal" hidden role="dialog" aria-modal="true" aria-label="图表放大检视">
+  <div class="diagram-modal-bar">
+    <span class="diagram-modal-title" id="diagramModalTitle">架构与流程图检视</span>
+    <button type="button" class="diagram-modal-close" id="diagramModalClose" aria-label="关闭">✕ 关闭 (Esc)</button>
+  </div>
+  <div class="diagram-modal-body" id="diagramModalBody"></div>
+</div>
+<script src="../assets/markmap-config.js"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/markmap-autoloader@0.18"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/@highlightjs/cdn-assets@11/highlight.min.js"></script>
+
+<script defer src="../assets/site.js"></script>
+</body>
+</html>

@@ -1,0 +1,158 @@
+<!doctype html>
+<html lang="zh-CN" id="top">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>开源学堂在线编程环境开发 MiniOB · MiniOB 可视化文档</title>
+<link rel="stylesheet" href="../assets/style.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@highlightjs/cdn-assets@11/styles/atom-one-dark.min.css">
+<script src="../assets/theme.js"></script>
+
+</head>
+<body class="">
+<div class="reading-progress" id="readingProgress" aria-hidden="true"></div>
+<header class="topbar">
+  <button class="menu-btn" id="menuBtn" aria-label="切换侧栏" aria-expanded="false">☰</button>
+  <a class="brand" href="../index.html"><span class="brand-mark">M</span><span>MiniOB <em>可视化文档</em></span></a>
+  <div class="top-actions">
+    <a class="top-link" href="../flows.html">动态流程</a>
+    <button class="theme-btn" id="themeBtn" aria-label="切换明暗主题" title="切换明暗主题">◐</button>
+  </div>
+</header>
+<div class="layout has-toc">
+  <aside class="sidebar" id="sidebar"><nav class="site-nav" aria-label="文档目录"><a class="nav-home" href="../index.html"><span class="brand-mark">M</span><span>MiniOB 可视化文档</span></a><details class="nav-group"><summary>快速开始<span>2</span></summary><div class="nav-links"><a href="../how_to_build.html"><span class="nav-link-text">如何编译</span></a><a href="../how_to_run.html"><span class="nav-link-text">如何运行</span></a></div></details><details class="nav-group"><summary>设计文档<span>21</span></summary><div class="nav-links"><a href="../design/miniob-architecture.html"><span class="nav-link-text">MiniOB代码架构框架设计和说明</span><span class="nav-badge" title="含交互流程图或架构图">图</span></a><a href="../design/miniob-buffer-pool.html"><span class="nav-link-text">MiniOB 存储实现</span><span class="nav-badge" title="含交互流程图或架构图">图</span></a><a href="../design/miniob-double-write-buffer.html"><span class="nav-link-text">MiniOB Double Write Buffer 实现</span><span class="nav-badge" title="含交互流程图或架构图">图</span></a><a href="../design/miniob-transaction.html"><span class="nav-link-text">事务模块</span><span class="nav-badge" title="含交互流程图或架构图">图</span></a><a href="../design/miniob-durability.html"><span class="nav-link-text">持久化</span><span class="nav-badge" title="含交互流程图或架构图">图</span></a><a href="../design/miniob-persistence-files.html"><span class="nav-link-text">持久化文件与恢复路径</span><span class="nav-badge" title="含交互流程图或架构图">图</span></a><a href="../design/miniob-checkpoint-wal.html"><span class="nav-link-text">MiniOB 检查点与 WAL 截断</span><span class="nav-badge" title="含交互流程图或架构图">图</span></a><a href="../design/miniob-sql-parser.html"><span class="nav-link-text">SQL 词法语法分析</span></a><a href="../design/miniob-how-to-add-new-sql.html"><span class="nav-link-text">SQL语句执行流程</span><span class="nav-badge" title="含交互流程图或架构图">图</span></a><a href="../design/miniob-sql-expression.html"><span class="nav-link-text">SQL 表达式</span></a><a href="../design/miniob-bplus-tree.html"><span class="nav-link-text">MiniOB B+Tree 实现</span><span class="nav-badge" title="含交互流程图或架构图">图</span></a><a href="../design/miniob-bplus-tree-concurrency.html"><span class="nav-link-text">B+ 树并发操作</span><span class="nav-badge" title="含交互流程图或架构图">图</span></a><a href="../design/miniob-thread-model.html"><span class="nav-link-text">线程模型</span><span class="nav-badge" title="含交互流程图或架构图">图</span></a><a href="../design/miniob-mysql-protocol.html"><span class="nav-link-text">MySQL 通讯协议</span></a><a href="../design/miniob-pax-storage.html"><span class="nav-link-text">MiniOB PAX 存储格式</span><span class="nav-badge" title="含交互流程图或架构图">图</span></a><a href="../design/miniob-aggregation-and-group-by.html"><span class="nav-link-text">MiniOB 向量化执行 aggregation 和 group by 实现</span></a><a href="../design/miniob-lsm-tree.html"><span class="nav-link-text">MiniOB LSM-Tree 存储引擎</span><span class="nav-badge" title="含交互流程图或架构图">图</span></a><a href="../design/introduction.html"><span class="nav-link-text">功能模块设计说明</span></a><a href="../design/miniob-btree-storage-engine.html"><span class="nav-link-text">MiniOB B+Tree 聚簇表存储引擎</span><span class="nav-badge" title="含交互流程图或架构图">图</span></a><a href="../design/miniob-cascade.html"><span class="nav-link-text">Cascade Optimizer(查询优化器)</span><span class="nav-badge" title="含交互流程图或架构图">图</span></a><a href="../design/miniob-update-mvcc-occ.html"><span class="nav-link-text">MiniOB UPDATE、MVCC 与 OCC 方案设计</span><span class="nav-badge" title="含交互流程图或架构图">图</span></a></div></details><details class="nav-group"><summary>课程实验<span>6</span></summary><div class="nav-links"><a href="../db_course_lab/overview.html"><span class="nav-link-text">数据库系统实现原理与实践课程实验</span></a><a href="../db_course_lab/lab0.html"><span class="nav-link-text">LAB#0 C++ 基础</span></a><a href="../db_course_lab/lab1.html"><span class="nav-link-text">LAB#1 LSM-Tree 存储引擎</span></a><a href="../db_course_lab/lab2.html"><span class="nav-link-text">LAB#2 查询引擎</span></a><a href="../db_course_lab/lab3.html"><span class="nav-link-text">LAB#3 事务引擎</span></a><a href="../db_course_lab/lab4.html"><span class="nav-link-text">LAB#4 性能测试</span></a></div></details><details class="nav-group"><summary>简明教程<span>9</span></summary><div class="nav-links"><a href="../lectures/copyright.html"><span class="nav-link-text">版权声明</span></a><a href="../lectures/lecture-1.html"><span class="nav-link-text">第1章 数据库管理系统概述</span></a><a href="../lectures/lecture-2.html"><span class="nav-link-text">第2章 数据库的存储结构</span></a><a href="../lectures/lecture-3.html"><span class="nav-link-text">第3章 索引结构</span></a><a href="../lectures/lecture-4.html"><span class="nav-link-text">第4章 查询处理</span></a><a href="../lectures/lecture-5.html"><span class="nav-link-text">第5章 查询优化</span></a><a href="../lectures/lecture-6.html"><span class="nav-link-text">第6章 事务处理</span></a><a href="../lectures/references.html"><span class="nav-link-text">参考资料</span></a><a href="../lectures/index.html"><span class="nav-link-text">数据库管理系统实现基础讲义</span></a></div></details><details class="nav-group" open><summary>开发环境<span>14</span></summary><div class="nav-links"><a href="introduction.html"><span class="nav-link-text">搭建开发环境</span></a><a href="vscode_dev_with_local_virtual_env.html"><span class="nav-link-text">虚拟机+vscode remote开发</span></a><a href="dev_by_online.html"><span class="nav-link-text">使用在线开发环境开发 MiniOB</span></a><a href="how-to-dev-using-docker.html"><span class="nav-link-text">使用Docker开发MiniOB</span></a><a href="how_to_dev_in_docker_container_by_vscode.html"><span class="nav-link-text">使用 Docker 和 VSCode 远程开发 Miniob</span></a><a href="how_to_dev_in_docker_container_by_vscode_on_windows.html"><span class="nav-link-text">在windows上通过docker配置环境并利用vscode调试代码（手把手版）</span></a><a href="how_to_dev_miniob_by_docker_on_windows.html"><span class="nav-link-text">安装Docker</span></a><a href="how_to_dev_miniob_by_vscode.html"><span class="nav-link-text">环境准备</span></a><a href="miniob-how-to-debug.html"><span class="nav-link-text">miniob调试篇</span></a><a href="how_to_submit_for_testing.html"><span class="nav-link-text">训练营平台使用说明</span></a><a href="integration_test.html"><span class="nav-link-text">MiniOB 集成测试使用文档</span></a><a href="cloudlab_setup.html" class="active" aria-current="page"><span class="nav-link-text">开源学堂在线编程环境开发 MiniOB</span></a><a href="how_to_dev_miniob_by_docker_on_windows_simplified.html"><span class="nav-link-text">在windows上通过docker配置环境并利用vscode编辑、开发、调试代码（简易版）</span></a><a href="how_to_dev_miniob_in_vscodeGUI_by_docker_on_windows.html"><span class="nav-link-text">基于Windows+docker容器在本地利用VSCode编辑、开发及调试miniob</span></a></div></details><details class="nav-group"><summary>大赛与训练<span>9</span></summary><div class="nav-links"><a href="../game/introduction.html"><span class="nav-link-text">OceanBase 数据库大赛</span></a><a href="../game/miniob-output-convention.html"><span class="nav-link-text">输出规范</span></a><a href="../game/debug-output.html"><span class="nav-link-text">输出调试信息</span></a><a href="../game/miniob-memtracer.html"><span class="nav-link-text">MemTracer</span></a><a href="../game/miniob_topics.html"><span class="nav-link-text">OceanBase 数据库大赛2021届题目</span></a><a href="../game/github-introduction.html"><span class="nav-link-text">MiniOB GitHub 在训练营中的使用说明</span></a><a href="../game/gitee-instructions.html"><span class="nav-link-text">MiniOB Gitee 在训练营中的使用说明</span></a><a href="../game/miniob-vectordb.html"><span class="nav-link-text">MiniOB 向量数据库</span></a><a href="../game/git-introduction.html"><span class="nav-link-text">Git 介绍</span></a></div></details><details class="nav-group"><summary>博客<span>2</span></summary><div class="nav-links"><a href="../blog/introduction.html"><span class="nav-link-text">介绍</span></a><a href="../blog/1.html"><span class="nav-link-text">High-Performance Concurrency Control Mechanisms for Main-Memory Databases</span></a></div></details><a class="nav-flows" href="../flows.html"><span class="dot"></span>动态流程<span class="count">13</span></a></nav></aside>
+  <main class="main">
+    
+<nav class="crumbs" aria-label="面包屑导航"><a href="../index.html">首页</a><span>/</span><span>开发环境</span><span>/</span><span aria-current="page">开源学堂在线编程环境开发 MiniOB</span></nav>
+<header class="doc-head">
+  <div class="doc-meta-bar">
+    <span class="eyebrow-pill">开发环境</span>
+    <span class="doc-meta-item">9 个章节</span>
+    <span class="doc-meta-sep">·</span>
+    <span class="doc-meta-item">约 2 分钟阅读</span>
+    <span class="doc-meta-sep">·</span>
+    <a class="doc-meta-source" href="../../docs/dev-env/cloudlab_setup.md">Markdown 源文件 ↗</a>
+  </div>
+  <h1>开源学堂在线编程环境开发 MiniOB</h1>
+</header>
+<section class="panel map-panel" id="doc-outline-panel">
+  <div class="panel-head">
+    <div>
+      <h2>章节结构导览</h2>
+      <span>点击任意章节直达正文；支持结构卡片与交互思维导图切换</span>
+    </div>
+    <button type="button" class="map-toggle-btn" data-toggle-markmap aria-expanded="false">⊞ 切换思维导图</button>
+  </div>
+  <div class="tree-view"><div class="tree-grid"><div class="tree-branch"><div class="tree-top"><a class="tree-link" href="#加入课程"><span class="tree-num">1</span><span>加入课程</span></a></div></div><div class="tree-branch"><div class="tree-top"><a class="tree-link" href="#初始化代码环境"><span class="tree-num">2</span><span>初始化代码环境</span></a></div><ul class="tree-sub"><li><a class="tree-link" href="#初始化项目代码"><span class="tree-num">2.1</span><span>初始化项目代码</span></a></li></ul></div><div class="tree-branch"><div class="tree-top"><a class="tree-link" href="#提交作业"><span class="tree-num">3</span><span>提交作业</span></a></div></div><div class="tree-branch"><div class="tree-top"><a class="tree-link" href="#注意事项"><span class="tree-num">4</span><span>注意事项</span></a></div></div><div class="tree-branch"><div class="tree-top"><a class="tree-link" href="#可能会出现的问题"><span class="tree-num">5</span><span>可能会出现的问题</span></a></div><ul class="tree-sub"><li><a class="tree-link" href="#github的网络没有问题但是push代码失败"><span class="tree-num">5.1</span><span>Github的网络没有问题，但是push代码失败</span></a></li></ul></div></div></div>
+  <div class="markmap-wrap" hidden>
+    <div class="markmap"><script type="text/template"># 开源学堂在线编程环境开发 MiniOB
+  - [加入课程](#加入课程)
+  - [初始化代码环境](#初始化代码环境)
+    - [初始化项目代码](#初始化项目代码)
+  - [提交作业](#提交作业)
+  - [注意事项](#注意事项)
+  - [可能会出现的问题](#可能会出现的问题)
+    - [Github的网络没有问题，但是push代码失败](#github的网络没有问题但是push代码失败)</script></div>
+  </div>
+</section>
+
+<article class="content"><h1 id="开源学堂在线编程环境开发-miniob">开源学堂在线编程环境开发 MiniOB</h1>
+<h2 id="加入课程">加入课程</h2>
+<p>加入课程链接: <a target="_blank" rel="noopener" href="https://oceanbase.beta.oscollege.net/os/6uBLht">MiniOB 日常练习</a></p>
+<h2 id="初始化代码环境">初始化代码环境</h2>
+<h3 id="初始化项目代码">初始化项目代码</h3>
+<ol>
+<li>
+<p>点击上方<code>启动环境</code>即可启动开发环境，每次实验的开发环境中的内容是会持久化保存在云端。</p>
+</li>
+<li>
+<p>点击实验工具中的<code>vscode</code>来进行开发，将项目在浏览器中打开。
+<img loading="lazy" src="../../docs/dev-env/images/cloudlab-setup-startenv.png" alt="" /></p>
+</li>
+<li>
+<p>点击在浏览器中打开，单独打开一个网页作为开发页面。
+<img loading="lazy" src="../../docs/dev-env/images/cloudlab-setup-openvscode.png" alt="" /></p>
+</li>
+<li>
+<p><code>vscode</code>中只提供了开发环境，需要同学们从<a target="_blank" rel="noopener" href="https://github.com/oceanbase/miniob">https://github.com/oceanbase/miniob</a>中将项目克隆到环境中。使用下面命令将项目<code>clone</code>下来之后:<code>git clone https://github.com/oceanbase/miniob.git</code>，可以看到在<code>workspace</code>下面有一个<code>miniob</code>的文件夹。
+<img loading="lazy" src="../../docs/dev-env/images/cloudlab-setup-miniob.png" alt="" /></p>
+</li>
+<li>
+<p>现在将<code>vscode</code>的工作目录设置成<code>miniob</code>文件夹，从左侧栏中打开<code>miniob</code>的文件夹即可，如下图。
+<img loading="lazy" src="../../docs/dev-env/images/cloudlab-setup-workspace.png" alt="" /></p>
+</li>
+</ol>
+<h4 id="开发环境配置">开发环境配置</h4>
+<ol>
+<li>首先安装插件<code>clangd</code>和<code>C/C++ Debug</code>。
+安装<code>clangd</code>,
+<img loading="lazy" src="../../docs/dev-env/images/cloudlab-setup-install-clangd.png" alt="" />
+同样的方式安装<code>C/C++ Debug</code>。
+<img loading="lazy" src="../../docs/dev-env/images/cloudlab-setup-install-cppdbg.png" alt="" /></li>
+<li>修改好代码之后，<code>Ctrl+Shift+B</code>构建项目，构建完毕后有一个<code>build_debug</code>的文件夹，存放编译后的可执行文件。</li>
+<li>使用<code>clangd</code>作为语言服务器， 构建完毕后，将<code>build_debug</code>中的<code>compile_commands.json</code>文件复制到<code>miniob</code>目录中，随便打开一个cpp文件，就可以看到<code>clangd</code>开始工作。
+<img loading="lazy" src="../../docs/dev-env/images/cloudlab-setup-config-clangd.png" alt="" /></li>
+<li>用<code>F5</code>进行调试，关于如何<code>vscode</code>如何调试，可以参考相关的资料:<a target="_blank" rel="noopener" href="https://code.visualstudio.com/docs/cpp/cpp-debug">cpp-debug</a>。修改<code>launch.json</code>文件中<code>program</code>和<code>args</code>来调试不同的可执行文件。
+<img loading="lazy" src="../../docs/dev-env/images/cloudlab-setup-launch-config.png" alt="" />
+<img loading="lazy" src="../../docs/dev-env/images/cloudlab-setup-debug.png" alt="" /></li>
+</ol>
+<h2 id="提交作业">提交作业</h2>
+<p>实验课作业使用提交平台进行提交，提交平台：<a target="_blank" rel="noopener" href="https://open.oceanbase.com/train">OceanBase训练营</a></p>
+<p>训练营提交代码需要gitee/github的仓库，并且大家创建的仓库必须是设置为<strong>私有仓库</strong>（否则会提交失败），具体教程可以参考下面链接：</p>
+<p><a target="_blank" rel="noopener" href="https://oceanbase.github.io/miniob/game/github-introduction/">MiniOB GitHub 在训练营中的使用说明</a></p>
+<p><a target="_blank" rel="noopener" href="https://oceanbase.github.io/miniob/game/gitee-instructions/">MiniOB Gitee 在训练营中的使用说明</a></p>
+<p>点击立即提测，填入对应的仓库代码地址，<code>Commit id</code>和分支，就可以进行测试，并且可以看到测试结果。</p>
+<h2 id="注意事项">注意事项</h2>
+<ol>
+<li>注意在线平台的实验时长的限制，到达限制之后会<em>回收当前环境</em>，但是<strong>在持久化目录下的文件不会被清理，会持久保存</strong>，就是上文提到的<code>workspace</code>下的文件。注意如果需要<code>debug</code>，一定要注意剩余环境时长。</li>
+<li>需要及时将代码上传到<code>github/gitee</code>上避免丢失代码。</li>
+<li>MiniOB的资料：<a target="_blank" rel="noopener" href="https://oceanbase.github.io/miniob/">MiniOB</a></li>
+</ol>
+<h2 id="可能会出现的问题">可能会出现的问题</h2>
+<h3 id="github的网络没有问题但是push代码失败">Github的网络没有问题，但是push代码失败</h3>
+<ol>
+<li>
+<p>使用令牌来做Github的身份验证，详细参考：
+<a target="_blank" rel="noopener" href="https://docs.github.com/en/authentication/keeping-your-account-and-data-secure/managing-your-personal-access-tokens">管理个人访问令牌</a></p>
+</li>
+<li>
+<p>按照上述步骤获得<code>token</code>之后，并且按照上文步骤中，导入<code>miniob</code>仓库在自己的<code>github</code>账号中。</p>
+</li>
+<li>
+<p>在终端中输入下面命令。</p>
+</li>
+</ol>
+<pre><code> # 先删除远端origin对应的仓库的本地记录。
+ git remote rm origin
+ # 添加自己的仓库，按照下面格式，其中 &lt;token&gt;替换成自己的token, &lt;username&gt;替换成自己的用户名。
+ git remote add origin https://&lt;token&gt;@github.com/&lt;username&gt;/miniob.git
+</code></pre>
+<ol start="4">
+<li>然后就可以进行正常的推送和拉取操作了。</li>
+</ol>
+</article>
+<nav class="pager" aria-label="相邻文档导航"><a class="prev" href="integration_test.html"><span>← 上一篇</span>MiniOB 集成测试使用文档</a><a class="next" href="how_to_dev_miniob_by_docker_on_windows_simplified.html"><span>下一篇 →</span>在windows上通过docker配置环境并利用vscode编辑、开发、调试代码（简易版）</a></nav>
+<p class="source-line">源文件：<a href="../../docs/dev-env/cloudlab_setup.md">dev-env/cloudlab_setup.md</a></p>
+
+    <footer class="page-footer">
+      <span>由 <code>docs/visual/build.py</code> &amp; <code>draw_diagrams.py</code> 从 <code>docs/docs</code> 生成</span>
+      <span>MiniOB · 可视化技术文档</span>
+    </footer>
+  </main>
+  <aside class="page-toc" aria-label="本页目录"><div class="toc-inner"><p class="toc-title">本页导览</p><ul class="toc-list"><li class="toc-item toc-l2"><a href="#加入课程">加入课程</a></li><li class="toc-item toc-l2"><a href="#初始化代码环境">初始化代码环境</a></li><li class="toc-item toc-l3"><a href="#初始化项目代码">初始化项目代码</a></li><li class="toc-item toc-l2"><a href="#提交作业">提交作业</a></li><li class="toc-item toc-l2"><a href="#注意事项">注意事项</a></li><li class="toc-item toc-l2"><a href="#可能会出现的问题">可能会出现的问题</a></li><li class="toc-item toc-l3"><a href="#github的网络没有问题但是push代码失败">Github的网络没有问题，但是push代码失败</a></li></ul><a class="toc-top" href="#top">↑ 回到顶部</a></div></aside>
+</div>
+<div class="nav-scrim" id="navScrim"></div>
+<div class="diagram-modal" id="diagramModal" hidden role="dialog" aria-modal="true" aria-label="图表放大检视">
+  <div class="diagram-modal-bar">
+    <span class="diagram-modal-title" id="diagramModalTitle">架构与流程图检视</span>
+    <button type="button" class="diagram-modal-close" id="diagramModalClose" aria-label="关闭">✕ 关闭 (Esc)</button>
+  </div>
+  <div class="diagram-modal-body" id="diagramModalBody"></div>
+</div>
+<script src="../assets/markmap-config.js"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/markmap-autoloader@0.18"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/@highlightjs/cdn-assets@11/highlight.min.js"></script>
+
+<script defer src="../assets/site.js"></script>
+</body>
+</html>

@@ -1,0 +1,235 @@
+<!doctype html>
+<html lang="zh-CN" id="top">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>在windows上通过docker配置环境并利用vscode调试代码（手把手版） · MiniOB 可视化文档</title>
+<link rel="stylesheet" href="../assets/style.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@highlightjs/cdn-assets@11/styles/atom-one-dark.min.css">
+<script src="../assets/theme.js"></script>
+
+</head>
+<body class="">
+<div class="reading-progress" id="readingProgress" aria-hidden="true"></div>
+<header class="topbar">
+  <button class="menu-btn" id="menuBtn" aria-label="切换侧栏" aria-expanded="false">☰</button>
+  <a class="brand" href="../index.html"><span class="brand-mark">M</span><span>MiniOB <em>可视化文档</em></span></a>
+  <div class="top-actions">
+    <a class="top-link" href="../flows.html">动态流程</a>
+    <button class="theme-btn" id="themeBtn" aria-label="切换明暗主题" title="切换明暗主题">◐</button>
+  </div>
+</header>
+<div class="layout has-toc">
+  <aside class="sidebar" id="sidebar"><nav class="site-nav" aria-label="文档目录"><a class="nav-home" href="../index.html"><span class="brand-mark">M</span><span>MiniOB 可视化文档</span></a><details class="nav-group"><summary>快速开始<span>2</span></summary><div class="nav-links"><a href="../how_to_build.html"><span class="nav-link-text">如何编译</span></a><a href="../how_to_run.html"><span class="nav-link-text">如何运行</span></a></div></details><details class="nav-group"><summary>设计文档<span>21</span></summary><div class="nav-links"><a href="../design/miniob-architecture.html"><span class="nav-link-text">MiniOB代码架构框架设计和说明</span><span class="nav-badge" title="含交互流程图或架构图">图</span></a><a href="../design/miniob-buffer-pool.html"><span class="nav-link-text">MiniOB 存储实现</span><span class="nav-badge" title="含交互流程图或架构图">图</span></a><a href="../design/miniob-double-write-buffer.html"><span class="nav-link-text">MiniOB Double Write Buffer 实现</span><span class="nav-badge" title="含交互流程图或架构图">图</span></a><a href="../design/miniob-transaction.html"><span class="nav-link-text">事务模块</span><span class="nav-badge" title="含交互流程图或架构图">图</span></a><a href="../design/miniob-durability.html"><span class="nav-link-text">持久化</span><span class="nav-badge" title="含交互流程图或架构图">图</span></a><a href="../design/miniob-persistence-files.html"><span class="nav-link-text">持久化文件与恢复路径</span><span class="nav-badge" title="含交互流程图或架构图">图</span></a><a href="../design/miniob-checkpoint-wal.html"><span class="nav-link-text">MiniOB 检查点与 WAL 截断</span><span class="nav-badge" title="含交互流程图或架构图">图</span></a><a href="../design/miniob-sql-parser.html"><span class="nav-link-text">SQL 词法语法分析</span></a><a href="../design/miniob-how-to-add-new-sql.html"><span class="nav-link-text">SQL语句执行流程</span><span class="nav-badge" title="含交互流程图或架构图">图</span></a><a href="../design/miniob-sql-expression.html"><span class="nav-link-text">SQL 表达式</span></a><a href="../design/miniob-bplus-tree.html"><span class="nav-link-text">MiniOB B+Tree 实现</span><span class="nav-badge" title="含交互流程图或架构图">图</span></a><a href="../design/miniob-bplus-tree-concurrency.html"><span class="nav-link-text">B+ 树并发操作</span><span class="nav-badge" title="含交互流程图或架构图">图</span></a><a href="../design/miniob-thread-model.html"><span class="nav-link-text">线程模型</span><span class="nav-badge" title="含交互流程图或架构图">图</span></a><a href="../design/miniob-mysql-protocol.html"><span class="nav-link-text">MySQL 通讯协议</span></a><a href="../design/miniob-pax-storage.html"><span class="nav-link-text">MiniOB PAX 存储格式</span><span class="nav-badge" title="含交互流程图或架构图">图</span></a><a href="../design/miniob-aggregation-and-group-by.html"><span class="nav-link-text">MiniOB 向量化执行 aggregation 和 group by 实现</span></a><a href="../design/miniob-lsm-tree.html"><span class="nav-link-text">MiniOB LSM-Tree 存储引擎</span><span class="nav-badge" title="含交互流程图或架构图">图</span></a><a href="../design/introduction.html"><span class="nav-link-text">功能模块设计说明</span></a><a href="../design/miniob-btree-storage-engine.html"><span class="nav-link-text">MiniOB B+Tree 聚簇表存储引擎</span><span class="nav-badge" title="含交互流程图或架构图">图</span></a><a href="../design/miniob-cascade.html"><span class="nav-link-text">Cascade Optimizer(查询优化器)</span><span class="nav-badge" title="含交互流程图或架构图">图</span></a><a href="../design/miniob-update-mvcc-occ.html"><span class="nav-link-text">MiniOB UPDATE、MVCC 与 OCC 方案设计</span><span class="nav-badge" title="含交互流程图或架构图">图</span></a></div></details><details class="nav-group"><summary>课程实验<span>6</span></summary><div class="nav-links"><a href="../db_course_lab/overview.html"><span class="nav-link-text">数据库系统实现原理与实践课程实验</span></a><a href="../db_course_lab/lab0.html"><span class="nav-link-text">LAB#0 C++ 基础</span></a><a href="../db_course_lab/lab1.html"><span class="nav-link-text">LAB#1 LSM-Tree 存储引擎</span></a><a href="../db_course_lab/lab2.html"><span class="nav-link-text">LAB#2 查询引擎</span></a><a href="../db_course_lab/lab3.html"><span class="nav-link-text">LAB#3 事务引擎</span></a><a href="../db_course_lab/lab4.html"><span class="nav-link-text">LAB#4 性能测试</span></a></div></details><details class="nav-group"><summary>简明教程<span>9</span></summary><div class="nav-links"><a href="../lectures/copyright.html"><span class="nav-link-text">版权声明</span></a><a href="../lectures/lecture-1.html"><span class="nav-link-text">第1章 数据库管理系统概述</span></a><a href="../lectures/lecture-2.html"><span class="nav-link-text">第2章 数据库的存储结构</span></a><a href="../lectures/lecture-3.html"><span class="nav-link-text">第3章 索引结构</span></a><a href="../lectures/lecture-4.html"><span class="nav-link-text">第4章 查询处理</span></a><a href="../lectures/lecture-5.html"><span class="nav-link-text">第5章 查询优化</span></a><a href="../lectures/lecture-6.html"><span class="nav-link-text">第6章 事务处理</span></a><a href="../lectures/references.html"><span class="nav-link-text">参考资料</span></a><a href="../lectures/index.html"><span class="nav-link-text">数据库管理系统实现基础讲义</span></a></div></details><details class="nav-group" open><summary>开发环境<span>14</span></summary><div class="nav-links"><a href="introduction.html"><span class="nav-link-text">搭建开发环境</span></a><a href="vscode_dev_with_local_virtual_env.html"><span class="nav-link-text">虚拟机+vscode remote开发</span></a><a href="dev_by_online.html"><span class="nav-link-text">使用在线开发环境开发 MiniOB</span></a><a href="how-to-dev-using-docker.html"><span class="nav-link-text">使用Docker开发MiniOB</span></a><a href="how_to_dev_in_docker_container_by_vscode.html"><span class="nav-link-text">使用 Docker 和 VSCode 远程开发 Miniob</span></a><a href="how_to_dev_in_docker_container_by_vscode_on_windows.html" class="active" aria-current="page"><span class="nav-link-text">在windows上通过docker配置环境并利用vscode调试代码（手把手版）</span></a><a href="how_to_dev_miniob_by_docker_on_windows.html"><span class="nav-link-text">安装Docker</span></a><a href="how_to_dev_miniob_by_vscode.html"><span class="nav-link-text">环境准备</span></a><a href="miniob-how-to-debug.html"><span class="nav-link-text">miniob调试篇</span></a><a href="how_to_submit_for_testing.html"><span class="nav-link-text">训练营平台使用说明</span></a><a href="integration_test.html"><span class="nav-link-text">MiniOB 集成测试使用文档</span></a><a href="cloudlab_setup.html"><span class="nav-link-text">开源学堂在线编程环境开发 MiniOB</span></a><a href="how_to_dev_miniob_by_docker_on_windows_simplified.html"><span class="nav-link-text">在windows上通过docker配置环境并利用vscode编辑、开发、调试代码（简易版）</span></a><a href="how_to_dev_miniob_in_vscodeGUI_by_docker_on_windows.html"><span class="nav-link-text">基于Windows+docker容器在本地利用VSCode编辑、开发及调试miniob</span></a></div></details><details class="nav-group"><summary>大赛与训练<span>9</span></summary><div class="nav-links"><a href="../game/introduction.html"><span class="nav-link-text">OceanBase 数据库大赛</span></a><a href="../game/miniob-output-convention.html"><span class="nav-link-text">输出规范</span></a><a href="../game/debug-output.html"><span class="nav-link-text">输出调试信息</span></a><a href="../game/miniob-memtracer.html"><span class="nav-link-text">MemTracer</span></a><a href="../game/miniob_topics.html"><span class="nav-link-text">OceanBase 数据库大赛2021届题目</span></a><a href="../game/github-introduction.html"><span class="nav-link-text">MiniOB GitHub 在训练营中的使用说明</span></a><a href="../game/gitee-instructions.html"><span class="nav-link-text">MiniOB Gitee 在训练营中的使用说明</span></a><a href="../game/miniob-vectordb.html"><span class="nav-link-text">MiniOB 向量数据库</span></a><a href="../game/git-introduction.html"><span class="nav-link-text">Git 介绍</span></a></div></details><details class="nav-group"><summary>博客<span>2</span></summary><div class="nav-links"><a href="../blog/introduction.html"><span class="nav-link-text">介绍</span></a><a href="../blog/1.html"><span class="nav-link-text">High-Performance Concurrency Control Mechanisms for Main-Memory Databases</span></a></div></details><a class="nav-flows" href="../flows.html"><span class="dot"></span>动态流程<span class="count">13</span></a></nav></aside>
+  <main class="main">
+    
+<nav class="crumbs" aria-label="面包屑导航"><a href="../index.html">首页</a><span>/</span><span>开发环境</span><span>/</span><span aria-current="page">在windows上通过docker配置环境并利用vscode调试代码（手把手版）</span></nav>
+<header class="doc-head">
+  <div class="doc-meta-bar">
+    <span class="eyebrow-pill">开发环境</span>
+    <span class="doc-meta-item">10 个章节</span>
+    <span class="doc-meta-sep">·</span>
+    <span class="doc-meta-item">约 8 分钟阅读</span>
+    <span class="doc-meta-sep">·</span>
+    <a class="doc-meta-source" href="../../docs/dev-env/how_to_dev_in_docker_container_by_vscode_on_windows.md">Markdown 源文件 ↗</a>
+  </div>
+  <h1>在windows上通过docker配置环境并利用vscode调试代码（手把手版）</h1>
+</header>
+<section class="panel map-panel" id="doc-outline-panel">
+  <div class="panel-head">
+    <div>
+      <h2>章节结构导览</h2>
+      <span>点击任意章节直达正文；支持结构卡片与交互思维导图切换</span>
+    </div>
+    <button type="button" class="map-toggle-btn" data-toggle-markmap aria-expanded="false">⊞ 切换思维导图</button>
+  </div>
+  <div class="tree-view"><div class="tree-grid"><div class="tree-branch"><div class="tree-top"><a class="tree-link" href="#实操"><span class="tree-num">1</span><span>实操：</span></a></div><ul class="tree-sub"><li><a class="tree-link" href="#1下载docker"><span class="tree-num">1.1</span><span>1、下载docker</span></a></li><li><a class="tree-link" href="#2获取oceanbaseminiob的docker环境"><span class="tree-num">1.2</span><span>2、获取oceanbase/miniob的docker环境</span></a></li><li><a class="tree-link" href="#3在vscode中使用git-对官网miniob进行clone-在本地创建一个代码仓库"><span class="tree-num">1.3</span><span>3、在vscode中使用git 对官网miniob进行clone ，在本地创建一个代码仓库</span></a></li><li><a class="tree-link" href="#4将获取到的文件与docker容器-映射连接"><span class="tree-num">1.4</span><span>4、将获取到的文件与docker容器 映射连接</span></a></li><li><a class="tree-link" href="#5在vscode中启动docker"><span class="tree-num">1.5</span><span>5、在vscode中启动docker</span></a></li></ul></div></div></div>
+  <div class="markmap-wrap" hidden>
+    <div class="markmap"><script type="text/template"># 在windows上通过docker配置环境并利用vscode调试代码（手把手版）
+  - [实操：](#实操)
+    - [1、下载docker](#1下载docker)
+    - [2、获取oceanbase/miniob的docker环境](#2获取oceanbaseminiob的docker环境)
+    - [3、在vscode中使用git 对官网miniob进行clone ，在本地创建一个代码仓库](#3在vscode中使用git-对官网miniob进行clone-在本地创建一个代码仓库)
+      - [1）准备工作（有vscode和git，并且配置好环境变量的小伙伴可以看下一步）：](#1准备工作有vscode和git并且配置好环境变量的小伙伴可以看下一步)
+      - [2）进入vscode clone 代码](#2进入vscode-clone-代码)
+    - [4、将获取到的文件与docker容器 映射连接](#4将获取到的文件与docker容器-映射连接)
+      - [创建一个container（映射方式）](#创建一个container映射方式)
+    - [5、在vscode中启动docker](#5在vscode中启动docker)</script></div>
+  </div>
+</section>
+
+<article class="content"><h1 id="在windows上通过docker配置环境并利用vscode调试代码手把手版">在windows上通过docker配置环境并利用vscode调试代码（手把手版）</h1>
+<p>-- 由严奕凡编写，就读于重庆大学.</p>
+<p><strong>系统情况：</strong> windows操作系统,版本win11</p>
+<p><strong>个人情况：</strong> from 0 to 1 不想用虚拟机,不想用gitpod</p>
+<p><strong>参考资料：</strong> https://oceanbase.github.io/miniob 、小伙伴们的讨论、亲身经历</p>
+<p><strong>配置思路：</strong>
+1、使用docker提供linux编译环境
+2、使用vscode进行代码编辑
+3、使用vscode的docker插件，在vscode终端调试</p>
+<p><strong>个人理解1:</strong> docker对我来说就是在windows系统上提供一个虚拟的linux环境，它只在build和调试时起到作用</p>
+<p><strong>个人理解2:</strong> vscode用来编辑代码</p>
+<p><strong>个人理解3:</strong> vscode里面docker插件的attach功能可以在vscode的终端实现一个linux的虚拟环境，使得miniob的build.sh能在其中通过bash指令运行</p>
+<h1 id="实操">实操：</h1>
+<h2 id="1下载docker">1、下载docker</h2>
+<p><a target="_blank" rel="noopener" href="https://www.docker.com/get-started/">Get Started | Docker</a></p>
+<h2 id="2获取oceanbaseminiob的docker环境">2、获取oceanbase/miniob的docker环境</h2>
+<p>方法是在任意位置启动 终端(cmd或者powershell)</p>
+<p>运行以下代码</p>
+<pre><code class="language-bash">docker run --privileged -d --name=miniobtest oceanbase/miniob
+</code></pre>
+<p>注意：如果这里遇到网络问题（例如：timeout 相关提示），请尝试用其他镜像源拉取镜像。
+<img loading="lazy" src="../../docs/dev-env/images/docker_pull_timeout.png" alt="docker pull timeout" /></p>
+<pre><code class="language-bash"># 下面的命令三选一即可
+docker pull oceanbase/miniob         # pull from docker hub
+docker pull ghcr.io/oceanbase/miniob &amp;&amp; docker tag ghcr.io/oceanbase/miniob oceanbase/miniob # pull from github
+docker pull quay.io/oceanbase/miniob &amp;&amp; docker tag quay.io/oceanbase/miniob oceanbase/miniob # pull from github # pull from quay.io
+</code></pre>
+<p>其中 --name=miniobtest  这个“miniobtest”是自己容器的名字 可以自己改
+这个代码大概理解成从远程oceanbase/miniob拉取适合miniob的配置好的环境</p>
+<p>这一步之后先把docker放一放，后面需要将本地文件与docker进行一个连接，先不放代码以免产生误解</p>
+<h2 id="3在vscode中使用git-对官网miniob进行clone-在本地创建一个代码仓库">3、在vscode中使用git 对官网miniob进行clone ，在本地创建一个代码仓库</h2>
+<p>PS：这一步部分小伙伴可能会遇到网络问题，提示您clone的时候连接到github失败，有两种解决办法，其一是解决访问github的问题，其二是直接从github上下载源代码下来,另外还可以用ssh的方式clone代码，速度比https快很多(本文档暂未给出ssh使用办法，有兴趣的小伙伴可以进行补充)</p>
+<h3 id="1准备工作有vscode和git并且配置好环境变量的小伙伴可以看下一步">1）准备工作（有vscode和git，并且配置好环境变量的小伙伴可以看下一步）：</h3>
+<p>下载vscode <a target="_blank" rel="noopener" href="https://code.visualstudio.com/">Visual Studio Code - Code Editing. Redefined</a></p>
+<p>下载git <a target="_blank" rel="noopener" href="https://git-scm.com/">Git (git-scm.com)</a></p>
+<p>配置vscode设置 ,下载所需插件：例如docker</p>
+<hr />
+<p><img loading="lazy" src="../../docs/dev-env/images/dev_in_docker_container_by_vscode_on_windows_plugin.png" alt="download docker" /></p>
+<p><img loading="lazy" src="../../docs/dev-env/images/dev_in_docker_container_by_vscode_on_windows_Docker.png" alt="docker" /></p>
+<p>配置环境变量（这是为了让git能在vscode终端中使用）：</p>
+<p><img loading="lazy" src="../../docs/dev-env/images/dev_in_docker_container_by_vscode_on_windows_searchEnv.png" alt="search env" /></p>
+<p><img loading="lazy" src="../../docs/dev-env/images/dev_in_docker_container_by_vscode_on_windows_searchEnv2.png" alt="search env2" /></p>
+<p>验证以下路径是否存在（如果没有，请添加文件路径）</p>
+<p><img loading="lazy" src="../../docs/dev-env/images/dev_in_docker_container_by_vscode_on_windows_searchEnv3.png" alt="search env3" /></p>
+<h3 id="2进入vscode-clone-代码">2）进入vscode clone 代码</h3>
+<p><img loading="lazy" src="../../docs/dev-env/images/dev_in_docker_container_by_vscode_on_windows_clone.png" alt="clone" /></p>
+<p>文件-打开文件夹，选取一个用于保存代码的文件夹</p>
+<p>然后ctrl+shift+~ (快速新建一个终端)
+(PS：Mac 系统 Command + J)</p>
+<p>在终端里输入</p>
+<pre><code class="language-bash">git clone https://github.com/oceanbase/miniob.git
+</code></pre>
+<p>如果git配置正确并且能成功连接到github</p>
+<p>您可以得到</p>
+<p><img loading="lazy" src="../../docs/dev-env/images/dev_in_docker_container_by_vscode_on_windows_clone_done.png" alt="clone done" /></p>
+<p>然后您可以进入得到的代码文件查看分支信息：例如</p>
+<pre><code class="language-bash">ls       --查看当前目录
+cd ‘文件名’      --进入
+</code></pre>
+<p><img loading="lazy" src="../../docs/dev-env/images/dev_in_docker_container_by_vscode_on_windows_clone_file_info.png" alt="clone file info" /></p>
+<p>您可以输入  （要先进入clone得到的代码文件里面，才能读取到.git文件）</p>
+<pre><code class="language-bash">git branch -a 
+</code></pre>
+<p>查看所有分支</p>
+<p><img loading="lazy" src="../../docs/dev-env/images/dev_in_docker_container_by_vscode_on_windows_clone_branch.png" alt="clone branch" /></p>
+<h2 id="4将获取到的文件与docker容器-映射连接">4、将获取到的文件与docker容器 映射连接</h2>
+<h3 id="创建一个container映射方式">创建一个container（映射方式）</h3>
+<p>恭喜！您已经获取到代码文件，并且实现了大部分配置！</p>
+<p>接下来我们进入clone得到的文件夹的<strong>上一层目录</strong>，在那打开终端（这是方便后续代码的实现）</p>
+<p>您也可以用cd 指令进入得到的文件夹的<strong>上一层目录</strong></p>
+<p>像这样</p>
+<p><img loading="lazy" src="../../docs/dev-env/images/dev_in_docker_container_by_vscode_on_windows_prepareDocker1.png" alt="prepare docker 1" /></p>
+<p>然后输入</p>
+<pre><code class="language-bash">docker run -d --name fortest --privileged -v $PWD/miniob:/root/miniob oceanbase/miniob
+</code></pre>
+<p>分析如下：</p>
+<blockquote>
+<ul>
+<li>
+<p>您提供的命令<code>docker run</code>用于运行具有特定选项和配置的 Docker 容器，但它还指定要运行的映像。让我们分解一下命令：</p>
+<ul>
+<li><code>docker run</code>：这是启动新 Docker 容器的基本命令。</li>
+<li><code>-d</code>：此选项以分离模式运行容器，这意味着它在后台运行，允许您继续使用终端。</li>
+<li><code>--name fortest</code>：此选项指定容器的名称为“fortest”。</li>
+<li><code>--privileged</code>：这是一个与安全相关的选项，可授予容器额外的权限，从而有效地赋予其对主机系统的更高访问权限。使用时要小心，<code>--privileged</code>因为它可能会带来安全风险。</li>
+<li><code>-v $PWD/miniob:/root/miniob</code>：此选项用于创建卷安装。它将主机系统上的目录或文件映射到容器内的目录。在本例中，它将主机系统上<code>miniob</code>当前工作目录 ( ) 中的目录映射到容器内的目录。这是向容器提供数据或配置的常见方法。<code>$PWD``/root/miniob</code></li>
+<li><code>oceanbase/miniob</code>：指定要运行的 Docker 映像。镜像“oceanbase/miniob”用于创建容器。如果您的系统上尚未提供该映像，Docker 将尝试从 Docker Hub 中提取该映像。</li>
+</ul>
+<p>因此，总体命令是以分离模式运行名为“fortest”的 Docker 容器，授予其提升的权限，将目录<code>miniob</code>从主机系统安装到<code>/root/miniob</code>容器内的目录，并使用“oceanbase/miniob”映像作为容器。此命令对于运行基于具有特定配置的“oceanbase/miniob”映像的容器非常有用。</p>
+</li>
+</ul>
+</blockquote>
+<p>得到的结果如图</p>
+<p><img loading="lazy" src="../../docs/dev-env/images/dev_in_docker_container_by_vscode_on_windows_prepareDocker2.png" alt="prepare docker 2" /></p>
+<p>此时您应该可以在docker里面查看到container</p>
+<p><img loading="lazy" src="../../docs/dev-env/images/dev_in_docker_container_by_vscode_on_windows_prepareDocker3.png" alt="prepare docker 3" /></p>
+<h2 id="5在vscode中启动docker">5、在vscode中启动docker</h2>
+<p>1）先打开docker软件（每次重启电脑后都需要做）</p>
+<p>2）打开vscode，在左侧边栏找到下载好的docker插件
+<img loading="lazy" src="../../docs/dev-env/images/dev_in_docker_container_by_vscode_on_windows_startDocker_in_vscode_1.png" alt="start docker1" /></p>
+<p>然后选中您刚才用以下代码生成的容器，如果是初次生成，您可能只会显示一个容器</p>
+<pre><code class="language-bash">docker run -d --name fortest --privileged -v $PWD/miniob:/root/miniob oceanbase/miniob
+</code></pre>
+<p>右键选中容器然后attach shell</p>
+<p><img loading="lazy" src="../../docs/dev-env/images/dev_in_docker_container_by_vscode_on_windows_startDocker_in_vscode_2.png" alt="start docker2" /></p>
+<p>然后在打开的终端中就可以编译miniob了！</p>
+<p>（注意，一开始是不会有build 和build_debug文件的,这两个是通过运行bash.sh生成的）</p>
+<p><img loading="lazy" src="../../docs/dev-env/images/dev_in_docker_container_by_vscode_on_windows_startDocker_in_vscode_3.png" alt="start docker3" /></p>
+<blockquote>
+<p><strong>没有看到 miniob 目录？</strong></p>
+<p>请尝试以下方法：</p>
+<p>在 Docker Desktop 中查看对应容器的 Log，如果提示 <code>REPO_ADDR</code> 未设置，请重新启动一个容器，并加上<code>-e REPO_ADDR=&lt;your_repo_addr&gt;</code> 参数，如<code>docker run -d --name fortest2 --privileged -v $PWD/miniob:/root/miniob -e REPO_ADDR=https://github.com/oceanbase/miniob.git oceanbase/miniob</code>。</p>
+<p>容器启动后，在终端输入<code>ls</code>，会出现<code>source</code>目录，用<code>cd source</code>命令进入目录，再次输入<code>ls</code>即可发现<code>miniob</code>目录。</p>
+<p>如果以上方法失效，请在 GitHub 创建一个 Issue，并附上容器的 Log。</p>
+</blockquote>
+<p>综合运用以下代码运行build.sh文件</p>
+<pre><code class="language-bash">ls
+cd miniob
+bash build.sh
+</code></pre>
+<p>解释如下</p>
+<blockquote>
+<p>您提供的命令是类 Unix 操作系统终端（例如 Linux）中使用的典型命令。让我分解一下命令：</p>
+<ol>
+<li><code>ls</code>：该命令是“list”的缩写。它用于列出当前目录中的文件和目录。运行<code>ls</code>将显示当前工作目录中的文件和文件夹列表。</li>
+<li><code>cd miniob</code>：此命令将当前工作目录更改为名为“miniob”的子目录。您将导航到“miniob”目录。</li>
+<li><code>bash build.sh</code>：此命令正在运行名为“build.sh”的 Bash 脚本。该脚本可能用于构建或编译某些软件、设置开发环境或执行与“miniob”项目或应用程序相关的其他任务。运行此脚本将执行其中定义的命令。</li>
+</ol>
+<p>假设“build.sh”是“miniob”项目的构建脚本，则运行这些命令是构建或设置项目的常见顺序。该<code>ls</code>命令用于检查当前目录的内容，<code>cd</code>用于更改到“miniob”目录，并<code>bash build.sh</code>用于执行构建脚本。</p>
+</blockquote>
+<p>编译通过后你可以在目录看到 build 或者build_debug 文件 然后可以进去调试</p>
+<p>示例代码：</p>
+<pre><code class="language-bash">cd build_debug
+./bin/observer -f ../etc/observer.ini -P cli
+#这会以直接执行命令的方式启动服务端程序，可以直接输入命令，不需要客户端。所有的请求都会以单线程的方式运行，配置项中的线程数不再有实际意义。
+</code></pre>
+<p>示例图（ps：drop table功能一开始没有实习，需要您自己去尝试实现）</p>
+<p><img loading="lazy" src="../../docs/dev-env/images/dev_in_docker_container_by_vscode_on_windows_startDocker_in_vscode_4.png" alt="start docker4" /></p>
+<p>您也可以启动服务端后再启用客户端，也可以实现类似效果
+在vscode中操作为 再次attach shell新建一个终端
+参考文档：https://oceanbase.github.io/miniob/how_to_run.html</p>
+<p><strong>以监听TCP端口的方式启动服务端程序</strong></p>
+<pre><code class="language-bash">./bin/observer -f ../etc/observer.ini -p 6789
+</code></pre>
+<p>这会以监听6789端口的方式启动服务端程序。 启动客户端程序：</p>
+<pre><code class="language-bash">./bin/obclient -p 6789
+</code></pre>
+<p>这会连接到服务端的6789端口。</p>
+<p>编辑日期  2024-09-10</p>
+</article>
+<nav class="pager" aria-label="相邻文档导航"><a class="prev" href="how_to_dev_in_docker_container_by_vscode.html"><span>← 上一篇</span>使用 Docker 和 VSCode 远程开发 Miniob</a><a class="next" href="how_to_dev_miniob_by_docker_on_windows.html"><span>下一篇 →</span>安装Docker</a></nav>
+<p class="source-line">源文件：<a href="../../docs/dev-env/how_to_dev_in_docker_container_by_vscode_on_windows.md">dev-env/how_to_dev_in_docker_container_by_vscode_on_windows.md</a></p>
+
+    <footer class="page-footer">
+      <span>由 <code>docs/visual/build.py</code> &amp; <code>draw_diagrams.py</code> 从 <code>docs/docs</code> 生成</span>
+      <span>MiniOB · 可视化技术文档</span>
+    </footer>
+  </main>
+  <aside class="page-toc" aria-label="本页目录"><div class="toc-inner"><p class="toc-title">本页导览</p><ul class="toc-list"><li class="toc-item toc-l1"><a href="#实操">实操：</a></li><li class="toc-item toc-l2"><a href="#1下载docker">1、下载docker</a></li><li class="toc-item toc-l2"><a href="#2获取oceanbaseminiob的docker环境">2、获取oceanbase/miniob的docker环境</a></li><li class="toc-item toc-l2"><a href="#3在vscode中使用git-对官网miniob进行clone-在本地创建一个代码仓库">3、在vscode中使用git 对官网miniob进行clone ，在本地创建一个代码仓库</a></li><li class="toc-item toc-l3"><a href="#1准备工作有vscode和git并且配置好环境变量的小伙伴可以看下一步">1）准备工作（有vscode和git，并且配置好环境变量的小伙伴可以看下一步）：</a></li><li class="toc-item toc-l3"><a href="#2进入vscode-clone-代码">2）进入vscode clone 代码</a></li><li class="toc-item toc-l2"><a href="#4将获取到的文件与docker容器-映射连接">4、将获取到的文件与docker容器 映射连接</a></li><li class="toc-item toc-l3"><a href="#创建一个container映射方式">创建一个container（映射方式）</a></li><li class="toc-item toc-l2"><a href="#5在vscode中启动docker">5、在vscode中启动docker</a></li></ul><a class="toc-top" href="#top">↑ 回到顶部</a></div></aside>
+</div>
+<div class="nav-scrim" id="navScrim"></div>
+<div class="diagram-modal" id="diagramModal" hidden role="dialog" aria-modal="true" aria-label="图表放大检视">
+  <div class="diagram-modal-bar">
+    <span class="diagram-modal-title" id="diagramModalTitle">架构与流程图检视</span>
+    <button type="button" class="diagram-modal-close" id="diagramModalClose" aria-label="关闭">✕ 关闭 (Esc)</button>
+  </div>
+  <div class="diagram-modal-body" id="diagramModalBody"></div>
+</div>
+<script src="../assets/markmap-config.js"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/markmap-autoloader@0.18"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/@highlightjs/cdn-assets@11/highlight.min.js"></script>
+
+<script defer src="../assets/site.js"></script>
+</body>
+</html>

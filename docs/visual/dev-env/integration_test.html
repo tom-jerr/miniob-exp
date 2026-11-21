@@ -1,0 +1,180 @@
+<!doctype html>
+<html lang="zh-CN" id="top">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>MiniOB 集成测试使用文档 · MiniOB 可视化文档</title>
+<link rel="stylesheet" href="../assets/style.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@highlightjs/cdn-assets@11/styles/atom-one-dark.min.css">
+<script src="../assets/theme.js"></script>
+
+</head>
+<body class="">
+<div class="reading-progress" id="readingProgress" aria-hidden="true"></div>
+<header class="topbar">
+  <button class="menu-btn" id="menuBtn" aria-label="切换侧栏" aria-expanded="false">☰</button>
+  <a class="brand" href="../index.html"><span class="brand-mark">M</span><span>MiniOB <em>可视化文档</em></span></a>
+  <div class="top-actions">
+    <a class="top-link" href="../flows.html">动态流程</a>
+    <button class="theme-btn" id="themeBtn" aria-label="切换明暗主题" title="切换明暗主题">◐</button>
+  </div>
+</header>
+<div class="layout has-toc">
+  <aside class="sidebar" id="sidebar"><nav class="site-nav" aria-label="文档目录"><a class="nav-home" href="../index.html"><span class="brand-mark">M</span><span>MiniOB 可视化文档</span></a><details class="nav-group"><summary>快速开始<span>2</span></summary><div class="nav-links"><a href="../how_to_build.html"><span class="nav-link-text">如何编译</span></a><a href="../how_to_run.html"><span class="nav-link-text">如何运行</span></a></div></details><details class="nav-group"><summary>设计文档<span>21</span></summary><div class="nav-links"><a href="../design/miniob-architecture.html"><span class="nav-link-text">MiniOB代码架构框架设计和说明</span><span class="nav-badge" title="含交互流程图或架构图">图</span></a><a href="../design/miniob-buffer-pool.html"><span class="nav-link-text">MiniOB 存储实现</span><span class="nav-badge" title="含交互流程图或架构图">图</span></a><a href="../design/miniob-double-write-buffer.html"><span class="nav-link-text">MiniOB Double Write Buffer 实现</span><span class="nav-badge" title="含交互流程图或架构图">图</span></a><a href="../design/miniob-transaction.html"><span class="nav-link-text">事务模块</span><span class="nav-badge" title="含交互流程图或架构图">图</span></a><a href="../design/miniob-durability.html"><span class="nav-link-text">持久化</span><span class="nav-badge" title="含交互流程图或架构图">图</span></a><a href="../design/miniob-persistence-files.html"><span class="nav-link-text">持久化文件与恢复路径</span><span class="nav-badge" title="含交互流程图或架构图">图</span></a><a href="../design/miniob-checkpoint-wal.html"><span class="nav-link-text">MiniOB 检查点与 WAL 截断</span><span class="nav-badge" title="含交互流程图或架构图">图</span></a><a href="../design/miniob-sql-parser.html"><span class="nav-link-text">SQL 词法语法分析</span></a><a href="../design/miniob-how-to-add-new-sql.html"><span class="nav-link-text">SQL语句执行流程</span><span class="nav-badge" title="含交互流程图或架构图">图</span></a><a href="../design/miniob-sql-expression.html"><span class="nav-link-text">SQL 表达式</span></a><a href="../design/miniob-bplus-tree.html"><span class="nav-link-text">MiniOB B+Tree 实现</span><span class="nav-badge" title="含交互流程图或架构图">图</span></a><a href="../design/miniob-bplus-tree-concurrency.html"><span class="nav-link-text">B+ 树并发操作</span><span class="nav-badge" title="含交互流程图或架构图">图</span></a><a href="../design/miniob-thread-model.html"><span class="nav-link-text">线程模型</span><span class="nav-badge" title="含交互流程图或架构图">图</span></a><a href="../design/miniob-mysql-protocol.html"><span class="nav-link-text">MySQL 通讯协议</span></a><a href="../design/miniob-pax-storage.html"><span class="nav-link-text">MiniOB PAX 存储格式</span><span class="nav-badge" title="含交互流程图或架构图">图</span></a><a href="../design/miniob-aggregation-and-group-by.html"><span class="nav-link-text">MiniOB 向量化执行 aggregation 和 group by 实现</span></a><a href="../design/miniob-lsm-tree.html"><span class="nav-link-text">MiniOB LSM-Tree 存储引擎</span><span class="nav-badge" title="含交互流程图或架构图">图</span></a><a href="../design/introduction.html"><span class="nav-link-text">功能模块设计说明</span></a><a href="../design/miniob-btree-storage-engine.html"><span class="nav-link-text">MiniOB B+Tree 聚簇表存储引擎</span><span class="nav-badge" title="含交互流程图或架构图">图</span></a><a href="../design/miniob-cascade.html"><span class="nav-link-text">Cascade Optimizer(查询优化器)</span><span class="nav-badge" title="含交互流程图或架构图">图</span></a><a href="../design/miniob-update-mvcc-occ.html"><span class="nav-link-text">MiniOB UPDATE、MVCC 与 OCC 方案设计</span><span class="nav-badge" title="含交互流程图或架构图">图</span></a></div></details><details class="nav-group"><summary>课程实验<span>6</span></summary><div class="nav-links"><a href="../db_course_lab/overview.html"><span class="nav-link-text">数据库系统实现原理与实践课程实验</span></a><a href="../db_course_lab/lab0.html"><span class="nav-link-text">LAB#0 C++ 基础</span></a><a href="../db_course_lab/lab1.html"><span class="nav-link-text">LAB#1 LSM-Tree 存储引擎</span></a><a href="../db_course_lab/lab2.html"><span class="nav-link-text">LAB#2 查询引擎</span></a><a href="../db_course_lab/lab3.html"><span class="nav-link-text">LAB#3 事务引擎</span></a><a href="../db_course_lab/lab4.html"><span class="nav-link-text">LAB#4 性能测试</span></a></div></details><details class="nav-group"><summary>简明教程<span>9</span></summary><div class="nav-links"><a href="../lectures/copyright.html"><span class="nav-link-text">版权声明</span></a><a href="../lectures/lecture-1.html"><span class="nav-link-text">第1章 数据库管理系统概述</span></a><a href="../lectures/lecture-2.html"><span class="nav-link-text">第2章 数据库的存储结构</span></a><a href="../lectures/lecture-3.html"><span class="nav-link-text">第3章 索引结构</span></a><a href="../lectures/lecture-4.html"><span class="nav-link-text">第4章 查询处理</span></a><a href="../lectures/lecture-5.html"><span class="nav-link-text">第5章 查询优化</span></a><a href="../lectures/lecture-6.html"><span class="nav-link-text">第6章 事务处理</span></a><a href="../lectures/references.html"><span class="nav-link-text">参考资料</span></a><a href="../lectures/index.html"><span class="nav-link-text">数据库管理系统实现基础讲义</span></a></div></details><details class="nav-group" open><summary>开发环境<span>14</span></summary><div class="nav-links"><a href="introduction.html"><span class="nav-link-text">搭建开发环境</span></a><a href="vscode_dev_with_local_virtual_env.html"><span class="nav-link-text">虚拟机+vscode remote开发</span></a><a href="dev_by_online.html"><span class="nav-link-text">使用在线开发环境开发 MiniOB</span></a><a href="how-to-dev-using-docker.html"><span class="nav-link-text">使用Docker开发MiniOB</span></a><a href="how_to_dev_in_docker_container_by_vscode.html"><span class="nav-link-text">使用 Docker 和 VSCode 远程开发 Miniob</span></a><a href="how_to_dev_in_docker_container_by_vscode_on_windows.html"><span class="nav-link-text">在windows上通过docker配置环境并利用vscode调试代码（手把手版）</span></a><a href="how_to_dev_miniob_by_docker_on_windows.html"><span class="nav-link-text">安装Docker</span></a><a href="how_to_dev_miniob_by_vscode.html"><span class="nav-link-text">环境准备</span></a><a href="miniob-how-to-debug.html"><span class="nav-link-text">miniob调试篇</span></a><a href="how_to_submit_for_testing.html"><span class="nav-link-text">训练营平台使用说明</span></a><a href="integration_test.html" class="active" aria-current="page"><span class="nav-link-text">MiniOB 集成测试使用文档</span></a><a href="cloudlab_setup.html"><span class="nav-link-text">开源学堂在线编程环境开发 MiniOB</span></a><a href="how_to_dev_miniob_by_docker_on_windows_simplified.html"><span class="nav-link-text">在windows上通过docker配置环境并利用vscode编辑、开发、调试代码（简易版）</span></a><a href="how_to_dev_miniob_in_vscodeGUI_by_docker_on_windows.html"><span class="nav-link-text">基于Windows+docker容器在本地利用VSCode编辑、开发及调试miniob</span></a></div></details><details class="nav-group"><summary>大赛与训练<span>9</span></summary><div class="nav-links"><a href="../game/introduction.html"><span class="nav-link-text">OceanBase 数据库大赛</span></a><a href="../game/miniob-output-convention.html"><span class="nav-link-text">输出规范</span></a><a href="../game/debug-output.html"><span class="nav-link-text">输出调试信息</span></a><a href="../game/miniob-memtracer.html"><span class="nav-link-text">MemTracer</span></a><a href="../game/miniob_topics.html"><span class="nav-link-text">OceanBase 数据库大赛2021届题目</span></a><a href="../game/github-introduction.html"><span class="nav-link-text">MiniOB GitHub 在训练营中的使用说明</span></a><a href="../game/gitee-instructions.html"><span class="nav-link-text">MiniOB Gitee 在训练营中的使用说明</span></a><a href="../game/miniob-vectordb.html"><span class="nav-link-text">MiniOB 向量数据库</span></a><a href="../game/git-introduction.html"><span class="nav-link-text">Git 介绍</span></a></div></details><details class="nav-group"><summary>博客<span>2</span></summary><div class="nav-links"><a href="../blog/introduction.html"><span class="nav-link-text">介绍</span></a><a href="../blog/1.html"><span class="nav-link-text">High-Performance Concurrency Control Mechanisms for Main-Memory Databases</span></a></div></details><a class="nav-flows" href="../flows.html"><span class="dot"></span>动态流程<span class="count">13</span></a></nav></aside>
+  <main class="main">
+    
+<nav class="crumbs" aria-label="面包屑导航"><a href="../index.html">首页</a><span>/</span><span>开发环境</span><span>/</span><span aria-current="page">MiniOB 集成测试使用文档</span></nav>
+<header class="doc-head">
+  <div class="doc-meta-bar">
+    <span class="eyebrow-pill">开发环境</span>
+    <span class="doc-meta-item">9 个章节</span>
+    <span class="doc-meta-sep">·</span>
+    <span class="doc-meta-item">约 8 分钟阅读</span>
+    <span class="doc-meta-sep">·</span>
+    <a class="doc-meta-source" href="../../docs/dev-env/integration_test.md">Markdown 源文件 ↗</a>
+  </div>
+  <h1>MiniOB 集成测试使用文档</h1>
+</header>
+<section class="panel map-panel" id="doc-outline-panel">
+  <div class="panel-head">
+    <div>
+      <h2>章节结构导览</h2>
+      <span>点击任意章节直达正文；支持结构卡片与交互思维导图切换</span>
+    </div>
+    <button type="button" class="map-toggle-btn" data-toggle-markmap aria-expanded="false">⊞ 切换思维导图</button>
+  </div>
+  <div class="tree-view"><div class="tree-grid"><div class="tree-branch"><div class="tree-top"><a class="tree-link" href="#如何运行集成测试"><span class="tree-num">1</span><span>如何运行集成测试</span></a></div><ul class="tree-sub"><li><a class="tree-link" href="#本地运行"><span class="tree-num">1.1</span><span>本地运行</span></a></li><li><a class="tree-link" href="#github-中运行"><span class="tree-num">1.2</span><span>GitHub 中运行</span></a></li><li><a class="tree-link" href="#查看执行结果"><span class="tree-num">1.3</span><span>查看执行结果</span></a></li></ul></div><div class="tree-branch"><div class="tree-top"><a class="tree-link" href="#如何添加集成测试测试用例"><span class="tree-num">2</span><span>如何添加集成测试测试用例</span></a></div></div><div class="tree-branch"><div class="tree-top"><a class="tree-link" href="#常见问题"><span class="tree-num">3</span><span>常见问题</span></a></div></div></div></div>
+  <div class="markmap-wrap" hidden>
+    <div class="markmap"><script type="text/template"># MiniOB 集成测试使用文档
+  - [如何运行集成测试](#如何运行集成测试)
+    - [本地运行](#本地运行)
+      - [前置依赖](#前置依赖)
+      - [执行集成测试](#执行集成测试)
+    - [GitHub 中运行](#github-中运行)
+    - [查看执行结果](#查看执行结果)
+  - [如何添加集成测试测试用例](#如何添加集成测试测试用例)
+  - [常见问题](#常见问题)</script></div>
+  </div>
+</section>
+
+<article class="content"><h1 id="miniob-集成测试使用文档">MiniOB 集成测试使用文档</h1>
+<p>MiniOB 集成测试的代码位于: <code>test/integration_test</code> 下，<a target="_blank" rel="noopener" href="http://open.oceanbase.com/train/">训练营</a> 中的测试与该集成测试基本一致。因此，大家可以通过该集成测试快速测试自己的 MiniOB 实现，自助排查训练营中未通过的测试用例。</p>
+<h1 id="如何运行集成测试">如何运行集成测试</h1>
+<h2 id="本地运行">本地运行</h2>
+<h3 id="前置依赖">前置依赖</h3>
+<ol>
+<li>建议使用 MiniOB 提供的官方镜像进行开发，关于如何使用可参考：<a href="introduction.html">开发环境</a></li>
+<li>安装集成测试运行所需依赖</li>
+</ol>
+<pre><code class="language-bash">sudo bash build.sh init
+sudo apt -y install pip python3-pymysql python3-psutil mysql-server
+</code></pre>
+<h3 id="执行集成测试">执行集成测试</h3>
+<pre><code>cd test/integration_test
+bash ./miniob_test_docker_entry.sh
+python3 libminiob_test.py -c conf.ini
+</code></pre>
+<h2 id="github-中运行">GitHub 中运行</h2>
+<p>目前，当你在 GitHub 上提交代码时，并向 main 分支提交 Pull Request 时，会自动触发测试用例的运行。你可以在 Pull Request 界面查看集成测试的运行结果。
+<img loading="lazy" src="../../docs/dev-env/images/github_integration_test.png" alt="" /></p>
+<p>关于如何使用 Github Action 以自定义集成测试的执行方式可以参考：<a target="_blank" rel="noopener" href="https://docs.github.com/en/actions">Github Action</a></p>
+<h2 id="查看执行结果">查看执行结果</h2>
+<p>当执行完一次集成测试后，最后的一条执行日志会展示执行结果，示例如下：</p>
+<pre><code>2025-04-22 16:52:55.849 [INFO ] &gt;&gt;&gt; miniob test done. result=case:aggregation-func, passed: False, result_groups:[{name:init data},{name:count, results:SELECT count(*) FROM aggregation_func;
+- 4}],case:basic, passed: True, result_groups:[{name:create table},{name:init data},{name:basic delete},{name:basic select},{name:create index}],case:date, passed: False, result_groups:[{name:init data, results:CREATE TABLE date_table(id int, u_date date);
+- SUCCESS
++ SQL_SYNTAX &gt; Failed to parse sql}],case:drop-table, passed: False, result_groups:[{name:drop empty table, results:create table Drop_table_1(id int);
+drop table Drop_table_1;
+- SUCCESS
++ FAILURE}],case:update, passed: False, result_groups:[{name:init data},{name:update one row, results:UPDATE Update_table_1 SET t_name='N01' WHERE id=1;
+- SUCCESS
++ FAILURE}] &lt;&lt;&lt; libminiob_test [_test@libminiob_test.py:165] [MainThread] P:20180 T:139725989607232
+2025-04-22 16:52:55.849 [INFO ] &gt;&gt;&gt; result = rc=0:success,outputs=,errors=,body=task_id=default,return_code=0,
+               branch=main,commit_id=,
+               message=,case_result=case:aggregation-func, passed: False, result_groups:[{name:init data},{name:count, results:SELECT count(*) FROM aggregation_func;
+- 4}],case:basic, passed: True, result_groups:[{name:create table},{name:init data},{name:basic delete},{name:basic select},{name:create index}],case:date, passed: False, result_groups:[{name:init data, results:CREATE TABLE date_table(id int, u_date date);
+- SUCCESS
++ SQL_SYNTAX &gt; Failed to parse sql}],case:drop-table, passed: False, result_groups:[{name:drop empty table, results:create table Drop_table_1(id int);
+drop table Drop_table_1;
+- SUCCESS
++ FAILURE}],case:update, passed: False, result_groups:[{name:init data},{name:update one row, results:UPDATE Update_table_1 SET t_name='N01' WHERE id=1;
+- SUCCESS
++ FAILURE}]
+             &lt;&lt;&lt; libminiob_test [&lt;module&gt;@libminiob_test.py:317] [MainThread] P:20180 T:139725989607232
+</code></pre>
+<p>其中，<code>case:</code> 后面为测试用例名称，<code>passed:</code> 后面为该用例是否通过，<code>result_groups:</code> 后面为每个测试步骤的执行结果。对于未通过的测试用例，会在其<code>result_groups</code> 中展示失败的原因。例如对于上述示例中的 drop_table，其失败的原因为：</p>
+<pre><code>result_groups:[{name:drop empty table, results:create table Drop_table_1(id int);
+drop table Drop_table_1;
+- SUCCESS
++ FAILURE}]
+</code></pre>
+<p>其中， <code>-</code> 符号之后的为预期输出，<code>+</code> 符号之后的为你实现的 MiniOB 的实际输出。</p>
+<h1 id="如何添加集成测试测试用例">如何添加集成测试测试用例</h1>
+<p>添加测试用例请参考：<code>test/integration_test/test_cases/MiniOB/python/</code> 中相关的测试用例，目前已公开几道简单题目（basic/drop_table/update等）的测试用例，帮助同学们快速入门。</p>
+<p>下面通过一个示例来介绍如何添加一个测试用例（MiniOB 运行结果与 MySQL 运行结果对比）。</p>
+<pre><code class="language-python">def create_test_cases() -&gt; TestCase:
+  # 创建一个测试用例
+  aggregation_test = TestCase()
+  # 设置测试用例名称
+  aggregation_test.name = 'aggregation-func'
+
+  # 创建一个执行组
+  init_group = aggregation_test.add_execution_group('init data')
+  # 执行组中添加 DDL 语句，注意这里需要使用 add_runtime_ddl_instruction 方法，才会增加与 MySQL 对比的测试用例。
+  init_group.add_runtime_ddl_instruction('CREATE TABLE aggregation_func(id int, num int, price float, addr char(4));')
+  
+  # 执行组中添加 DML 语句
+  insert_sqls = [
+    &quot;INSERT INTO aggregation_func VALUES (1, 18, 10.0, 'abc');&quot;,
+    &quot;INSERT INTO aggregation_func VALUES (2, 15, 20.0, 'abc');&quot;,
+    &quot;INSERT INTO aggregation_func VALUES (3, 12, 30.0, 'def');&quot;,
+    &quot;INSERT INTO aggregation_func VALUES (4, 15, 30.0, 'dei');&quot;
+  ]
+  for sql in insert_sqls:
+    init_group.add_runtime_dml_instruction(sql)
+  
+  # 创建一个执行组，该执行组依赖于 init_group，通过定义依赖关系，可以在测试用例执行失败时，展示依赖的group 的测试用例，方便定位问题。
+  count_group = aggregation_test.add_execution_group('count', [init_group])
+
+  # 执行组中添加 DQL 语句，注意这里需要使用 add_runtime_dql_instruction 方法，才会增加与 MySQL 对比的测试用例。
+  count_sqls = [
+    'SELECT count(*) FROM aggregation_func;',
+    'SELECT count(num) FROM aggregation_func;'
+  ]
+
+  for sql in count_sqls:
+    count_group.add_runtime_dql_instruction(sql)
+
+  return aggregation_test
+</code></pre>
+<h1 id="常见问题">常见问题</h1>
+<p>Q: 我在本地运行的集成测试和训练营中的测试是完全一样的吗还是有什么区别？
+A: 可以认为是基本一样的，区别在于训练营中的集成测试是在内存受限（1GB）的容器内运行的。测试运行的代码基本一致，如果遇到在本地/Github 上运行的结果与训练营的结果不一致，欢迎反馈。</p>
+<p>Q: 我用该集成测试可以复现出训练营中的问题，但是不知道如何进一步定位问题？
+A: 你可以在集成测试的关键位置增加更多自定义的日志输出。默认情况下，集成测试的日志会输出到标准输出.</p>
+</article>
+<nav class="pager" aria-label="相邻文档导航"><a class="prev" href="how_to_submit_for_testing.html"><span>← 上一篇</span>训练营平台使用说明</a><a class="next" href="cloudlab_setup.html"><span>下一篇 →</span>开源学堂在线编程环境开发 MiniOB</a></nav>
+<p class="source-line">源文件：<a href="../../docs/dev-env/integration_test.md">dev-env/integration_test.md</a></p>
+
+    <footer class="page-footer">
+      <span>由 <code>docs/visual/build.py</code> &amp; <code>draw_diagrams.py</code> 从 <code>docs/docs</code> 生成</span>
+      <span>MiniOB · 可视化技术文档</span>
+    </footer>
+  </main>
+  <aside class="page-toc" aria-label="本页目录"><div class="toc-inner"><p class="toc-title">本页导览</p><ul class="toc-list"><li class="toc-item toc-l1"><a href="#如何运行集成测试">如何运行集成测试</a></li><li class="toc-item toc-l2"><a href="#本地运行">本地运行</a></li><li class="toc-item toc-l3"><a href="#前置依赖">前置依赖</a></li><li class="toc-item toc-l3"><a href="#执行集成测试">执行集成测试</a></li><li class="toc-item toc-l2"><a href="#github-中运行">GitHub 中运行</a></li><li class="toc-item toc-l2"><a href="#查看执行结果">查看执行结果</a></li><li class="toc-item toc-l1"><a href="#如何添加集成测试测试用例">如何添加集成测试测试用例</a></li><li class="toc-item toc-l1"><a href="#常见问题">常见问题</a></li></ul><a class="toc-top" href="#top">↑ 回到顶部</a></div></aside>
+</div>
+<div class="nav-scrim" id="navScrim"></div>
+<div class="diagram-modal" id="diagramModal" hidden role="dialog" aria-modal="true" aria-label="图表放大检视">
+  <div class="diagram-modal-bar">
+    <span class="diagram-modal-title" id="diagramModalTitle">架构与流程图检视</span>
+    <button type="button" class="diagram-modal-close" id="diagramModalClose" aria-label="关闭">✕ 关闭 (Esc)</button>
+  </div>
+  <div class="diagram-modal-body" id="diagramModalBody"></div>
+</div>
+<script src="../assets/markmap-config.js"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/markmap-autoloader@0.18"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/@highlightjs/cdn-assets@11/highlight.min.js"></script>
+
+<script defer src="../assets/site.js"></script>
+</body>
+</html>

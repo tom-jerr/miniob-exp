@@ -1,0 +1,312 @@
+<!doctype html>
+<html lang="zh-CN" id="top">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>线程模型 · MiniOB 可视化文档</title>
+<link rel="stylesheet" href="../assets/style.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@highlightjs/cdn-assets@11/styles/atom-one-dark.min.css">
+<script src="../assets/theme.js"></script>
+
+</head>
+<body class="">
+<div class="reading-progress" id="readingProgress" aria-hidden="true"></div>
+<header class="topbar">
+  <button class="menu-btn" id="menuBtn" aria-label="切换侧栏" aria-expanded="false">☰</button>
+  <a class="brand" href="../index.html"><span class="brand-mark">M</span><span>MiniOB <em>可视化文档</em></span></a>
+  <div class="top-actions">
+    <a class="top-link" href="../flows.html">动态流程</a>
+    <button class="theme-btn" id="themeBtn" aria-label="切换明暗主题" title="切换明暗主题">◐</button>
+  </div>
+</header>
+<div class="layout has-toc">
+  <aside class="sidebar" id="sidebar"><nav class="site-nav" aria-label="文档目录"><a class="nav-home" href="../index.html"><span class="brand-mark">M</span><span>MiniOB 可视化文档</span></a><details class="nav-group"><summary>快速开始<span>2</span></summary><div class="nav-links"><a href="../how_to_build.html"><span class="nav-link-text">如何编译</span></a><a href="../how_to_run.html"><span class="nav-link-text">如何运行</span></a></div></details><details class="nav-group" open><summary>设计文档<span>21</span></summary><div class="nav-links"><a href="miniob-architecture.html"><span class="nav-link-text">MiniOB代码架构框架设计和说明</span><span class="nav-badge" title="含交互流程图或架构图">图</span></a><a href="miniob-buffer-pool.html"><span class="nav-link-text">MiniOB 存储实现</span><span class="nav-badge" title="含交互流程图或架构图">图</span></a><a href="miniob-double-write-buffer.html"><span class="nav-link-text">MiniOB Double Write Buffer 实现</span><span class="nav-badge" title="含交互流程图或架构图">图</span></a><a href="miniob-transaction.html"><span class="nav-link-text">事务模块</span><span class="nav-badge" title="含交互流程图或架构图">图</span></a><a href="miniob-durability.html"><span class="nav-link-text">持久化</span><span class="nav-badge" title="含交互流程图或架构图">图</span></a><a href="miniob-persistence-files.html"><span class="nav-link-text">持久化文件与恢复路径</span><span class="nav-badge" title="含交互流程图或架构图">图</span></a><a href="miniob-checkpoint-wal.html"><span class="nav-link-text">MiniOB 检查点与 WAL 截断</span><span class="nav-badge" title="含交互流程图或架构图">图</span></a><a href="miniob-sql-parser.html"><span class="nav-link-text">SQL 词法语法分析</span></a><a href="miniob-how-to-add-new-sql.html"><span class="nav-link-text">SQL语句执行流程</span><span class="nav-badge" title="含交互流程图或架构图">图</span></a><a href="miniob-sql-expression.html"><span class="nav-link-text">SQL 表达式</span></a><a href="miniob-bplus-tree.html"><span class="nav-link-text">MiniOB B+Tree 实现</span><span class="nav-badge" title="含交互流程图或架构图">图</span></a><a href="miniob-bplus-tree-concurrency.html"><span class="nav-link-text">B+ 树并发操作</span><span class="nav-badge" title="含交互流程图或架构图">图</span></a><a href="miniob-thread-model.html" class="active" aria-current="page"><span class="nav-link-text">线程模型</span><span class="nav-badge" title="含交互流程图或架构图">图</span></a><a href="miniob-mysql-protocol.html"><span class="nav-link-text">MySQL 通讯协议</span></a><a href="miniob-pax-storage.html"><span class="nav-link-text">MiniOB PAX 存储格式</span><span class="nav-badge" title="含交互流程图或架构图">图</span></a><a href="miniob-aggregation-and-group-by.html"><span class="nav-link-text">MiniOB 向量化执行 aggregation 和 group by 实现</span></a><a href="miniob-lsm-tree.html"><span class="nav-link-text">MiniOB LSM-Tree 存储引擎</span><span class="nav-badge" title="含交互流程图或架构图">图</span></a><a href="introduction.html"><span class="nav-link-text">功能模块设计说明</span></a><a href="miniob-btree-storage-engine.html"><span class="nav-link-text">MiniOB B+Tree 聚簇表存储引擎</span><span class="nav-badge" title="含交互流程图或架构图">图</span></a><a href="miniob-cascade.html"><span class="nav-link-text">Cascade Optimizer(查询优化器)</span><span class="nav-badge" title="含交互流程图或架构图">图</span></a><a href="miniob-update-mvcc-occ.html"><span class="nav-link-text">MiniOB UPDATE、MVCC 与 OCC 方案设计</span><span class="nav-badge" title="含交互流程图或架构图">图</span></a></div></details><details class="nav-group"><summary>课程实验<span>6</span></summary><div class="nav-links"><a href="../db_course_lab/overview.html"><span class="nav-link-text">数据库系统实现原理与实践课程实验</span></a><a href="../db_course_lab/lab0.html"><span class="nav-link-text">LAB#0 C++ 基础</span></a><a href="../db_course_lab/lab1.html"><span class="nav-link-text">LAB#1 LSM-Tree 存储引擎</span></a><a href="../db_course_lab/lab2.html"><span class="nav-link-text">LAB#2 查询引擎</span></a><a href="../db_course_lab/lab3.html"><span class="nav-link-text">LAB#3 事务引擎</span></a><a href="../db_course_lab/lab4.html"><span class="nav-link-text">LAB#4 性能测试</span></a></div></details><details class="nav-group"><summary>简明教程<span>9</span></summary><div class="nav-links"><a href="../lectures/copyright.html"><span class="nav-link-text">版权声明</span></a><a href="../lectures/lecture-1.html"><span class="nav-link-text">第1章 数据库管理系统概述</span></a><a href="../lectures/lecture-2.html"><span class="nav-link-text">第2章 数据库的存储结构</span></a><a href="../lectures/lecture-3.html"><span class="nav-link-text">第3章 索引结构</span></a><a href="../lectures/lecture-4.html"><span class="nav-link-text">第4章 查询处理</span></a><a href="../lectures/lecture-5.html"><span class="nav-link-text">第5章 查询优化</span></a><a href="../lectures/lecture-6.html"><span class="nav-link-text">第6章 事务处理</span></a><a href="../lectures/references.html"><span class="nav-link-text">参考资料</span></a><a href="../lectures/index.html"><span class="nav-link-text">数据库管理系统实现基础讲义</span></a></div></details><details class="nav-group"><summary>开发环境<span>14</span></summary><div class="nav-links"><a href="../dev-env/introduction.html"><span class="nav-link-text">搭建开发环境</span></a><a href="../dev-env/vscode_dev_with_local_virtual_env.html"><span class="nav-link-text">虚拟机+vscode remote开发</span></a><a href="../dev-env/dev_by_online.html"><span class="nav-link-text">使用在线开发环境开发 MiniOB</span></a><a href="../dev-env/how-to-dev-using-docker.html"><span class="nav-link-text">使用Docker开发MiniOB</span></a><a href="../dev-env/how_to_dev_in_docker_container_by_vscode.html"><span class="nav-link-text">使用 Docker 和 VSCode 远程开发 Miniob</span></a><a href="../dev-env/how_to_dev_in_docker_container_by_vscode_on_windows.html"><span class="nav-link-text">在windows上通过docker配置环境并利用vscode调试代码（手把手版）</span></a><a href="../dev-env/how_to_dev_miniob_by_docker_on_windows.html"><span class="nav-link-text">安装Docker</span></a><a href="../dev-env/how_to_dev_miniob_by_vscode.html"><span class="nav-link-text">环境准备</span></a><a href="../dev-env/miniob-how-to-debug.html"><span class="nav-link-text">miniob调试篇</span></a><a href="../dev-env/how_to_submit_for_testing.html"><span class="nav-link-text">训练营平台使用说明</span></a><a href="../dev-env/integration_test.html"><span class="nav-link-text">MiniOB 集成测试使用文档</span></a><a href="../dev-env/cloudlab_setup.html"><span class="nav-link-text">开源学堂在线编程环境开发 MiniOB</span></a><a href="../dev-env/how_to_dev_miniob_by_docker_on_windows_simplified.html"><span class="nav-link-text">在windows上通过docker配置环境并利用vscode编辑、开发、调试代码（简易版）</span></a><a href="../dev-env/how_to_dev_miniob_in_vscodeGUI_by_docker_on_windows.html"><span class="nav-link-text">基于Windows+docker容器在本地利用VSCode编辑、开发及调试miniob</span></a></div></details><details class="nav-group"><summary>大赛与训练<span>9</span></summary><div class="nav-links"><a href="../game/introduction.html"><span class="nav-link-text">OceanBase 数据库大赛</span></a><a href="../game/miniob-output-convention.html"><span class="nav-link-text">输出规范</span></a><a href="../game/debug-output.html"><span class="nav-link-text">输出调试信息</span></a><a href="../game/miniob-memtracer.html"><span class="nav-link-text">MemTracer</span></a><a href="../game/miniob_topics.html"><span class="nav-link-text">OceanBase 数据库大赛2021届题目</span></a><a href="../game/github-introduction.html"><span class="nav-link-text">MiniOB GitHub 在训练营中的使用说明</span></a><a href="../game/gitee-instructions.html"><span class="nav-link-text">MiniOB Gitee 在训练营中的使用说明</span></a><a href="../game/miniob-vectordb.html"><span class="nav-link-text">MiniOB 向量数据库</span></a><a href="../game/git-introduction.html"><span class="nav-link-text">Git 介绍</span></a></div></details><details class="nav-group"><summary>博客<span>2</span></summary><div class="nav-links"><a href="../blog/introduction.html"><span class="nav-link-text">介绍</span></a><a href="../blog/1.html"><span class="nav-link-text">High-Performance Concurrency Control Mechanisms for Main-Memory Databases</span></a></div></details><a class="nav-flows" href="../flows.html"><span class="dot"></span>动态流程<span class="count">13</span></a></nav></aside>
+  <main class="main">
+    
+<nav class="crumbs" aria-label="面包屑导航"><a href="../index.html">首页</a><span>/</span><span>设计文档</span><span>/</span><span aria-current="page">线程模型</span></nav>
+<header class="doc-head">
+  <div class="doc-meta-bar">
+    <span class="eyebrow-pill">设计文档</span>
+    <span class="doc-meta-item">8 个章节</span>
+    <span class="doc-meta-sep">·</span>
+    <span class="doc-meta-item">约 2 分钟阅读</span>
+    <span class="doc-meta-sep">·</span>
+    <a class="doc-meta-source" href="../../docs/design/miniob-thread-model.md">Markdown 源文件 ↗</a>
+  </div>
+  <h1>线程模型</h1>
+</header>
+<section class="panel map-panel" id="doc-outline-panel">
+  <div class="panel-head">
+    <div>
+      <h2>章节结构导览</h2>
+      <span>点击任意章节直达正文；支持结构卡片与交互思维导图切换</span>
+    </div>
+    <button type="button" class="map-toggle-btn" data-toggle-markmap aria-expanded="false">⊞ 切换思维导图</button>
+  </div>
+  <div class="tree-view"><div class="tree-grid"><div class="tree-branch"><div class="tree-top"><a class="tree-link" href="#简介"><span class="tree-num">1</span><span>简介</span></a></div></div><div class="tree-branch"><div class="tree-top"><a class="tree-link" href="#线程模型设计"><span class="tree-num">2</span><span>线程模型设计</span></a></div><ul class="tree-sub"><li><a class="tree-link" href="#命令行参数"><span class="tree-num">2.1</span><span>命令行参数</span></a></li><li><a class="tree-link" href="#线程池模型做什么"><span class="tree-num">2.2</span><span>线程池模型做什么</span></a></li><li><a class="tree-link" href="#一个连接一个线程"><span class="tree-num">2.3</span><span>一个连接一个线程</span></a></li><li><a class="tree-link" href="#线程池模型"><span class="tree-num">2.4</span><span>线程池模型</span></a></li></ul></div><div class="tree-branch"><div class="tree-top"><a class="tree-link" href="#参考"><span class="tree-num">3</span><span>参考</span></a></div></div></div></div>
+  <div class="markmap-wrap" hidden>
+    <div class="markmap"><script type="text/template"># 线程模型
+  - [简介](#简介)
+  - [线程模型设计](#线程模型设计)
+    - [命令行参数](#命令行参数)
+    - [线程池模型做什么](#线程池模型做什么)
+    - [一个连接一个线程](#一个连接一个线程)
+    - [线程池模型](#线程池模型)
+  - [参考](#参考)</script></div>
+  </div>
+</section>
+<div class="flows-inline">
+<section class="flow-player" id="flow-thread-model" data-flow="thread-model" tabindex="0" aria-label="线程模型：连接处理 交互流程播放器">
+  <header class="flow-head">
+    <div>
+      <div class="flow-kicker-row">
+        <span class="flow-kicker">INTERACTIVE MECHANISM · 动态机制流程</span>
+        <span class="flow-step-total">共 7 步</span>
+      </div>
+      <h2>线程模型：连接处理</h2>
+      <p class="flow-summary">主线程收连接后的一连接一线程与线程池两条处理路径。</p>
+    </div>
+    <div class="flow-head-actions">
+      <button type="button" class="arch-zoom-btn" data-zoom-diagram aria-label="放大流程图">⤢ 放大</button>
+      <a class="arch-svg-link" href="../assets/diagrams/flow-thread-model.svg" target="_blank" rel="noopener" title="打开独立 SVG 矢量图">SVG ↗</a>
+      <a class="flow-source" href="miniob-thread-model.html#线程模型设计">跳转原文 →</a>
+    </div>
+  </header>
+  <div class="flow-legend" aria-hidden="true">
+    <span><i class="leg-dot leg-active"></i>当前步骤节点与流转路径</span>
+    <span><i class="leg-dot leg-visited"></i>已执行路径</span>
+    <span><i class="leg-dot leg-idle"></i>待执行节点</span>
+    <span class="flow-legend-tip">💡 可直接点击图中节点、下方步骤条，或使用 ← / → 键切换步骤</span>
+  </div>
+  <div class="flow-canvas" role="img" aria-label="线程模型：连接处理 流程图"><svg xmlns="http://www.w3.org/2000/svg" width="1060" height="340" viewBox="0 0 1060 340" role="img" aria-labelledby="flow-thread-model-title flow-thread-model-desc" class="toolkit-diagram" data-diagram-id="flow-thread-model">
+  <title id="flow-thread-model-title">线程模型：连接处理 — 交互式机制流程图</title>
+  <desc id="flow-thread-model-desc">主线程收连接后的一连接一线程与线程池两条处理路径。</desc>
+  <defs>
+    <marker id="flow-thread-model-arrow-ink" viewBox="0 0 10 10" refX="8.6" refY="5" markerWidth="6.8" markerHeight="6.8" orient="auto">
+      <path d="M0 0.8 L9.5 5 L0 9.2 Z" fill="#334155" />
+    </marker>
+    <marker id="flow-thread-model-arrow-blue" viewBox="0 0 10 10" refX="8.6" refY="5" markerWidth="6.8" markerHeight="6.8" orient="auto">
+      <path d="M0 0.8 L9.5 5 L0 9.2 Z" fill="#2554C7" />
+    </marker>
+    <marker id="flow-thread-model-arrow-amber" viewBox="0 0 10 10" refX="8.6" refY="5" markerWidth="6.8" markerHeight="6.8" orient="auto">
+      <path d="M0 0.8 L9.5 5 L0 9.2 Z" fill="#B45309" />
+    </marker>
+    <marker id="flow-thread-model-arrow-teal" viewBox="0 0 10 10" refX="8.6" refY="5" markerWidth="6.8" markerHeight="6.8" orient="auto">
+      <path d="M0 0.8 L9.5 5 L0 9.2 Z" fill="#0F766E" />
+    </marker>
+    <marker id="flow-thread-model-arrow-purple" viewBox="0 0 10 10" refX="8.6" refY="5" markerWidth="6.8" markerHeight="6.8" orient="auto">
+      <path d="M0 0.8 L9.5 5 L0 9.2 Z" fill="#6D28D9" />
+    </marker>
+    <marker id="flow-thread-model-arrow-rose" viewBox="0 0 10 10" refX="8.6" refY="5" markerWidth="6.8" markerHeight="6.8" orient="auto">
+      <path d="M0 0.8 L9.5 5 L0 9.2 Z" fill="#BE123C" />
+    </marker>
+    <marker id="flow-thread-model-arrow-muted" viewBox="0 0 10 10" refX="8.6" refY="5" markerWidth="6.8" markerHeight="6.8" orient="auto">
+      <path d="M0 0.8 L9.5 5 L0 9.2 Z" fill="#64748B" />
+    </marker>
+  </defs>
+  <g class="diag-bg">
+    <rect x="0" y="0" width="1060" height="340" rx="12" fill="#FCFDFE" stroke="none" class="diag-canvas-bg" />
+  </g>
+  <g class="diag-lanes">
+    <g class="diag-lane">
+      <rect x="16" y="16" width="330" height="308" rx="10" fill="#F4F7FB" stroke="#CBD5E1" stroke-width="1.5" class="diag-lane-rect" />
+      <text x="30" y="38" font-family="&quot;Noto Sans SC&quot;, &quot;PingFang SC&quot;, &quot;Microsoft YaHei&quot;, &quot;Segoe UI&quot;, Arial, sans-serif" font-size="12.8" font-weight="700" fill="#526077" class="diag-lane-title">1. 连接接入与模型分发</text>
+      <text x="332" y="38" font-family="&quot;JetBrains Mono&quot;, &quot;SFMono-Regular&quot;, Consolas, &quot;Liberation Mono&quot;, monospace" font-size="11.2" font-weight="500" text-anchor="end" fill="#7B89A1" class="diag-lane-sub">NetServer::serve &amp; ThreadHandler</text>
+    </g>
+    <g class="diag-lane">
+      <rect x="360" y="16" width="512" height="136" rx="10" fill="#F0F5FF" stroke="#2554C7" stroke-width="1.5" class="diag-lane-rect" />
+      <text x="374" y="38" font-family="&quot;Noto Sans SC&quot;, &quot;PingFang SC&quot;, &quot;Microsoft YaHei&quot;, &quot;Segoe UI&quot;, Arial, sans-serif" font-size="12.8" font-weight="700" fill="#1E40AF" class="diag-lane-title">2A. 一连接一线程模型 (-T=one-thread-per-connection)</text>
+      <text x="858" y="38" font-family="&quot;JetBrains Mono&quot;, &quot;SFMono-Regular&quot;, Consolas, &quot;Liberation Mono&quot;, monospace" font-size="11.2" font-weight="500" text-anchor="end" fill="#7B89A1" class="diag-lane-sub">OneThreadPerConnectionThreadHandler</text>
+    </g>
+    <g class="diag-lane">
+      <rect x="360" y="166" width="512" height="158" rx="10" fill="#F0FDFA" stroke="#0F766E" stroke-width="1.5" class="diag-lane-rect" />
+      <text x="374" y="188" font-family="&quot;Noto Sans SC&quot;, &quot;PingFang SC&quot;, &quot;Microsoft YaHei&quot;, &quot;Segoe UI&quot;, Arial, sans-serif" font-size="12.8" font-weight="700" fill="#115E59" class="diag-lane-title">2B. 线程池模型 (-T=java-thread-pool)</text>
+      <text x="858" y="188" font-family="&quot;JetBrains Mono&quot;, &quot;SFMono-Regular&quot;, Consolas, &quot;Liberation Mono&quot;, monospace" font-size="11.2" font-weight="500" text-anchor="end" fill="#7B89A1" class="diag-lane-sub">JavaThreadPoolThreadHandler &amp; Executor</text>
+    </g>
+    <g class="diag-lane">
+      <rect x="886" y="16" width="158" height="308" rx="10" fill="#F4F7FB" stroke="#CBD5E1" stroke-width="1.5" class="diag-lane-rect" />
+      <text x="900" y="38" font-family="&quot;Noto Sans SC&quot;, &quot;PingFang SC&quot;, &quot;Microsoft YaHei&quot;, &quot;Segoe UI&quot;, Arial, sans-serif" font-size="12.8" font-weight="700" fill="#526077" class="diag-lane-title">3. 生命周期结束</text>
+      <text x="1030" y="38" font-family="&quot;JetBrains Mono&quot;, &quot;SFMono-Regular&quot;, Consolas, &quot;Liberation Mono&quot;, monospace" font-size="11.2" font-weight="500" text-anchor="end" fill="#7B89A1" class="diag-lane-sub">连接释放</text>
+    </g>
+  </g>
+  <g class="diag-edges">
+    <g class="flow-edge" data-from="listen" data-to="handler">
+      <path d="M 170.0 170.0 L 194.0 170.0" fill="none" stroke="#2554C7" stroke-width="1.9" stroke-linejoin="round" stroke-linecap="round" class="flow-edge-path" marker-end="url(#flow-thread-model-arrow-blue)" />
+      <rect x="130.5" y="110.5" width="102.9" height="19.0" rx="5.5" fill="#FFFFFF" stroke="#CBD5E1" stroke-width="1.1" class="flow-edge-pill" />
+      <text x="182.0" y="123.8" font-family="&quot;Noto Sans SC&quot;, &quot;PingFang SC&quot;, &quot;Microsoft YaHei&quot;, &quot;Segoe UI&quot;, Arial, sans-serif" font-size="11.2" font-weight="600" text-anchor="middle" fill="#526077" class="flow-edge-label">new_connection</text>
+    </g>
+    <g class="flow-edge" data-from="handler" data-to="otpc">
+      <path d="M 263.0 134.0 L 263.0 94.0 L 510.0 94.0" fill="none" stroke="#2554C7" stroke-width="1.9" stroke-linejoin="round" stroke-linecap="round" class="flow-edge-path" marker-end="url(#flow-thread-model-arrow-blue)" />
+      <rect x="377.6" y="70.5" width="77.9" height="19.0" rx="5.5" fill="#FFFFFF" stroke="#CBD5E1" stroke-width="1.1" class="flow-edge-pill" />
+      <text x="416.5" y="83.8" font-family="&quot;Noto Sans SC&quot;, &quot;PingFang SC&quot;, &quot;Microsoft YaHei&quot;, &quot;Segoe UI&quot;, Arial, sans-serif" font-size="11.2" font-weight="600" text-anchor="middle" fill="#526077" class="flow-edge-label">每连接一线程</text>
+    </g>
+    <g class="flow-edge" data-from="handler" data-to="pool">
+      <path d="M 263.0 206.0 L 263.0 249.0 L 378.0 249.0" fill="none" stroke="#0F766E" stroke-width="1.9" stroke-linejoin="round" stroke-linecap="round" class="flow-edge-path" marker-end="url(#flow-thread-model-arrow-teal)" />
+      <rect x="297.1" y="255.5" width="66.9" height="19.0" rx="5.5" fill="#FFFFFF" stroke="#CBD5E1" stroke-width="1.1" class="flow-edge-pill" />
+      <text x="330.5" y="268.8" font-family="&quot;Noto Sans SC&quot;, &quot;PingFang SC&quot;, &quot;Microsoft YaHei&quot;, &quot;Segoe UI&quot;, Arial, sans-serif" font-size="11.2" font-weight="600" text-anchor="middle" fill="#526077" class="flow-edge-label">线程池模型</text>
+    </g>
+    <g class="flow-edge" data-from="pool" data-to="queue">
+      <path d="M 522.0 249.0 L 546.0 249.0" fill="none" stroke="#0F766E" stroke-width="1.9" stroke-linejoin="round" stroke-linecap="round" class="flow-edge-path" marker-end="url(#flow-thread-model-arrow-teal)" />
+      <rect x="500.6" y="287.5" width="66.9" height="19.0" rx="5.5" fill="#FFFFFF" stroke="#CBD5E1" stroke-width="1.1" class="flow-edge-pill" />
+      <text x="534.0" y="300.8" font-family="&quot;Noto Sans SC&quot;, &quot;PingFang SC&quot;, &quot;Microsoft YaHei&quot;, &quot;Segoe UI&quot;, Arial, sans-serif" font-size="11.2" font-weight="600" text-anchor="middle" fill="#526077" class="flow-edge-label">有消息入队</text>
+    </g>
+    <g class="flow-edge" data-from="queue" data-to="worker">
+      <path d="M 690.0 249.0 L 714.0 249.0" fill="none" stroke="#0F766E" stroke-width="1.9" stroke-linejoin="round" stroke-linecap="round" class="flow-edge-path" marker-end="url(#flow-thread-model-arrow-teal)" />
+      <rect x="668.6" y="287.5" width="66.9" height="19.0" rx="5.5" fill="#FFFFFF" stroke="#CBD5E1" stroke-width="1.1" class="flow-edge-pill" />
+      <text x="702.0" y="300.8" font-family="&quot;Noto Sans SC&quot;, &quot;PingFang SC&quot;, &quot;Microsoft YaHei&quot;, &quot;Segoe UI&quot;, Arial, sans-serif" font-size="11.2" font-weight="600" text-anchor="middle" fill="#526077" class="flow-edge-label">取任务处理</text>
+    </g>
+    <g class="flow-edge" data-from="otpc" data-to="close">
+      <path d="M 730.0 94.0 L 965.0 94.0 L 965.0 134.0" fill="none" stroke="#2554C7" stroke-width="1.9" stroke-linejoin="round" stroke-linecap="round" class="flow-edge-path" marker-end="url(#flow-thread-model-arrow-blue)" />
+      <rect x="814.1" y="70.5" width="66.9" height="19.0" rx="5.5" fill="#FFFFFF" stroke="#CBD5E1" stroke-width="1.1" class="flow-edge-pill" />
+      <text x="847.5" y="83.8" font-family="&quot;Noto Sans SC&quot;, &quot;PingFang SC&quot;, &quot;Microsoft YaHei&quot;, &quot;Segoe UI&quot;, Arial, sans-serif" font-size="11.2" font-weight="600" text-anchor="middle" fill="#526077" class="flow-edge-label">处理完关闭</text>
+    </g>
+    <g class="flow-edge" data-from="worker" data-to="close">
+      <path d="M 856.0 249.0 L 965.0 249.0 L 965.0 206.0" fill="none" stroke="#0F766E" stroke-width="1.9" stroke-linejoin="round" stroke-linecap="round" class="flow-edge-path" marker-end="url(#flow-thread-model-arrow-teal)" />
+      <rect x="892.5" y="255.5" width="55.9" height="19.0" rx="5.5" fill="#FFFFFF" stroke="#CBD5E1" stroke-width="1.1" class="flow-edge-pill" />
+      <text x="920.5" y="268.8" font-family="&quot;Noto Sans SC&quot;, &quot;PingFang SC&quot;, &quot;Microsoft YaHei&quot;, &quot;Segoe UI&quot;, Arial, sans-serif" font-size="11.2" font-weight="600" text-anchor="middle" fill="#526077" class="flow-edge-label">关闭连接</text>
+    </g>
+  </g>
+  <g class="diag-nodes">
+    <g class="flow-node role-gray" data-node-id="listen" data-steps="1" tabindex="0" role="button" aria-label="主线程监听 (NetServer::serve)">
+      <rect x="32" y="134" width="138" height="72" rx="9" fill="#F1F5F9" stroke="#475569" stroke-width="1.8" class="flow-node-rect" />
+      <rect x="40" y="140" width="22.0" height="16" rx="4.5" fill="#334155" stroke="none" class="flow-node-badge-bg" />
+      <text x="51.0" y="151.5" font-family="&quot;JetBrains Mono&quot;, &quot;SFMono-Regular&quot;, Consolas, &quot;Liberation Mono&quot;, monospace" font-size="10.2" font-weight="700" text-anchor="middle" fill="#FFFFFF" class="flow-node-badge-text">S2</text>
+      <text x="101.0" y="172.0" font-family="&quot;Noto Sans SC&quot;, &quot;PingFang SC&quot;, &quot;Microsoft YaHei&quot;, &quot;Segoe UI&quot;, Arial, sans-serif" font-size="14.2" font-weight="700" text-anchor="middle" fill="#141E30" class="flow-node-title">主线程监听</text>
+      <text x="101.0" y="188.5" font-family="&quot;JetBrains Mono&quot;, &quot;SFMono-Regular&quot;, Consolas, &quot;Liberation Mono&quot;, monospace" font-size="11" font-weight="500" text-anchor="middle" fill="#526077" class="flow-node-sub">NetServer::serve</text>
+    </g>
+    <g class="flow-node role-blue" data-node-id="handler" data-steps="0" tabindex="0" role="button" aria-label="ThreadHandler (ThreadHandler::create)">
+      <rect x="194" y="134" width="138" height="72" rx="9" fill="#E6EFFD" stroke="#2554C7" stroke-width="1.8" class="flow-node-rect" />
+      <rect x="202" y="140" width="22.0" height="16" rx="4.5" fill="#1E40AF" stroke="none" class="flow-node-badge-bg" />
+      <text x="213.0" y="151.5" font-family="&quot;JetBrains Mono&quot;, &quot;SFMono-Regular&quot;, Consolas, &quot;Liberation Mono&quot;, monospace" font-size="10.2" font-weight="700" text-anchor="middle" fill="#FFFFFF" class="flow-node-badge-text">S1</text>
+      <text x="263.0" y="172.0" font-family="&quot;Noto Sans SC&quot;, &quot;PingFang SC&quot;, &quot;Microsoft YaHei&quot;, &quot;Segoe UI&quot;, Arial, sans-serif" font-size="14.2" font-weight="700" text-anchor="middle" fill="#141E30" class="flow-node-title">ThreadHandler</text>
+      <text x="263.0" y="188.5" font-family="&quot;JetBrains Mono&quot;, &quot;SFMono-Regular&quot;, Consolas, &quot;Liberation Mono&quot;, monospace" font-size="11" font-weight="500" text-anchor="middle" fill="#526077" class="flow-node-sub">ThreadHandler::create</text>
+    </g>
+    <g class="flow-node role-blue" data-node-id="otpc" data-steps="2" tabindex="0" role="button" aria-label="一连接一线程 (专属线程监听并执行 SQL)">
+      <rect x="510" y="58" width="220" height="72" rx="9" fill="#E6EFFD" stroke="#2554C7" stroke-width="1.8" class="flow-node-rect" />
+      <rect x="518" y="64" width="22.0" height="16" rx="4.5" fill="#1E40AF" stroke="none" class="flow-node-badge-bg" />
+      <text x="529.0" y="75.5" font-family="&quot;JetBrains Mono&quot;, &quot;SFMono-Regular&quot;, Consolas, &quot;Liberation Mono&quot;, monospace" font-size="10.2" font-weight="700" text-anchor="middle" fill="#FFFFFF" class="flow-node-badge-text">S3</text>
+      <text x="620.0" y="96.0" font-family="&quot;Noto Sans SC&quot;, &quot;PingFang SC&quot;, &quot;Microsoft YaHei&quot;, &quot;Segoe UI&quot;, Arial, sans-serif" font-size="14.2" font-weight="700" text-anchor="middle" fill="#141E30" class="flow-node-title">一连接一线程</text>
+      <text x="620.0" y="112.5" font-family="&quot;JetBrains Mono&quot;, &quot;SFMono-Regular&quot;, Consolas, &quot;Liberation Mono&quot;, monospace" font-size="11" font-weight="500" text-anchor="middle" fill="#526077" class="flow-node-sub">专属线程监听并执行 SQL</text>
+    </g>
+    <g class="flow-node role-teal" data-node-id="pool" data-steps="3" tabindex="0" role="button" aria-label="线程池监听 (Selector 监听消息)">
+      <rect x="378" y="214" width="144" height="70" rx="9" fill="#CCFBF1" stroke="#0F766E" stroke-width="1.8" class="flow-node-rect" />
+      <rect x="386" y="220" width="22.0" height="16" rx="4.5" fill="#115E59" stroke="none" class="flow-node-badge-bg" />
+      <text x="397.0" y="231.5" font-family="&quot;JetBrains Mono&quot;, &quot;SFMono-Regular&quot;, Consolas, &quot;Liberation Mono&quot;, monospace" font-size="10.2" font-weight="700" text-anchor="middle" fill="#FFFFFF" class="flow-node-badge-text">S4</text>
+      <text x="450.0" y="251.0" font-family="&quot;Noto Sans SC&quot;, &quot;PingFang SC&quot;, &quot;Microsoft YaHei&quot;, &quot;Segoe UI&quot;, Arial, sans-serif" font-size="14.2" font-weight="700" text-anchor="middle" fill="#141E30" class="flow-node-title">线程池监听</text>
+      <text x="450.0" y="267.5" font-family="&quot;JetBrains Mono&quot;, &quot;SFMono-Regular&quot;, Consolas, &quot;Liberation Mono&quot;, monospace" font-size="11" font-weight="500" text-anchor="middle" fill="#526077" class="flow-node-sub">Selector 监听消息</text>
+    </g>
+    <g class="flow-node role-amber" data-node-id="queue" data-steps="4" tabindex="0" role="button" aria-label="任务队列 (连接任务入队等待)">
+      <rect x="546" y="214" width="144" height="70" rx="9" fill="#FEF0C7" stroke="#B45309" stroke-width="1.8" class="flow-node-rect" />
+      <rect x="554" y="220" width="22.0" height="16" rx="4.5" fill="#92400E" stroke="none" class="flow-node-badge-bg" />
+      <text x="565.0" y="231.5" font-family="&quot;JetBrains Mono&quot;, &quot;SFMono-Regular&quot;, Consolas, &quot;Liberation Mono&quot;, monospace" font-size="10.2" font-weight="700" text-anchor="middle" fill="#FFFFFF" class="flow-node-badge-text">S5</text>
+      <text x="618.0" y="251.0" font-family="&quot;Noto Sans SC&quot;, &quot;PingFang SC&quot;, &quot;Microsoft YaHei&quot;, &quot;Segoe UI&quot;, Arial, sans-serif" font-size="14.2" font-weight="700" text-anchor="middle" fill="#141E30" class="flow-node-title">任务队列</text>
+      <text x="618.0" y="267.5" font-family="&quot;JetBrains Mono&quot;, &quot;SFMono-Regular&quot;, Consolas, &quot;Liberation Mono&quot;, monospace" font-size="11" font-weight="500" text-anchor="middle" fill="#526077" class="flow-node-sub">连接任务入队等待</text>
+    </g>
+    <g class="flow-node role-teal" data-node-id="worker" data-steps="5" tabindex="0" role="button" aria-label="池内线程 (Worker 执行与应答)">
+      <rect x="714" y="214" width="142" height="70" rx="9" fill="#CCFBF1" stroke="#0F766E" stroke-width="1.8" class="flow-node-rect" />
+      <rect x="722" y="220" width="22.0" height="16" rx="4.5" fill="#115E59" stroke="none" class="flow-node-badge-bg" />
+      <text x="733.0" y="231.5" font-family="&quot;JetBrains Mono&quot;, &quot;SFMono-Regular&quot;, Consolas, &quot;Liberation Mono&quot;, monospace" font-size="10.2" font-weight="700" text-anchor="middle" fill="#FFFFFF" class="flow-node-badge-text">S6</text>
+      <text x="785.0" y="251.0" font-family="&quot;Noto Sans SC&quot;, &quot;PingFang SC&quot;, &quot;Microsoft YaHei&quot;, &quot;Segoe UI&quot;, Arial, sans-serif" font-size="14.2" font-weight="700" text-anchor="middle" fill="#141E30" class="flow-node-title">池内线程</text>
+      <text x="785.0" y="267.5" font-family="&quot;JetBrains Mono&quot;, &quot;SFMono-Regular&quot;, Consolas, &quot;Liberation Mono&quot;, monospace" font-size="11" font-weight="500" text-anchor="middle" fill="#526077" class="flow-node-sub">Worker 执行与应答</text>
+    </g>
+    <g class="flow-node role-gray" data-node-id="close" data-steps="6" tabindex="0" role="button" aria-label="关闭连接 (负责线程关闭连接)">
+      <rect x="900" y="134" width="130" height="72" rx="9" fill="#F1F5F9" stroke="#475569" stroke-width="1.8" class="flow-node-rect" />
+      <rect x="908" y="140" width="22.0" height="16" rx="4.5" fill="#334155" stroke="none" class="flow-node-badge-bg" />
+      <text x="919.0" y="151.5" font-family="&quot;JetBrains Mono&quot;, &quot;SFMono-Regular&quot;, Consolas, &quot;Liberation Mono&quot;, monospace" font-size="10.2" font-weight="700" text-anchor="middle" fill="#FFFFFF" class="flow-node-badge-text">S7</text>
+      <text x="965.0" y="172.0" font-family="&quot;Noto Sans SC&quot;, &quot;PingFang SC&quot;, &quot;Microsoft YaHei&quot;, &quot;Segoe UI&quot;, Arial, sans-serif" font-size="14.2" font-weight="700" text-anchor="middle" fill="#141E30" class="flow-node-title">关闭连接</text>
+      <text x="965.0" y="188.5" font-family="&quot;JetBrains Mono&quot;, &quot;SFMono-Regular&quot;, Consolas, &quot;Liberation Mono&quot;, monospace" font-size="11" font-weight="500" text-anchor="middle" fill="#526077" class="flow-node-sub">负责线程关闭连接</text>
+    </g>
+  </g>
+  <g class="diag-labels" />
+</svg></div>
+  <div class="flow-progress-track" aria-hidden="true"><div class="flow-progress-bar" style="width:14.3%"></div></div>
+  <div class="flow-controls-row">
+    <div class="flow-bar">
+      <button type="button" class="flow-btn" data-act="prev" aria-label="上一步" title="上一步 (←)">← 上一步</button>
+      <button type="button" class="flow-btn primary" data-act="play" aria-label="自动播放" title="播放 / 暂停 (Space)">▶ 自动播放</button>
+      <button type="button" class="flow-btn" data-act="next" aria-label="下一步" title="下一步 (→)">下一步 →</button>
+    </div>
+    <span class="flow-count">步骤 1 / 7</span>
+  </div>
+  <div class="flow-steps" role="tablist" aria-label="流程步骤列表"><button type="button" class="step-chip active" data-step="0" title="选择线程模型" aria-label="第 1 步：选择线程模型"><span class="step-chip-num">1</span><span class="step-chip-label">选择线程模型</span></button><button type="button" class="step-chip" data-step="1" title="主线程接收连接" aria-label="第 2 步：主线程接收连接"><span class="step-chip-num">2</span><span class="step-chip-label">主线程接收连接</span></button><button type="button" class="step-chip" data-step="2" title="一连接一线程" aria-label="第 3 步：一连接一线程"><span class="step-chip-num">3</span><span class="step-chip-label">一连接一线程</span></button><button type="button" class="step-chip" data-step="3" title="线程池监听" aria-label="第 4 步：线程池监听"><span class="step-chip-num">4</span><span class="step-chip-label">线程池监听</span></button><button type="button" class="step-chip" data-step="4" title="入队等待" aria-label="第 5 步：入队等待"><span class="step-chip-num">5</span><span class="step-chip-label">入队等待</span></button><button type="button" class="step-chip" data-step="5" title="池内线程处理" aria-label="第 6 步：池内线程处理"><span class="step-chip-num">6</span><span class="step-chip-label">池内线程处理</span></button><button type="button" class="step-chip" data-step="6" title="关闭连接" aria-label="第 7 步：关闭连接"><span class="step-chip-num">7</span><span class="step-chip-label">关闭连接</span></button></div>
+  <div class="flow-desc" aria-live="polite">
+    <div class="flow-desc-head">
+      <span class="flow-desc-badge">STEP 1 / 7</span>
+      <strong class="flow-desc-title">选择线程模型</strong>
+      <div class="flow-desc-tags"><span class="flow-tag">ThreadHandler</span></div>
+    </div>
+    <p class="flow-desc-text">启动时用 -T=one-thread-per-connection（默认）或 -T=java-thread-pool 指定，ThreadHandler::create 按传入名字创建对应对象。</p>
+  </div>
+  <details class="flow-notes"><summary><span>边界与文档未决点（3 项事实核对）</span></summary><ul><li>文档未给出线程池大小、扩容与空闲回收的具体阈值。</li><li>关闭连接只说明由“这个线程”负责，未说明由读事件还是处理流程触发。</li><li>同一文档参数写作 -T=one-thread-per-connection，而事务文档使用 -t mvcc/-t occ，两者是不同参数，不要混用。</li></ul></details>
+</section></div>
+<article class="content"><h1 id="线程模型">线程模型</h1>
+<blockquote>
+<p>本篇文档介绍 MiniOB 中的线程池模型。</p>
+</blockquote>
+<h2 id="简介">简介</h2>
+<p>多线程是提高系统资源利用率的一种常用手段，也是我们学习软件开发进阶的必经之路。
+MiniOB 实现了一个可扩展的线程模型，当前支持两种线程池模型：</p>
+<ul>
+<li>
+<p>一个连接一个线程；</p>
+</li>
+<li>
+<p>一个线程池处理所有连接。</p>
+</li>
+</ul>
+<blockquote>
+<p>这种设计是模仿了MySQL/MariaDB的线程模型设计。</p>
+</blockquote>
+<h2 id="线程模型设计">线程模型设计</h2>
+<h3 id="命令行参数">命令行参数</h3>
+<p>当前MiniOB的线程池模型通过命令行接口指定使用哪种类型：</p>
+<pre><code class="language-bash"># 一个连接一个线程（默认）
+observer -T=one-thread-per-connection
+# 一个线程池处理所有连接
+observer -T=java-thread-pool
+</code></pre>
+<p>ThreadHandler::create 会根据传入的名字创建对应的 ThreadHandler 对象。</p>
+<h3 id="线程池模型做什么">线程池模型做什么</h3>
+<p>这个模型并不负责所有的任务，只处理客户端发来的请求。包括监听客户端是否有消息到达、处理SQL请求与返回应答、关闭连接等。</p>
+<p>线程模型并不负责监听新的客户端连接，这是在主线程中做的事情，参考 <code>NetServer::serve</code>。当有新的连接到达时，会调用 <code>ThreadHandler::new_connection</code>，线程模型按照自己的模型设计来处理新来的连接。</p>
+<h3 id="一个连接一个线程">一个连接一个线程</h3>
+<p>OneThreadPerConnectionThreadHandler 会为每个连接创建一个线程，这个线程负责监听这个连接是否有消息到达、处理SQL请求与返回应答、关闭连接等。</p>
+<p><img loading="lazy" src="../../docs/design/images/thread-model-one-thread-per-connection.png" alt="OneThreadPerConnectionThreadHandler" /></p>
+<h3 id="线程池模型">线程池模型</h3>
+<p>JavaThreadPoolThreadHandler 会创建一个线程池，线程池中一个线程负责监听所有连接是否有消息到达。如果有消息到达，就将这个连接对象放入线程池任务队列中，等待线程池中的线程来处理。在某个连接的任务处理完成之前，不会监听它的新消息。</p>
+<p>这个线程池使用libevent实现消息监听，参考 <code>JavaThreadPoolThreadHandler::start</code>。</p>
+<p>这里解释一下为什么叫做JavaThreadPoolThreadHandler，因为这个线程池的设计是参考了Java的线程池设计，但是做了简化，参考 <code>ThreadPoolExecutor</code>。</p>
+<p>ThreadPoolExecutor 是一个简单的可伸缩线程池。当任务比当前空闲线程多的时候，就会扩容。当某些线程空闲时间比较久，就会自动退出。</p>
+<p><img loading="lazy" src="../../docs/design/images/thread-model-thread-pool.png" alt="JavaThreadPoolThreadHandler" /></p>
+<h2 id="参考">参考</h2>
+<ul>
+<li><a target="_blank" rel="noopener" href="https://docs.percona.com/percona-server/5.7/performance/threadpool.html#handling-of-long-network-waits">MySQL Percona Thread Pool</a></li>
+<li><a target="_blank" rel="noopener" href="https://mariadb.com/kb/en/thread-groups-in-the-unix-implementation-of-the-thread-pool/">MariaDB Thread Pool</a></li>
+<li><a target="_blank" rel="noopener" href="https://docs.oracle.com/javase/8/docs/api/java/util/concurrent/ThreadPoolExecutor.html">Java ThreadPoolExecutor</a></li>
+</ul>
+</article>
+<nav class="pager" aria-label="相邻文档导航"><a class="prev" href="miniob-bplus-tree-concurrency.html"><span>← 上一篇</span>B+ 树并发操作</a><a class="next" href="miniob-mysql-protocol.html"><span>下一篇 →</span>MySQL 通讯协议</a></nav>
+<p class="source-line">源文件：<a href="../../docs/design/miniob-thread-model.md">design/miniob-thread-model.md</a></p>
+
+    <footer class="page-footer">
+      <span>由 <code>docs/visual/build.py</code> &amp; <code>draw_diagrams.py</code> 从 <code>docs/docs</code> 生成</span>
+      <span>MiniOB · 可视化技术文档</span>
+    </footer>
+  </main>
+  <aside class="page-toc" aria-label="本页目录"><div class="toc-inner"><p class="toc-title">本页导览</p><ul class="toc-list"><li class="toc-item toc-flow"><a href="#flow-thread-model">▶ 流程：线程模型：连接处理</a></li><li class="toc-item toc-l2"><a href="#简介">简介</a></li><li class="toc-item toc-l2"><a href="#线程模型设计">线程模型设计</a></li><li class="toc-item toc-l3"><a href="#命令行参数">命令行参数</a></li><li class="toc-item toc-l3"><a href="#线程池模型做什么">线程池模型做什么</a></li><li class="toc-item toc-l3"><a href="#一个连接一个线程">一个连接一个线程</a></li><li class="toc-item toc-l3"><a href="#线程池模型">线程池模型</a></li><li class="toc-item toc-l2"><a href="#参考">参考</a></li></ul><a class="toc-top" href="#top">↑ 回到顶部</a></div></aside>
+</div>
+<div class="nav-scrim" id="navScrim"></div>
+<div class="diagram-modal" id="diagramModal" hidden role="dialog" aria-modal="true" aria-label="图表放大检视">
+  <div class="diagram-modal-bar">
+    <span class="diagram-modal-title" id="diagramModalTitle">架构与流程图检视</span>
+    <button type="button" class="diagram-modal-close" id="diagramModalClose" aria-label="关闭">✕ 关闭 (Esc)</button>
+  </div>
+  <div class="diagram-modal-body" id="diagramModalBody"></div>
+</div>
+<script src="../assets/markmap-config.js"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/markmap-autoloader@0.18"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/@highlightjs/cdn-assets@11/highlight.min.js"></script>
+<script type="application/json" id="flow-data">[{"id": "thread-model", "title": "线程模型：连接处理", "source": "design/miniob-thread-model.md", "anchor": "线程模型设计", "nodes": [{"id": "listen", "label": "主线程监听"}, {"id": "handler", "label": "ThreadHandler"}, {"id": "otpc", "label": "一连接一线程"}, {"id": "pool", "label": "线程池监听"}, {"id": "queue", "label": "任务队列"}, {"id": "worker", "label": "池内线程"}, {"id": "close", "label": "关闭连接"}], "edges": [["listen", "handler", "new_connection"], ["handler", "otpc", "每连接一线程"], ["handler", "pool", "线程池模型"], ["pool", "queue", "有消息入队"], ["queue", "worker", "取任务处理"], ["otpc", "close", "处理完关闭"], ["worker", "close", "关闭连接"]], "steps": [{"title": "选择线程模型", "desc": "启动时用 -T=one-thread-per-connection（默认）或 -T=java-thread-pool 指定，ThreadHandler::create 按传入名字创建对应对象。", "highlight": ["handler"]}, {"title": "主线程接收连接", "desc": "线程模型不负责监听新连接，这是主线程 NetServer::serve 的事；新连接到达时调用 ThreadHandler::new_connection。", "highlight": ["listen"]}, {"title": "一连接一线程", "desc": "OneThreadPerConnectionThreadHandler 为每个连接创建一个线程，负责监听消息、处理SQL请求与应答、关闭连接。", "highlight": ["otpc"]}, {"title": "线程池监听", "desc": "JavaThreadPoolThreadHandler 创建一个线程池，池中一个线程负责监听所有连接是否有消息到达。", "highlight": ["pool"]}, {"title": "入队等待", "desc": "有消息到达就把连接对象放入线程池任务队列等待池内线程处理；该连接任务完成前不会监听它的新消息。", "highlight": ["queue"]}, {"title": "池内线程处理", "desc": "池内线程取任务完成 SQL 请求与应答；ThreadPoolExecutor 在任务多于空闲线程时扩容、线程空闲较久时自动退出。", "highlight": ["worker"]}, {"title": "关闭连接", "desc": "两种模型都由负责该连接的线程完成关闭连接。", "highlight": ["close"]}], "uncertainties": ["文档未给出线程池大小、扩容与空闲回收的具体阈值。", "关闭连接只说明由“这个线程”负责，未说明由读事件还是处理流程触发。", "同一文档参数写作 -T=one-thread-per-connection，而事务文档使用 -t mvcc/-t occ，两者是不同参数，不要混用。"], "summary": "主线程收连接后的一连接一线程与线程池两条处理路径。"}]</script>
+<script defer src="../assets/site.js"></script>
+</body>
+</html>

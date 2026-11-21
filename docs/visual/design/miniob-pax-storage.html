@@ -1,0 +1,352 @@
+<!doctype html>
+<html lang="zh-CN" id="top">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>MiniOB PAX 存储格式 · MiniOB 可视化文档</title>
+<link rel="stylesheet" href="../assets/style.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@highlightjs/cdn-assets@11/styles/atom-one-dark.min.css">
+<script src="../assets/theme.js"></script>
+
+</head>
+<body class="">
+<div class="reading-progress" id="readingProgress" aria-hidden="true"></div>
+<header class="topbar">
+  <button class="menu-btn" id="menuBtn" aria-label="切换侧栏" aria-expanded="false">☰</button>
+  <a class="brand" href="../index.html"><span class="brand-mark">M</span><span>MiniOB <em>可视化文档</em></span></a>
+  <div class="top-actions">
+    <a class="top-link" href="../flows.html">动态流程</a>
+    <button class="theme-btn" id="themeBtn" aria-label="切换明暗主题" title="切换明暗主题">◐</button>
+  </div>
+</header>
+<div class="layout has-toc">
+  <aside class="sidebar" id="sidebar"><nav class="site-nav" aria-label="文档目录"><a class="nav-home" href="../index.html"><span class="brand-mark">M</span><span>MiniOB 可视化文档</span></a><details class="nav-group"><summary>快速开始<span>2</span></summary><div class="nav-links"><a href="../how_to_build.html"><span class="nav-link-text">如何编译</span></a><a href="../how_to_run.html"><span class="nav-link-text">如何运行</span></a></div></details><details class="nav-group" open><summary>设计文档<span>21</span></summary><div class="nav-links"><a href="miniob-architecture.html"><span class="nav-link-text">MiniOB代码架构框架设计和说明</span><span class="nav-badge" title="含交互流程图或架构图">图</span></a><a href="miniob-buffer-pool.html"><span class="nav-link-text">MiniOB 存储实现</span><span class="nav-badge" title="含交互流程图或架构图">图</span></a><a href="miniob-double-write-buffer.html"><span class="nav-link-text">MiniOB Double Write Buffer 实现</span><span class="nav-badge" title="含交互流程图或架构图">图</span></a><a href="miniob-transaction.html"><span class="nav-link-text">事务模块</span><span class="nav-badge" title="含交互流程图或架构图">图</span></a><a href="miniob-durability.html"><span class="nav-link-text">持久化</span><span class="nav-badge" title="含交互流程图或架构图">图</span></a><a href="miniob-persistence-files.html"><span class="nav-link-text">持久化文件与恢复路径</span><span class="nav-badge" title="含交互流程图或架构图">图</span></a><a href="miniob-checkpoint-wal.html"><span class="nav-link-text">MiniOB 检查点与 WAL 截断</span><span class="nav-badge" title="含交互流程图或架构图">图</span></a><a href="miniob-sql-parser.html"><span class="nav-link-text">SQL 词法语法分析</span></a><a href="miniob-how-to-add-new-sql.html"><span class="nav-link-text">SQL语句执行流程</span><span class="nav-badge" title="含交互流程图或架构图">图</span></a><a href="miniob-sql-expression.html"><span class="nav-link-text">SQL 表达式</span></a><a href="miniob-bplus-tree.html"><span class="nav-link-text">MiniOB B+Tree 实现</span><span class="nav-badge" title="含交互流程图或架构图">图</span></a><a href="miniob-bplus-tree-concurrency.html"><span class="nav-link-text">B+ 树并发操作</span><span class="nav-badge" title="含交互流程图或架构图">图</span></a><a href="miniob-thread-model.html"><span class="nav-link-text">线程模型</span><span class="nav-badge" title="含交互流程图或架构图">图</span></a><a href="miniob-mysql-protocol.html"><span class="nav-link-text">MySQL 通讯协议</span></a><a href="miniob-pax-storage.html" class="active" aria-current="page"><span class="nav-link-text">MiniOB PAX 存储格式</span><span class="nav-badge" title="含交互流程图或架构图">图</span></a><a href="miniob-aggregation-and-group-by.html"><span class="nav-link-text">MiniOB 向量化执行 aggregation 和 group by 实现</span></a><a href="miniob-lsm-tree.html"><span class="nav-link-text">MiniOB LSM-Tree 存储引擎</span><span class="nav-badge" title="含交互流程图或架构图">图</span></a><a href="introduction.html"><span class="nav-link-text">功能模块设计说明</span></a><a href="miniob-btree-storage-engine.html"><span class="nav-link-text">MiniOB B+Tree 聚簇表存储引擎</span><span class="nav-badge" title="含交互流程图或架构图">图</span></a><a href="miniob-cascade.html"><span class="nav-link-text">Cascade Optimizer(查询优化器)</span><span class="nav-badge" title="含交互流程图或架构图">图</span></a><a href="miniob-update-mvcc-occ.html"><span class="nav-link-text">MiniOB UPDATE、MVCC 与 OCC 方案设计</span><span class="nav-badge" title="含交互流程图或架构图">图</span></a></div></details><details class="nav-group"><summary>课程实验<span>6</span></summary><div class="nav-links"><a href="../db_course_lab/overview.html"><span class="nav-link-text">数据库系统实现原理与实践课程实验</span></a><a href="../db_course_lab/lab0.html"><span class="nav-link-text">LAB#0 C++ 基础</span></a><a href="../db_course_lab/lab1.html"><span class="nav-link-text">LAB#1 LSM-Tree 存储引擎</span></a><a href="../db_course_lab/lab2.html"><span class="nav-link-text">LAB#2 查询引擎</span></a><a href="../db_course_lab/lab3.html"><span class="nav-link-text">LAB#3 事务引擎</span></a><a href="../db_course_lab/lab4.html"><span class="nav-link-text">LAB#4 性能测试</span></a></div></details><details class="nav-group"><summary>简明教程<span>9</span></summary><div class="nav-links"><a href="../lectures/copyright.html"><span class="nav-link-text">版权声明</span></a><a href="../lectures/lecture-1.html"><span class="nav-link-text">第1章 数据库管理系统概述</span></a><a href="../lectures/lecture-2.html"><span class="nav-link-text">第2章 数据库的存储结构</span></a><a href="../lectures/lecture-3.html"><span class="nav-link-text">第3章 索引结构</span></a><a href="../lectures/lecture-4.html"><span class="nav-link-text">第4章 查询处理</span></a><a href="../lectures/lecture-5.html"><span class="nav-link-text">第5章 查询优化</span></a><a href="../lectures/lecture-6.html"><span class="nav-link-text">第6章 事务处理</span></a><a href="../lectures/references.html"><span class="nav-link-text">参考资料</span></a><a href="../lectures/index.html"><span class="nav-link-text">数据库管理系统实现基础讲义</span></a></div></details><details class="nav-group"><summary>开发环境<span>14</span></summary><div class="nav-links"><a href="../dev-env/introduction.html"><span class="nav-link-text">搭建开发环境</span></a><a href="../dev-env/vscode_dev_with_local_virtual_env.html"><span class="nav-link-text">虚拟机+vscode remote开发</span></a><a href="../dev-env/dev_by_online.html"><span class="nav-link-text">使用在线开发环境开发 MiniOB</span></a><a href="../dev-env/how-to-dev-using-docker.html"><span class="nav-link-text">使用Docker开发MiniOB</span></a><a href="../dev-env/how_to_dev_in_docker_container_by_vscode.html"><span class="nav-link-text">使用 Docker 和 VSCode 远程开发 Miniob</span></a><a href="../dev-env/how_to_dev_in_docker_container_by_vscode_on_windows.html"><span class="nav-link-text">在windows上通过docker配置环境并利用vscode调试代码（手把手版）</span></a><a href="../dev-env/how_to_dev_miniob_by_docker_on_windows.html"><span class="nav-link-text">安装Docker</span></a><a href="../dev-env/how_to_dev_miniob_by_vscode.html"><span class="nav-link-text">环境准备</span></a><a href="../dev-env/miniob-how-to-debug.html"><span class="nav-link-text">miniob调试篇</span></a><a href="../dev-env/how_to_submit_for_testing.html"><span class="nav-link-text">训练营平台使用说明</span></a><a href="../dev-env/integration_test.html"><span class="nav-link-text">MiniOB 集成测试使用文档</span></a><a href="../dev-env/cloudlab_setup.html"><span class="nav-link-text">开源学堂在线编程环境开发 MiniOB</span></a><a href="../dev-env/how_to_dev_miniob_by_docker_on_windows_simplified.html"><span class="nav-link-text">在windows上通过docker配置环境并利用vscode编辑、开发、调试代码（简易版）</span></a><a href="../dev-env/how_to_dev_miniob_in_vscodeGUI_by_docker_on_windows.html"><span class="nav-link-text">基于Windows+docker容器在本地利用VSCode编辑、开发及调试miniob</span></a></div></details><details class="nav-group"><summary>大赛与训练<span>9</span></summary><div class="nav-links"><a href="../game/introduction.html"><span class="nav-link-text">OceanBase 数据库大赛</span></a><a href="../game/miniob-output-convention.html"><span class="nav-link-text">输出规范</span></a><a href="../game/debug-output.html"><span class="nav-link-text">输出调试信息</span></a><a href="../game/miniob-memtracer.html"><span class="nav-link-text">MemTracer</span></a><a href="../game/miniob_topics.html"><span class="nav-link-text">OceanBase 数据库大赛2021届题目</span></a><a href="../game/github-introduction.html"><span class="nav-link-text">MiniOB GitHub 在训练营中的使用说明</span></a><a href="../game/gitee-instructions.html"><span class="nav-link-text">MiniOB Gitee 在训练营中的使用说明</span></a><a href="../game/miniob-vectordb.html"><span class="nav-link-text">MiniOB 向量数据库</span></a><a href="../game/git-introduction.html"><span class="nav-link-text">Git 介绍</span></a></div></details><details class="nav-group"><summary>博客<span>2</span></summary><div class="nav-links"><a href="../blog/introduction.html"><span class="nav-link-text">介绍</span></a><a href="../blog/1.html"><span class="nav-link-text">High-Performance Concurrency Control Mechanisms for Main-Memory Databases</span></a></div></details><a class="nav-flows" href="../flows.html"><span class="dot"></span>动态流程<span class="count">13</span></a></nav></aside>
+  <main class="main">
+    
+<nav class="crumbs" aria-label="面包屑导航"><a href="../index.html">首页</a><span>/</span><span>设计文档</span><span>/</span><span aria-current="page">MiniOB PAX 存储格式</span></nav>
+<header class="doc-head">
+  <div class="doc-meta-bar">
+    <span class="eyebrow-pill">设计文档</span>
+    <span class="doc-meta-item">9 个章节</span>
+    <span class="doc-meta-sep">·</span>
+    <span class="doc-meta-item">约 6 分钟阅读</span>
+    <span class="doc-meta-sep">·</span>
+    <a class="doc-meta-source" href="../../docs/design/miniob-pax-storage.md">Markdown 源文件 ↗</a>
+  </div>
+  <h1>MiniOB PAX 存储格式</h1>
+</header>
+<section class="panel map-panel" id="doc-outline-panel">
+  <div class="panel-head">
+    <div>
+      <h2>章节结构导览</h2>
+      <span>点击任意章节直达正文；支持结构卡片与交互思维导图切换</span>
+    </div>
+    <button type="button" class="map-toggle-btn" data-toggle-markmap aria-expanded="false">⊞ 切换思维导图</button>
+  </div>
+  <div class="tree-view"><div class="tree-grid"><div class="tree-branch"><div class="tree-top"><a class="tree-link" href="#存储模型storage-models"><span class="tree-num">1</span><span>存储模型（Storage Models）</span></a></div><ul class="tree-sub"><li><a class="tree-link" href="#n-ary-storage-model-nsm"><span class="tree-num">1.1</span><span>N-ARY Storage Model (NSM)</span></a></li><li><a class="tree-link" href="#decomposition-storage-model-dsm"><span class="tree-num">1.2</span><span>Decomposition Storage Model (DSM)</span></a></li><li><a class="tree-link" href="#partition-attributes-across-pax"><span class="tree-num">1.3</span><span>Partition Attributes Across (PAX)</span></a></li></ul></div><div class="tree-branch"><div class="tree-top"><a class="tree-link" href="#miniob-中-pax-存储格式"><span class="tree-num">2</span><span>MiniOB 中 PAX 存储格式</span></a></div><ul class="tree-sub"><li><a class="tree-link" href="#实现"><span class="tree-num">2.1</span><span>实现</span></a></li><li><a class="tree-link" href="#实验"><span class="tree-num">2.2</span><span>实验</span></a></li><li><a class="tree-link" href="#测试"><span class="tree-num">2.3</span><span>测试</span></a></li></ul></div></div></div>
+  <div class="markmap-wrap" hidden>
+    <div class="markmap"><script type="text/template"># MiniOB PAX 存储格式
+  - [存储模型（Storage Models）](#存储模型storage-models)
+    - [N-ARY Storage Model (NSM)](#n-ary-storage-model-nsm)
+    - [Decomposition Storage Model (DSM)](#decomposition-storage-model-dsm)
+    - [Partition Attributes Across (PAX)](#partition-attributes-across-pax)
+  - [MiniOB 中 PAX 存储格式](#miniob-中-pax-存储格式)
+    - [实现](#实现)
+    - [实验](#实验)
+    - [测试](#测试)</script></div>
+  </div>
+</section>
+<div class="flows-inline">
+<section class="flow-player" id="flow-pax-storage-layout" data-flow="pax-storage-layout" tabindex="0" aria-label="PAX 页内存储布局 交互流程播放器">
+  <header class="flow-head">
+    <div>
+      <div class="flow-kicker-row">
+        <span class="flow-kicker">INTERACTIVE MECHANISM · 动态机制流程</span>
+        <span class="flow-step-total">共 7 步</span>
+      </div>
+      <h2>PAX 页内存储布局</h2>
+      <p class="flow-summary">页内垂直分区：页头、位图、列索引与按列读写。</p>
+    </div>
+    <div class="flow-head-actions">
+      <button type="button" class="arch-zoom-btn" data-zoom-diagram aria-label="放大流程图">⤢ 放大</button>
+      <a class="arch-svg-link" href="../assets/diagrams/flow-pax-storage-layout.svg" target="_blank" rel="noopener" title="打开独立 SVG 矢量图">SVG ↗</a>
+      <a class="flow-source" href="miniob-pax-storage.html#miniob-中-pax-存储格式">跳转原文 →</a>
+    </div>
+  </header>
+  <div class="flow-legend" aria-hidden="true">
+    <span><i class="leg-dot leg-active"></i>当前步骤节点与流转路径</span>
+    <span><i class="leg-dot leg-visited"></i>已执行路径</span>
+    <span><i class="leg-dot leg-idle"></i>待执行节点</span>
+    <span class="flow-legend-tip">💡 可直接点击图中节点、下方步骤条，或使用 ← / → 键切换步骤</span>
+  </div>
+  <div class="flow-canvas" role="img" aria-label="PAX 页内存储布局 流程图"><svg xmlns="http://www.w3.org/2000/svg" width="1060" height="350" viewBox="0 0 1060 350" role="img" aria-labelledby="flow-pax-storage-layout-title flow-pax-storage-layout-desc" class="toolkit-diagram" data-diagram-id="flow-pax-storage-layout">
+  <title id="flow-pax-storage-layout-title">PAX 页内存储布局 — 交互式机制流程图</title>
+  <desc id="flow-pax-storage-layout-desc">页内垂直分区：页头、位图、列索引与按列读写。</desc>
+  <defs>
+    <marker id="flow-pax-storage-layout-arrow-ink" viewBox="0 0 10 10" refX="8.6" refY="5" markerWidth="6.8" markerHeight="6.8" orient="auto">
+      <path d="M0 0.8 L9.5 5 L0 9.2 Z" fill="#334155" />
+    </marker>
+    <marker id="flow-pax-storage-layout-arrow-blue" viewBox="0 0 10 10" refX="8.6" refY="5" markerWidth="6.8" markerHeight="6.8" orient="auto">
+      <path d="M0 0.8 L9.5 5 L0 9.2 Z" fill="#2554C7" />
+    </marker>
+    <marker id="flow-pax-storage-layout-arrow-amber" viewBox="0 0 10 10" refX="8.6" refY="5" markerWidth="6.8" markerHeight="6.8" orient="auto">
+      <path d="M0 0.8 L9.5 5 L0 9.2 Z" fill="#B45309" />
+    </marker>
+    <marker id="flow-pax-storage-layout-arrow-teal" viewBox="0 0 10 10" refX="8.6" refY="5" markerWidth="6.8" markerHeight="6.8" orient="auto">
+      <path d="M0 0.8 L9.5 5 L0 9.2 Z" fill="#0F766E" />
+    </marker>
+    <marker id="flow-pax-storage-layout-arrow-purple" viewBox="0 0 10 10" refX="8.6" refY="5" markerWidth="6.8" markerHeight="6.8" orient="auto">
+      <path d="M0 0.8 L9.5 5 L0 9.2 Z" fill="#6D28D9" />
+    </marker>
+    <marker id="flow-pax-storage-layout-arrow-rose" viewBox="0 0 10 10" refX="8.6" refY="5" markerWidth="6.8" markerHeight="6.8" orient="auto">
+      <path d="M0 0.8 L9.5 5 L0 9.2 Z" fill="#BE123C" />
+    </marker>
+    <marker id="flow-pax-storage-layout-arrow-muted" viewBox="0 0 10 10" refX="8.6" refY="5" markerWidth="6.8" markerHeight="6.8" orient="auto">
+      <path d="M0 0.8 L9.5 5 L0 9.2 Z" fill="#64748B" />
+    </marker>
+  </defs>
+  <g class="diag-bg">
+    <rect x="0" y="0" width="1060" height="350" rx="12" fill="#FCFDFE" stroke="none" class="diag-canvas-bg" />
+  </g>
+  <g class="diag-lanes">
+    <g class="diag-lane">
+      <rect x="16" y="16" width="444" height="318" rx="10" fill="#F0F5FF" stroke="#2554C7" stroke-width="1.5" class="diag-lane-rect" />
+      <text x="30" y="38" font-family="&quot;Noto Sans SC&quot;, &quot;PingFang SC&quot;, &quot;Microsoft YaHei&quot;, &quot;Segoe UI&quot;, Arial, sans-serif" font-size="12.8" font-weight="700" fill="#1E40AF" class="diag-lane-title">1. 表格式选择与页内管理器 (Table &amp; Handler)</text>
+      <text x="446" y="38" font-family="&quot;JetBrains Mono&quot;, &quot;SFMono-Regular&quot;, Consolas, &quot;Liberation Mono&quot;, monospace" font-size="11.2" font-weight="500" text-anchor="end" fill="#7B89A1" class="diag-lane-sub">storage format=pax &amp; PaxRecordPageHandler</text>
+    </g>
+    <g class="diag-lane">
+      <rect x="476" y="16" width="568" height="318" rx="10" fill="#FFF9EB" stroke="#B45309" stroke-width="1.5" class="diag-lane-rect" />
+      <text x="490" y="38" font-family="&quot;Noto Sans SC&quot;, &quot;PingFang SC&quot;, &quot;Microsoft YaHei&quot;, &quot;Segoe UI&quot;, Arial, sans-serif" font-size="12.8" font-weight="700" fill="#92400E" class="diag-lane-title">2. PAX 8KB 页内垂直分区布局 (Partition Attributes Across)</text>
+      <text x="1030" y="38" font-family="&quot;JetBrains Mono&quot;, &quot;SFMono-Regular&quot;, Consolas, &quot;Liberation Mono&quot;, monospace" font-size="11.2" font-weight="500" text-anchor="end" fill="#7B89A1" class="diag-lane-sub">[PageHeader | Bitmap | Column Index | Col 1 .. Col N]</text>
+    </g>
+  </g>
+  <g class="diag-edges">
+    <g class="flow-edge" data-from="create_pax" data-to="pax_handler">
+      <path d="M 200.0 104.0 L 244.0 104.0" fill="none" stroke="#2554C7" stroke-width="1.9" stroke-linejoin="round" stroke-linecap="round" class="flow-edge-path" marker-end="url(#flow-pax-storage-layout-arrow-blue)" />
+    </g>
+    <g class="flow-edge" data-from="pax_handler" data-to="page_layout">
+      <path d="M 440.0 104.0 L 500.0 104.0" fill="none" stroke="#B45309" stroke-width="1.9" stroke-linejoin="round" stroke-linecap="round" class="flow-edge-path" marker-end="url(#flow-pax-storage-layout-arrow-amber)" />
+    </g>
+    <g class="flow-edge" data-from="page_layout" data-to="page_header">
+      <path d="M 682.0 90.0 L 736.0 90.0" fill="none" stroke="#B45309" stroke-width="1.9" stroke-linejoin="round" stroke-linecap="round" class="flow-edge-path" marker-end="url(#flow-pax-storage-layout-arrow-amber)" />
+    </g>
+    <g class="flow-edge" data-from="page_layout" data-to="col_index">
+      <path d="M 591.0 140.0 L 591.0 178.0 L 736.0 178.0" fill="none" stroke="#B45309" stroke-width="1.9" stroke-linejoin="round" stroke-linecap="round" class="flow-edge-path" marker-end="url(#flow-pax-storage-layout-arrow-amber)" />
+    </g>
+    <g class="flow-edge" data-from="col_index" data-to="col_data">
+      <path d="M 876.0 212.0 L 876.0 236.0" fill="none" stroke="#0F766E" stroke-width="1.9" stroke-linejoin="round" stroke-linecap="round" class="flow-edge-path" marker-end="url(#flow-pax-storage-layout-arrow-teal)" />
+    </g>
+    <g class="flow-edge" data-from="pax_handler" data-to="insert_rec">
+      <path d="M 310.0 140.0 L 310.0 182.0 L 153.0 182.0 L 153.0 224.0" fill="none" stroke="#0F766E" stroke-width="1.9" stroke-linejoin="round" stroke-linecap="round" class="flow-edge-path" marker-end="url(#flow-pax-storage-layout-arrow-teal)" />
+    </g>
+    <g class="flow-edge" data-from="pax_handler" data-to="get_rec">
+      <path d="M 348.0 140.0 L 348.0 224.0" fill="none" stroke="#6D28D9" stroke-width="1.9" stroke-linejoin="round" stroke-linecap="round" class="flow-edge-path" marker-end="url(#flow-pax-storage-layout-arrow-purple)" />
+    </g>
+    <g class="flow-edge" data-from="insert_rec" data-to="col_data">
+      <path d="M 153.0 296.0 L 153.0 320.0 L 696.0 320.0 L 696.0 284.0 L 736.0 284.0" fill="none" stroke="#0F766E" stroke-width="1.9" stroke-linejoin="round" stroke-linecap="round" class="flow-edge-path" marker-end="url(#flow-pax-storage-layout-arrow-teal)" />
+      <rect x="362.0" y="300.5" width="44.9" height="19.0" rx="5.5" fill="#FFFFFF" stroke="#CBD5E1" stroke-width="1.1" class="flow-edge-pill" />
+      <text x="384.5" y="313.8" font-family="&quot;Noto Sans SC&quot;, &quot;PingFang SC&quot;, &quot;Microsoft YaHei&quot;, &quot;Segoe UI&quot;, Arial, sans-serif" font-size="11.2" font-weight="600" text-anchor="middle" fill="#526077" class="flow-edge-label">写入列</text>
+    </g>
+    <g class="flow-edge" data-from="get_rec" data-to="col_data">
+      <path d="M 430.0 260.0 L 736.0 260.0" fill="none" stroke="#6D28D9" stroke-width="1.9" stroke-linejoin="round" stroke-linecap="round" class="flow-edge-path" marker-end="url(#flow-pax-storage-layout-arrow-purple)" />
+      <rect x="555.0" y="236.5" width="55.9" height="19.0" rx="5.5" fill="#FFFFFF" stroke="#CBD5E1" stroke-width="1.1" class="flow-edge-pill" />
+      <text x="583.0" y="249.8" font-family="&quot;Noto Sans SC&quot;, &quot;PingFang SC&quot;, &quot;Microsoft YaHei&quot;, &quot;Segoe UI&quot;, Arial, sans-serif" font-size="11.2" font-weight="600" text-anchor="middle" fill="#526077" class="flow-edge-label">按列读取</text>
+    </g>
+  </g>
+  <g class="diag-nodes">
+    <g class="flow-node role-blue" data-node-id="create_pax" data-steps="0" tabindex="0" role="button" aria-label="建表指定 pax (storage format=pax)">
+      <rect x="34" y="68" width="166" height="72" rx="9" fill="#E6EFFD" stroke="#2554C7" stroke-width="1.8" class="flow-node-rect" />
+      <rect x="42" y="74" width="22.0" height="16" rx="4.5" fill="#1E40AF" stroke="none" class="flow-node-badge-bg" />
+      <text x="53.0" y="85.5" font-family="&quot;JetBrains Mono&quot;, &quot;SFMono-Regular&quot;, Consolas, &quot;Liberation Mono&quot;, monospace" font-size="10.2" font-weight="700" text-anchor="middle" fill="#FFFFFF" class="flow-node-badge-text">S1</text>
+      <text x="117.0" y="106.0" font-family="&quot;Noto Sans SC&quot;, &quot;PingFang SC&quot;, &quot;Microsoft YaHei&quot;, &quot;Segoe UI&quot;, Arial, sans-serif" font-size="14.2" font-weight="700" text-anchor="middle" fill="#141E30" class="flow-node-title">建表指定 pax</text>
+      <text x="117.0" y="122.5" font-family="&quot;JetBrains Mono&quot;, &quot;SFMono-Regular&quot;, Consolas, &quot;Liberation Mono&quot;, monospace" font-size="11" font-weight="500" text-anchor="middle" fill="#526077" class="flow-node-sub">storage format=pax</text>
+    </g>
+    <g class="flow-node role-blue" data-node-id="pax_handler" data-steps="1" tabindex="0" role="button" aria-label="PAX 页内管理器 (PaxRecordPageHandler)">
+      <rect x="244" y="68" width="196" height="72" rx="9" fill="#E6EFFD" stroke="#2554C7" stroke-width="1.8" class="flow-node-rect" />
+      <rect x="252" y="74" width="22.0" height="16" rx="4.5" fill="#1E40AF" stroke="none" class="flow-node-badge-bg" />
+      <text x="263.0" y="85.5" font-family="&quot;JetBrains Mono&quot;, &quot;SFMono-Regular&quot;, Consolas, &quot;Liberation Mono&quot;, monospace" font-size="10.2" font-weight="700" text-anchor="middle" fill="#FFFFFF" class="flow-node-badge-text">S2</text>
+      <text x="342.0" y="106.0" font-family="&quot;Noto Sans SC&quot;, &quot;PingFang SC&quot;, &quot;Microsoft YaHei&quot;, &quot;Segoe UI&quot;, Arial, sans-serif" font-size="14.2" font-weight="700" text-anchor="middle" fill="#141E30" class="flow-node-title">PAX 页内管理器</text>
+      <text x="342.0" y="122.5" font-family="&quot;JetBrains Mono&quot;, &quot;SFMono-Regular&quot;, Consolas, &quot;Liberation Mono&quot;, monospace" font-size="11" font-weight="500" text-anchor="middle" fill="#526077" class="flow-node-sub">PaxRecordPageHandler</text>
+    </g>
+    <g class="flow-node role-teal" data-node-id="insert_rec" data-steps="6" tabindex="0" role="button" aria-label="insert_record (按列拆解写入槽位)">
+      <rect x="74" y="224" width="158" height="72" rx="9" fill="#CCFBF1" stroke="#0F766E" stroke-width="1.8" class="flow-node-rect" />
+      <rect x="82" y="230" width="22.0" height="16" rx="4.5" fill="#115E59" stroke="none" class="flow-node-badge-bg" />
+      <text x="93.0" y="241.5" font-family="&quot;JetBrains Mono&quot;, &quot;SFMono-Regular&quot;, Consolas, &quot;Liberation Mono&quot;, monospace" font-size="10.2" font-weight="700" text-anchor="middle" fill="#FFFFFF" class="flow-node-badge-text">S7</text>
+      <text x="153.0" y="262.0" font-family="&quot;Noto Sans SC&quot;, &quot;PingFang SC&quot;, &quot;Microsoft YaHei&quot;, &quot;Segoe UI&quot;, Arial, sans-serif" font-size="14.2" font-weight="700" text-anchor="middle" fill="#141E30" class="flow-node-title">insert_record</text>
+      <text x="153.0" y="278.5" font-family="&quot;JetBrains Mono&quot;, &quot;SFMono-Regular&quot;, Consolas, &quot;Liberation Mono&quot;, monospace" font-size="11" font-weight="500" text-anchor="middle" fill="#526077" class="flow-node-sub">按列拆解写入槽位</text>
+    </g>
+    <g class="flow-node role-purple" data-node-id="get_rec" data-steps="6" tabindex="0" role="button" aria-label="get_record (get_record / get_chunk)">
+      <rect x="266" y="224" width="164" height="72" rx="9" fill="#EDE9FE" stroke="#6D28D9" stroke-width="1.8" class="flow-node-rect" />
+      <rect x="274" y="230" width="22.0" height="16" rx="4.5" fill="#5B21B6" stroke="none" class="flow-node-badge-bg" />
+      <text x="285.0" y="241.5" font-family="&quot;JetBrains Mono&quot;, &quot;SFMono-Regular&quot;, Consolas, &quot;Liberation Mono&quot;, monospace" font-size="10.2" font-weight="700" text-anchor="middle" fill="#FFFFFF" class="flow-node-badge-text">S7</text>
+      <text x="348.0" y="262.0" font-family="&quot;Noto Sans SC&quot;, &quot;PingFang SC&quot;, &quot;Microsoft YaHei&quot;, &quot;Segoe UI&quot;, Arial, sans-serif" font-size="14.2" font-weight="700" text-anchor="middle" fill="#141E30" class="flow-node-title">get_record</text>
+      <text x="348.0" y="278.5" font-family="&quot;JetBrains Mono&quot;, &quot;SFMono-Regular&quot;, Consolas, &quot;Liberation Mono&quot;, monospace" font-size="11" font-weight="500" text-anchor="middle" fill="#526077" class="flow-node-sub">get_record / get_chunk</text>
+    </g>
+    <g class="flow-node role-amber" data-node-id="page_layout" data-steps="2" tabindex="0" role="button" aria-label="页内垂直分区 (8KB 页内属性垂直切分)">
+      <rect x="500" y="68" width="182" height="72" rx="9" fill="#FEF0C7" stroke="#B45309" stroke-width="1.8" class="flow-node-rect" />
+      <rect x="508" y="74" width="22.0" height="16" rx="4.5" fill="#92400E" stroke="none" class="flow-node-badge-bg" />
+      <text x="519.0" y="85.5" font-family="&quot;JetBrains Mono&quot;, &quot;SFMono-Regular&quot;, Consolas, &quot;Liberation Mono&quot;, monospace" font-size="10.2" font-weight="700" text-anchor="middle" fill="#FFFFFF" class="flow-node-badge-text">S3</text>
+      <text x="591.0" y="106.0" font-family="&quot;Noto Sans SC&quot;, &quot;PingFang SC&quot;, &quot;Microsoft YaHei&quot;, &quot;Segoe UI&quot;, Arial, sans-serif" font-size="14.2" font-weight="700" text-anchor="middle" fill="#141E30" class="flow-node-title">页内垂直分区</text>
+      <text x="591.0" y="122.5" font-family="&quot;JetBrains Mono&quot;, &quot;SFMono-Regular&quot;, Consolas, &quot;Liberation Mono&quot;, monospace" font-size="11" font-weight="500" text-anchor="middle" fill="#526077" class="flow-node-sub">8KB 页内属性垂直切分</text>
+    </g>
+    <g class="flow-node role-gray" data-node-id="page_header" data-steps="3" tabindex="0" role="button" aria-label="页头与记录位图 (record_num / capacity + slot bitmap)">
+      <rect x="736" y="56" width="280" height="68" rx="9" fill="#F1F5F9" stroke="#475569" stroke-width="1.8" class="flow-node-rect" />
+      <rect x="744" y="62" width="22.0" height="16" rx="4.5" fill="#334155" stroke="none" class="flow-node-badge-bg" />
+      <text x="755.0" y="73.5" font-family="&quot;JetBrains Mono&quot;, &quot;SFMono-Regular&quot;, Consolas, &quot;Liberation Mono&quot;, monospace" font-size="10.2" font-weight="700" text-anchor="middle" fill="#FFFFFF" class="flow-node-badge-text">S4</text>
+      <text x="876.0" y="92.0" font-family="&quot;Noto Sans SC&quot;, &quot;PingFang SC&quot;, &quot;Microsoft YaHei&quot;, &quot;Segoe UI&quot;, Arial, sans-serif" font-size="14.2" font-weight="700" text-anchor="middle" fill="#141E30" class="flow-node-title">页头与记录位图</text>
+      <text x="876.0" y="108.5" font-family="&quot;JetBrains Mono&quot;, &quot;SFMono-Regular&quot;, Consolas, &quot;Liberation Mono&quot;, monospace" font-size="11" font-weight="500" text-anchor="middle" fill="#526077" class="flow-node-sub">record_num / capacity + slot bitmap</text>
+    </g>
+    <g class="flow-node role-amber" data-node-id="col_index" data-steps="4" tabindex="0" role="button" aria-label="列索引数组 (col_0 .. col_n (列起始偏移数组))">
+      <rect x="736" y="144" width="280" height="68" rx="9" fill="#FEF0C7" stroke="#B45309" stroke-width="1.8" class="flow-node-rect" />
+      <rect x="744" y="150" width="22.0" height="16" rx="4.5" fill="#92400E" stroke="none" class="flow-node-badge-bg" />
+      <text x="755.0" y="161.5" font-family="&quot;JetBrains Mono&quot;, &quot;SFMono-Regular&quot;, Consolas, &quot;Liberation Mono&quot;, monospace" font-size="10.2" font-weight="700" text-anchor="middle" fill="#FFFFFF" class="flow-node-badge-text">S5</text>
+      <text x="876.0" y="180.0" font-family="&quot;Noto Sans SC&quot;, &quot;PingFang SC&quot;, &quot;Microsoft YaHei&quot;, &quot;Segoe UI&quot;, Arial, sans-serif" font-size="14.2" font-weight="700" text-anchor="middle" fill="#141E30" class="flow-node-title">列索引数组</text>
+      <text x="876.0" y="196.5" font-family="&quot;JetBrains Mono&quot;, &quot;SFMono-Regular&quot;, Consolas, &quot;Liberation Mono&quot;, monospace" font-size="11" font-weight="500" text-anchor="middle" fill="#526077" class="flow-node-sub">col_0 .. col_n (列起始偏移数组)</text>
+    </g>
+    <g class="flow-node role-teal" data-node-id="col_data" data-steps="5" tabindex="0" role="button" aria-label="列数据连续存放 ([Col 1 连续区] [Col 2 连续区] ... [Col N])">
+      <rect x="736" y="236" width="280" height="74" rx="9" fill="#CCFBF1" stroke="#0F766E" stroke-width="1.8" class="flow-node-rect" />
+      <rect x="744" y="242" width="22.0" height="16" rx="4.5" fill="#115E59" stroke="none" class="flow-node-badge-bg" />
+      <text x="755.0" y="253.5" font-family="&quot;JetBrains Mono&quot;, &quot;SFMono-Regular&quot;, Consolas, &quot;Liberation Mono&quot;, monospace" font-size="10.2" font-weight="700" text-anchor="middle" fill="#FFFFFF" class="flow-node-badge-text">S6</text>
+      <text x="876.0" y="275.0" font-family="&quot;Noto Sans SC&quot;, &quot;PingFang SC&quot;, &quot;Microsoft YaHei&quot;, &quot;Segoe UI&quot;, Arial, sans-serif" font-size="14.2" font-weight="700" text-anchor="middle" fill="#141E30" class="flow-node-title">列数据连续存放</text>
+      <text x="876.0" y="291.5" font-family="&quot;JetBrains Mono&quot;, &quot;SFMono-Regular&quot;, Consolas, &quot;Liberation Mono&quot;, monospace" font-size="11" font-weight="500" text-anchor="middle" fill="#526077" class="flow-node-sub">[Col 1 连续区] [Col 2 连续区] ... [Col N]</text>
+    </g>
+  </g>
+  <g class="diag-labels" />
+</svg></div>
+  <div class="flow-progress-track" aria-hidden="true"><div class="flow-progress-bar" style="width:14.3%"></div></div>
+  <div class="flow-controls-row">
+    <div class="flow-bar">
+      <button type="button" class="flow-btn" data-act="prev" aria-label="上一步" title="上一步 (←)">← 上一步</button>
+      <button type="button" class="flow-btn primary" data-act="play" aria-label="自动播放" title="播放 / 暂停 (Space)">▶ 自动播放</button>
+      <button type="button" class="flow-btn" data-act="next" aria-label="下一步" title="下一步 (→)">下一步 →</button>
+    </div>
+    <span class="flow-count">步骤 1 / 7</span>
+  </div>
+  <div class="flow-steps" role="tablist" aria-label="流程步骤列表"><button type="button" class="step-chip active" data-step="0" title="建表选择 PAX" aria-label="第 1 步：建表选择 PAX"><span class="step-chip-num">1</span><span class="step-chip-label">建表选择 PAX</span></button><button type="button" class="step-chip" data-step="1" title="页内管理器" aria-label="第 2 步：页内管理器"><span class="step-chip-num">2</span><span class="step-chip-label">页内管理器</span></button><button type="button" class="step-chip" data-step="2" title="页内垂直分区" aria-label="第 3 步：页内垂直分区"><span class="step-chip-num">3</span><span class="step-chip-label">页内垂直分区</span></button><button type="button" class="step-chip" data-step="3" title="复用页头与位图" aria-label="第 4 步：复用页头与位图"><span class="step-chip-num">4</span><span class="step-chip-label">复用页头与位图</span></button><button type="button" class="step-chip" data-step="4" title="列索引定位" aria-label="第 5 步：列索引定位"><span class="step-chip-num">5</span><span class="step-chip-label">列索引定位</span></button><button type="button" class="step-chip" data-step="5" title="列数据连续存储" aria-label="第 6 步：列数据连续存储"><span class="step-chip-num">6</span><span class="step-chip-label">列数据连续存储</span></button><button type="button" class="step-chip" data-step="6" title="三个待实现函数" aria-label="第 7 步：三个待实现函数"><span class="step-chip-num">7</span><span class="step-chip-label">三个待实现函数</span></button></div>
+  <div class="flow-desc" aria-live="polite">
+    <div class="flow-desc-head">
+      <span class="flow-desc-badge">STEP 1 / 7</span>
+      <strong class="flow-desc-title">建表选择 PAX</strong>
+      <div class="flow-desc-tags"><span class="flow-tag">建表指定 pax</span></div>
+    </div>
+    <p class="flow-desc-text">通过 `storage format=pax` 创建列存格式的表，不指定存储格式时默认创建行存格式的表。</p>
+  </div>
+  <details class="flow-notes"><summary><span>边界与文档未决点（4 项事实核对）</span></summary><ul><li>文档未说明 bitmap 的位与记录槽位的具体映射，只说其作用与行式存储一致。</li><li>column index 被描述为 n+1 个元素（col_0..col_n），其中 col_i 对应列 ID i+1，col_n 为结束地址+1，索引位置与列 ID 存在 1 的偏移，文档未进一步解释。</li><li>get_chunk 与 get_record 的职责边界文档未展开，只说明需参考函数注释实现；PAX 在本次实验中属待实现状态。</li><li>文档未给出 PAX 页内列数据是否对齐、变长列如何存放的说明。</li></ul></details>
+</section></div>
+<article class="content"><h1 id="miniob-pax-存储格式">MiniOB PAX 存储格式</h1>
+<p>本篇文档介绍 MiniOB 中 PAX 存储格式。</p>
+<h2 id="存储模型storage-models">存储模型（Storage Models）</h2>
+<p>数据库的存储模型规定了它如何在磁盘和内存中组织数据。首先，我们来介绍下三种经典的存储模型。</p>
+<h3 id="n-ary-storage-model-nsm">N-ARY Storage Model (NSM)</h3>
+<p>在 NSM 存储模型中，一行记录的所有属性连续存储在数据库页面（Page）中，这也被称为行式存储。NSM 适合 OLTP 工作负载。因为在 OLTP 负载中，查询更有可能访问整个记录（对整个记录进行增删改查）。</p>
+<pre><code>     Col1 Col2 Col3                   Page          
+    ┌─────────────┬─┐        ┌──────────┬──────────┐
+Row1│ a1   b1   c1│ │        │PageHeader│ a1 b1 c1 │
+    ├─────────────┤ │        ├────────┬─┴──────┬───┤
+Row2│ a2   b2   c2│ │        │a2 b2 c2│a3 b3 c3│.. │
+    ├─────────────┤ │        ├────────┴────────┴───┤
+Row3│ a3   b3   c3│ │        │...                  │
+    ├─────────────┘ │        ├─────────────────────┤
+... │ ..   ..   ..  │        │...                  │
+... │ ..   ..   ..  │        └─────────────────────┘
+    │               │                               
+RowN│ an   bn   cn  │                               
+    └───────────────┘ 
+</code></pre>
+<h3 id="decomposition-storage-model-dsm">Decomposition Storage Model (DSM)</h3>
+<p>在 DSM 存储模型中，所有记录的单个属性被连续存储在数据块/文件中。这也被称为列式存储。DSM 适合 OLAP 工作负载，因为 OLAP 负载中往往会对表属性的一个子集执行扫描和计算。</p>
+<pre><code>                                 File/Block       
+     Col1 Col2 Col3        ┌─────────────────────┐
+    ┌────┬────┬────┬┐      │ Header              │
+Row1│ a1 │ b1 │ c1 ││      ├─────────────────────┤
+    │    │    │    ││      │a1 a2 a3 ......... an│
+Row2│ a2 │ b2 │ c2 ││      └─────────────────────┘
+    │    │    │    ││                             
+Row3│ a3 │ b3 │ c3 ││      ┌─────────────────────┐
+    │    │    │    ││      │ Header              │
+    │  . │....│.   ││      ├─────────────────────┤
+... │    │    │    ││      │b1 b2 b3 ......... bn│
+... │ .. │ .. │ .. ││      └─────────────────────┘
+RowN│ an │ bn │ cn ││                             
+    └────┴────┴────┴┘      ┌─────────────────────┐
+                           │ Header              │
+                           ├─────────────────────┤
+                           │c1 c2 c3 ......... cn│
+                           └─────────────────────┘
+</code></pre>
+<h3 id="partition-attributes-across-pax">Partition Attributes Across (PAX)</h3>
+<p>PAX (Partition Attributes Across) 是一种混合存储格式，它在数据库页面（Page）内对属性进行垂直分区。</p>
+<pre><code>     Col1 Col2 Col3                   Page          
+    ┌─────────────┬─┐        ┌──────────┬──────────┐
+Row1│ a1   b1   c1│ │        │PageHeader│ a1 a2 a3 │
+    │             │ │        ├──────────┼──────────┤
+Row2│ a2   b2   c2│ │        │b1 b2 b3  │ c1 c2 c3 │
+    │             │ │        └──────────┴──────────┘
+Row3│ a3   b3   c3│ │                 ....          
+    ├─────────────┘ │        ┌──────────┬──────────┐
+    │  .........    │        │PageHeader│ ..... an │
+... ├─────────────┐ │        ├──────────┼──────────┤
+... │ ..   ..   ..│ │        │...... bn │ ..... cn │
+RowN│ an   bn   cn│ │        └──────────┴──────────┘
+    └─────────────┴─┘                               
+</code></pre>
+<h2 id="miniob-中-pax-存储格式">MiniOB 中 PAX 存储格式</h2>
+<h3 id="实现">实现</h3>
+<p>在 MiniOB 中，RecordManager 负责一个文件中表记录（Record）的组织/管理。在没有实现 PAX 存储格式之前，MiniOB 只支持行存格式，每个记录连续存储在页面（Page）中，通过<code>RowRecordPageHandler</code> 对单个页面中的记录进行管理。需要通过实现 <code>PaxRecordPageHandler</code> 来支持页面内 PAX 存储格式的管理。
+Page 内的 PAX 存储格式如下：</p>
+<pre><code>| PageHeader | record allocate bitmap | column index  |
+|------------|------------------------| ------------- |
+| column1 | column2 | ..................... | columnN |
+</code></pre>
+<p>其中 <code>PageHeader</code> 与 <code>bitmap</code> 和行式存储中的作用一致，<code>column index</code> 用于定位列数据在页面内的偏移量，每列数据连续存储。</p>
+<p><code>column index</code> 结构如下，为一个连续的数组。假设某个页面共有 <code>n + 1</code> 列，分别为<code>col_0, col_1, ..., col_n</code>，<code>col_i</code> 表示列 ID（column id）为 <code>i + 1</code>的列在页面内的起始地址(<code>i &lt; n</code>)。当 <code>i = n</code>时，<code>col_n</code> 表示列 ID 为 <code>n</code> 的列在页面内的结束地址 + 1。</p>
+<pre><code>| col_0 | col_1 | col_2 | ......  | col_n |
+|-------|-------|-------|---------|-------|
+</code></pre>
+<p>MiniOB 支持了创建 PAX 表的语法。当不指定存储格式时，默认创建行存格式的表。</p>
+<pre><code>CREATE TABLE table_name
+      (table_definition_list) [storage_format_option]
+
+storage_format_option:
+      storage format=row
+    | storage format=pax
+</code></pre>
+<p>示例：</p>
+<p>创建行存格式的表：</p>
+<pre><code class="language-sql">create table t(a int,b int) storage format=row;
+create table t(a int,b int);
+</code></pre>
+<p>创建列存格式的表：</p>
+<pre><code class="language-sql">create table t(a int,b int) storage format=pax;
+</code></pre>
+<h3 id="实验">实验</h3>
+<p>实现 PAX 存储格式，需要完成 <code>src/observer/storage/record/record_manager.cpp</code> 中 <code>PaxRecordPageHandler::insert_record</code>, <code>PaxRecordPageHandler::get_chunk</code>, <code>PaxRecordPageHandler::get_record</code> 三个函数（标注 <code>// your code here</code> 的位置），详情可参考这三个函数的注释。行存格式存储是已经在MiniOB 中完整实现的，实现 PAX 存储格式的过程中可以参考 <code>RowRecordPageHandler</code>。</p>
+<h3 id="测试">测试</h3>
+<p>通过 <code>unittest/pax_storage_test.cpp</code> 中所有测试用例，通过<code>benchmark/pax_storage_concurrency_test.cpp</code> 性能测试。</p>
+<p>注意：如果需要运行 <code>pax_storage_test</code> 、<code>pax_storage_concurrency_test</code>，请移除<code>DISABLED_</code> 前缀。</p>
+</article>
+<nav class="pager" aria-label="相邻文档导航"><a class="prev" href="miniob-mysql-protocol.html"><span>← 上一篇</span>MySQL 通讯协议</a><a class="next" href="miniob-aggregation-and-group-by.html"><span>下一篇 →</span>MiniOB 向量化执行 aggregation 和 group by 实现</a></nav>
+<p class="source-line">源文件：<a href="../../docs/design/miniob-pax-storage.md">design/miniob-pax-storage.md</a></p>
+
+    <footer class="page-footer">
+      <span>由 <code>docs/visual/build.py</code> &amp; <code>draw_diagrams.py</code> 从 <code>docs/docs</code> 生成</span>
+      <span>MiniOB · 可视化技术文档</span>
+    </footer>
+  </main>
+  <aside class="page-toc" aria-label="本页目录"><div class="toc-inner"><p class="toc-title">本页导览</p><ul class="toc-list"><li class="toc-item toc-flow"><a href="#flow-pax-storage-layout">▶ 流程：PAX 页内存储布局</a></li><li class="toc-item toc-l2"><a href="#存储模型storage-models">存储模型（Storage Models）</a></li><li class="toc-item toc-l3"><a href="#n-ary-storage-model-nsm">N-ARY Storage Model (NSM)</a></li><li class="toc-item toc-l3"><a href="#decomposition-storage-model-dsm">Decomposition Storage Model (DSM)</a></li><li class="toc-item toc-l3"><a href="#partition-attributes-across-pax">Partition Attributes Across (PAX)</a></li><li class="toc-item toc-l2"><a href="#miniob-中-pax-存储格式">MiniOB 中 PAX 存储格式</a></li><li class="toc-item toc-l3"><a href="#实现">实现</a></li><li class="toc-item toc-l3"><a href="#实验">实验</a></li><li class="toc-item toc-l3"><a href="#测试">测试</a></li></ul><a class="toc-top" href="#top">↑ 回到顶部</a></div></aside>
+</div>
+<div class="nav-scrim" id="navScrim"></div>
+<div class="diagram-modal" id="diagramModal" hidden role="dialog" aria-modal="true" aria-label="图表放大检视">
+  <div class="diagram-modal-bar">
+    <span class="diagram-modal-title" id="diagramModalTitle">架构与流程图检视</span>
+    <button type="button" class="diagram-modal-close" id="diagramModalClose" aria-label="关闭">✕ 关闭 (Esc)</button>
+  </div>
+  <div class="diagram-modal-body" id="diagramModalBody"></div>
+</div>
+<script src="../assets/markmap-config.js"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/markmap-autoloader@0.18"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/@highlightjs/cdn-assets@11/highlight.min.js"></script>
+<script type="application/json" id="flow-data">[{"id": "pax-storage-layout", "title": "PAX 页内存储布局", "source": "design/miniob-pax-storage.md", "anchor": "MiniOB 中 PAX 存储格式", "nodes": [{"id": "create_pax", "label": "建表指定 pax"}, {"id": "pax_handler", "label": "PAX 页内管理器"}, {"id": "page_layout", "label": "页内垂直分区"}, {"id": "page_header", "label": "页头与记录位图"}, {"id": "col_index", "label": "列索引数组"}, {"id": "col_data", "label": "列数据连续存放"}, {"id": "insert_rec", "label": "insert_record"}, {"id": "get_rec", "label": "get_record"}], "edges": [["create_pax", "pax_handler"], ["pax_handler", "page_layout"], ["page_layout", "page_header"], ["page_layout", "col_index"], ["col_index", "col_data"], ["pax_handler", "insert_rec"], ["pax_handler", "get_rec"], ["insert_rec", "col_data", "写入列"], ["get_rec", "col_data", "按列读取"]], "steps": [{"title": "建表选择 PAX", "desc": "通过 `storage format=pax` 创建列存格式的表，不指定存储格式时默认创建行存格式的表。", "highlight": ["create_pax"]}, {"title": "页内管理器", "desc": "RecordManager 负责一个文件中表记录的组织管理，PAX 页面由 PaxRecordPageHandler 管理，行存页面由 RowRecordPageHandler 管理。", "highlight": ["pax_handler"]}, {"title": "页内垂直分区", "desc": "PAX 在页面内对属性做垂直分区，页面布局为 PageHeader、record allocate bitmap、column index，然后是 column1 到 columnN。", "highlight": ["page_layout"]}, {"title": "复用页头与位图", "desc": "PageHeader 与 bitmap 在 PAX 页内的作用与行式存储中一致。", "highlight": ["page_header"]}, {"title": "列索引定位", "desc": "column index 是一个连续数组，col_i 表示列 ID 为 i+1 的列在页面内的起始地址，col_n 表示最后一列的结束地址 + 1。", "highlight": ["col_index"]}, {"title": "列数据连续存储", "desc": "每列数据在页面内连续存储，列索引用于定位各列数据的偏移量。", "highlight": ["col_data"]}, {"title": "三个待实现函数", "desc": "实验要求实现 record_manager.cpp 中的 PaxRecordPageHandler::insert_record、get_chunk、get_record，测试为 pax_storage_test 与 pax_storage_concurrency_test（需移除 DISABLED_ 前缀）。", "highlight": ["insert_rec", "get_rec"]}], "uncertainties": ["文档未说明 bitmap 的位与记录槽位的具体映射，只说其作用与行式存储一致。", "column index 被描述为 n+1 个元素（col_0..col_n），其中 col_i 对应列 ID i+1，col_n 为结束地址+1，索引位置与列 ID 存在 1 的偏移，文档未进一步解释。", "get_chunk 与 get_record 的职责边界文档未展开，只说明需参考函数注释实现；PAX 在本次实验中属待实现状态。", "文档未给出 PAX 页内列数据是否对齐、变长列如何存放的说明。"], "summary": "页内垂直分区：页头、位图、列索引与按列读写。"}]</script>
+<script defer src="../assets/site.js"></script>
+</body>
+</html>

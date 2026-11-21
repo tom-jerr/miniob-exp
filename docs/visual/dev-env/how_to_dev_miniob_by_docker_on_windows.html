@@ -1,0 +1,170 @@
+<!doctype html>
+<html lang="zh-CN" id="top">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>安装Docker · MiniOB 可视化文档</title>
+<link rel="stylesheet" href="../assets/style.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@highlightjs/cdn-assets@11/styles/atom-one-dark.min.css">
+<script src="../assets/theme.js"></script>
+
+</head>
+<body class="">
+<div class="reading-progress" id="readingProgress" aria-hidden="true"></div>
+<header class="topbar">
+  <button class="menu-btn" id="menuBtn" aria-label="切换侧栏" aria-expanded="false">☰</button>
+  <a class="brand" href="../index.html"><span class="brand-mark">M</span><span>MiniOB <em>可视化文档</em></span></a>
+  <div class="top-actions">
+    <a class="top-link" href="../flows.html">动态流程</a>
+    <button class="theme-btn" id="themeBtn" aria-label="切换明暗主题" title="切换明暗主题">◐</button>
+  </div>
+</header>
+<div class="layout has-toc">
+  <aside class="sidebar" id="sidebar"><nav class="site-nav" aria-label="文档目录"><a class="nav-home" href="../index.html"><span class="brand-mark">M</span><span>MiniOB 可视化文档</span></a><details class="nav-group"><summary>快速开始<span>2</span></summary><div class="nav-links"><a href="../how_to_build.html"><span class="nav-link-text">如何编译</span></a><a href="../how_to_run.html"><span class="nav-link-text">如何运行</span></a></div></details><details class="nav-group"><summary>设计文档<span>21</span></summary><div class="nav-links"><a href="../design/miniob-architecture.html"><span class="nav-link-text">MiniOB代码架构框架设计和说明</span><span class="nav-badge" title="含交互流程图或架构图">图</span></a><a href="../design/miniob-buffer-pool.html"><span class="nav-link-text">MiniOB 存储实现</span><span class="nav-badge" title="含交互流程图或架构图">图</span></a><a href="../design/miniob-double-write-buffer.html"><span class="nav-link-text">MiniOB Double Write Buffer 实现</span><span class="nav-badge" title="含交互流程图或架构图">图</span></a><a href="../design/miniob-transaction.html"><span class="nav-link-text">事务模块</span><span class="nav-badge" title="含交互流程图或架构图">图</span></a><a href="../design/miniob-durability.html"><span class="nav-link-text">持久化</span><span class="nav-badge" title="含交互流程图或架构图">图</span></a><a href="../design/miniob-persistence-files.html"><span class="nav-link-text">持久化文件与恢复路径</span><span class="nav-badge" title="含交互流程图或架构图">图</span></a><a href="../design/miniob-checkpoint-wal.html"><span class="nav-link-text">MiniOB 检查点与 WAL 截断</span><span class="nav-badge" title="含交互流程图或架构图">图</span></a><a href="../design/miniob-sql-parser.html"><span class="nav-link-text">SQL 词法语法分析</span></a><a href="../design/miniob-how-to-add-new-sql.html"><span class="nav-link-text">SQL语句执行流程</span><span class="nav-badge" title="含交互流程图或架构图">图</span></a><a href="../design/miniob-sql-expression.html"><span class="nav-link-text">SQL 表达式</span></a><a href="../design/miniob-bplus-tree.html"><span class="nav-link-text">MiniOB B+Tree 实现</span><span class="nav-badge" title="含交互流程图或架构图">图</span></a><a href="../design/miniob-bplus-tree-concurrency.html"><span class="nav-link-text">B+ 树并发操作</span><span class="nav-badge" title="含交互流程图或架构图">图</span></a><a href="../design/miniob-thread-model.html"><span class="nav-link-text">线程模型</span><span class="nav-badge" title="含交互流程图或架构图">图</span></a><a href="../design/miniob-mysql-protocol.html"><span class="nav-link-text">MySQL 通讯协议</span></a><a href="../design/miniob-pax-storage.html"><span class="nav-link-text">MiniOB PAX 存储格式</span><span class="nav-badge" title="含交互流程图或架构图">图</span></a><a href="../design/miniob-aggregation-and-group-by.html"><span class="nav-link-text">MiniOB 向量化执行 aggregation 和 group by 实现</span></a><a href="../design/miniob-lsm-tree.html"><span class="nav-link-text">MiniOB LSM-Tree 存储引擎</span><span class="nav-badge" title="含交互流程图或架构图">图</span></a><a href="../design/introduction.html"><span class="nav-link-text">功能模块设计说明</span></a><a href="../design/miniob-btree-storage-engine.html"><span class="nav-link-text">MiniOB B+Tree 聚簇表存储引擎</span><span class="nav-badge" title="含交互流程图或架构图">图</span></a><a href="../design/miniob-cascade.html"><span class="nav-link-text">Cascade Optimizer(查询优化器)</span><span class="nav-badge" title="含交互流程图或架构图">图</span></a><a href="../design/miniob-update-mvcc-occ.html"><span class="nav-link-text">MiniOB UPDATE、MVCC 与 OCC 方案设计</span><span class="nav-badge" title="含交互流程图或架构图">图</span></a></div></details><details class="nav-group"><summary>课程实验<span>6</span></summary><div class="nav-links"><a href="../db_course_lab/overview.html"><span class="nav-link-text">数据库系统实现原理与实践课程实验</span></a><a href="../db_course_lab/lab0.html"><span class="nav-link-text">LAB#0 C++ 基础</span></a><a href="../db_course_lab/lab1.html"><span class="nav-link-text">LAB#1 LSM-Tree 存储引擎</span></a><a href="../db_course_lab/lab2.html"><span class="nav-link-text">LAB#2 查询引擎</span></a><a href="../db_course_lab/lab3.html"><span class="nav-link-text">LAB#3 事务引擎</span></a><a href="../db_course_lab/lab4.html"><span class="nav-link-text">LAB#4 性能测试</span></a></div></details><details class="nav-group"><summary>简明教程<span>9</span></summary><div class="nav-links"><a href="../lectures/copyright.html"><span class="nav-link-text">版权声明</span></a><a href="../lectures/lecture-1.html"><span class="nav-link-text">第1章 数据库管理系统概述</span></a><a href="../lectures/lecture-2.html"><span class="nav-link-text">第2章 数据库的存储结构</span></a><a href="../lectures/lecture-3.html"><span class="nav-link-text">第3章 索引结构</span></a><a href="../lectures/lecture-4.html"><span class="nav-link-text">第4章 查询处理</span></a><a href="../lectures/lecture-5.html"><span class="nav-link-text">第5章 查询优化</span></a><a href="../lectures/lecture-6.html"><span class="nav-link-text">第6章 事务处理</span></a><a href="../lectures/references.html"><span class="nav-link-text">参考资料</span></a><a href="../lectures/index.html"><span class="nav-link-text">数据库管理系统实现基础讲义</span></a></div></details><details class="nav-group" open><summary>开发环境<span>14</span></summary><div class="nav-links"><a href="introduction.html"><span class="nav-link-text">搭建开发环境</span></a><a href="vscode_dev_with_local_virtual_env.html"><span class="nav-link-text">虚拟机+vscode remote开发</span></a><a href="dev_by_online.html"><span class="nav-link-text">使用在线开发环境开发 MiniOB</span></a><a href="how-to-dev-using-docker.html"><span class="nav-link-text">使用Docker开发MiniOB</span></a><a href="how_to_dev_in_docker_container_by_vscode.html"><span class="nav-link-text">使用 Docker 和 VSCode 远程开发 Miniob</span></a><a href="how_to_dev_in_docker_container_by_vscode_on_windows.html"><span class="nav-link-text">在windows上通过docker配置环境并利用vscode调试代码（手把手版）</span></a><a href="how_to_dev_miniob_by_docker_on_windows.html" class="active" aria-current="page"><span class="nav-link-text">安装Docker</span></a><a href="how_to_dev_miniob_by_vscode.html"><span class="nav-link-text">环境准备</span></a><a href="miniob-how-to-debug.html"><span class="nav-link-text">miniob调试篇</span></a><a href="how_to_submit_for_testing.html"><span class="nav-link-text">训练营平台使用说明</span></a><a href="integration_test.html"><span class="nav-link-text">MiniOB 集成测试使用文档</span></a><a href="cloudlab_setup.html"><span class="nav-link-text">开源学堂在线编程环境开发 MiniOB</span></a><a href="how_to_dev_miniob_by_docker_on_windows_simplified.html"><span class="nav-link-text">在windows上通过docker配置环境并利用vscode编辑、开发、调试代码（简易版）</span></a><a href="how_to_dev_miniob_in_vscodeGUI_by_docker_on_windows.html"><span class="nav-link-text">基于Windows+docker容器在本地利用VSCode编辑、开发及调试miniob</span></a></div></details><details class="nav-group"><summary>大赛与训练<span>9</span></summary><div class="nav-links"><a href="../game/introduction.html"><span class="nav-link-text">OceanBase 数据库大赛</span></a><a href="../game/miniob-output-convention.html"><span class="nav-link-text">输出规范</span></a><a href="../game/debug-output.html"><span class="nav-link-text">输出调试信息</span></a><a href="../game/miniob-memtracer.html"><span class="nav-link-text">MemTracer</span></a><a href="../game/miniob_topics.html"><span class="nav-link-text">OceanBase 数据库大赛2021届题目</span></a><a href="../game/github-introduction.html"><span class="nav-link-text">MiniOB GitHub 在训练营中的使用说明</span></a><a href="../game/gitee-instructions.html"><span class="nav-link-text">MiniOB Gitee 在训练营中的使用说明</span></a><a href="../game/miniob-vectordb.html"><span class="nav-link-text">MiniOB 向量数据库</span></a><a href="../game/git-introduction.html"><span class="nav-link-text">Git 介绍</span></a></div></details><details class="nav-group"><summary>博客<span>2</span></summary><div class="nav-links"><a href="../blog/introduction.html"><span class="nav-link-text">介绍</span></a><a href="../blog/1.html"><span class="nav-link-text">High-Performance Concurrency Control Mechanisms for Main-Memory Databases</span></a></div></details><a class="nav-flows" href="../flows.html"><span class="dot"></span>动态流程<span class="count">13</span></a></nav></aside>
+  <main class="main">
+    
+<nav class="crumbs" aria-label="面包屑导航"><a href="../index.html">首页</a><span>/</span><span>开发环境</span><span>/</span><span aria-current="page">安装Docker</span></nav>
+<header class="doc-head">
+  <div class="doc-meta-bar">
+    <span class="eyebrow-pill">开发环境</span>
+    <span class="doc-meta-item">7 个章节</span>
+    <span class="doc-meta-sep">·</span>
+    <span class="doc-meta-item">约 3 分钟阅读</span>
+    <span class="doc-meta-sep">·</span>
+    <a class="doc-meta-source" href="../../docs/dev-env/how_to_dev_miniob_by_docker_on_windows.md">Markdown 源文件 ↗</a>
+  </div>
+  <h1>安装Docker</h1>
+</header>
+<section class="panel map-panel" id="doc-outline-panel">
+  <div class="panel-head">
+    <div>
+      <h2>章节结构导览</h2>
+      <span>点击任意章节直达正文；支持结构卡片与交互思维导图切换</span>
+    </div>
+    <button type="button" class="map-toggle-btn" data-toggle-markmap aria-expanded="false">⊞ 切换思维导图</button>
+  </div>
+  <div class="tree-view"><div class="tree-grid"><div class="tree-branch"><div class="tree-top"><a class="tree-link" href="#如何开启电脑的虚拟化"><span class="tree-num">1</span><span>如何开启电脑的虚拟化</span></a></div></div><div class="tree-branch"><div class="tree-top"><a class="tree-link" href="#下载docker-desktop"><span class="tree-num">2</span><span>下载Docker Desktop</span></a></div></div><div class="tree-branch"><div class="tree-top"><a class="tree-link" href="#开启windows-子系统"><span class="tree-num">3</span><span>开启Windows 子系统</span></a></div></div><div class="tree-branch"><div class="tree-top"><a class="tree-link" href="#安装docker-1"><span class="tree-num">4</span><span>安装Docker</span></a></div></div><div class="tree-branch"><div class="tree-top"><a class="tree-link" href="#运行docker"><span class="tree-num">5</span><span>运行Docker</span></a></div></div><div class="tree-branch"><div class="tree-top"><a class="tree-link" href="#faq"><span class="tree-num">6</span><span>FAQ</span></a></div></div></div></div>
+  <div class="markmap-wrap" hidden>
+    <div class="markmap"><script type="text/template"># 安装Docker
+  - [如何开启电脑的虚拟化](#如何开启电脑的虚拟化)
+  - [下载Docker Desktop](#下载docker-desktop)
+  - [开启Windows 子系统](#开启windows-子系统)
+  - [安装Docker](#安装docker-1)
+  - [运行Docker](#运行docker)
+  - [FAQ](#faq)</script></div>
+  </div>
+</section>
+
+<article class="content"><p>Windows 如何使用 Docker 开发miniob</p>
+<p>miniob 是 OceanBase联合华中科技大学开发的一款帮助零基础开发者数据库开发实战的系统，目前已经开源，可以在GitHub网站查看：<a target="_blank" rel="noopener" href="https://github.com/oceanbase/miniob">miniob github首页</a>。</p>
+<p>Miniob 是一个基于Linux的系统，可以在Linux和Mac上开发测试。使用Windows的同学，可以尝试Docker、Linux 子系统或者Cygwin等方式。本篇文章介绍在Windows系统上如何使用Docker来开发miniob。</p>
+<h1 id="安装docker">安装Docker</h1>
+<p>Windows系统上默认不会安装Docker，需要自行安装。安装Docker有一些依赖，比如要开启电脑的虚拟化功能、Windows的Hyper-V 功能，具体操作可以参考这篇文档<a target="_blank" rel="noopener" href="https://docs.microsoft.com/zh-cn/virtualization/windowscontainers/quick-start/set-up-environment?tabs=Windows-10-and-11">在Windows系统上安装Docker</a>。</p>
+<p>虽然文档已经比较详细，而且网上可以搜到大量的教程，这里还是给一些步骤提示。</p>
+<h2 id="如何开启电脑的虚拟化">如何开启电脑的虚拟化</h2>
+<p>以ThinkPad X1 Carbon 为例（不同的电脑可能会有些不同）</p>
+<p>开机按 F1 进入：BIOS （不同的电脑进入BIOS的方式可能不同）</p>
+<ol>
+<li>选择：Security</li>
+<li>选择：Virtualization</li>
+<li>选择：
+<ul>
+<li>Intel(R) Virturalization Technology=Enable</li>
+<li>Intel(R) VT-d Feature=Enable</li>
+</ul>
+</li>
+</ol>
+<h2 id="下载docker-desktop">下载Docker Desktop</h2>
+<p>这个步骤没有什么特殊的，<a target="_blank" rel="noopener" href="https://docs.docker.com/desktop/install/windows-install/">下载</a>即可。</p>
+<h2 id="开启windows-子系统">开启Windows 子系统</h2>
+<p>可以在Windows应用中找到Windows功能的开关，具体步骤以Windows 10为例，参考下面的步骤。
+<img loading="lazy" src="../../docs/dev-env/images/windows-functions.png" alt="打开Windows设置中的应用和功能" /></p>
+<p><img loading="lazy" src="../../docs/dev-env/images/windows-enable-disable-functions.png" alt="找到开启关闭功能的页面" /></p>
+<p><img loading="lazy" src="../../docs/dev-env/images/windows-wsl.png" alt="开启Windows子系统" /></p>
+<h2 id="安装docker-1">安装Docker</h2>
+<p>Windows应用程序的典型安装，点击下载好的安装包即可。</p>
+<h1 id="运行docker">运行Docker</h1>
+<p>在PowerShell 中执行以下命令，下载并启动miniob镜像</p>
+<pre><code class="language-bash">docker run -d --name miniob --privileged oceanbase/miniob
+</code></pre>
+<p>其中 privileged 参数是为了方便在容器中进行调试。</p>
+<p>运行下面的命令可以进入到容器并进行开发</p>
+<pre><code class="language-bash">docker exec -it miniob bash
+</code></pre>
+<p>这个命令可以在终端上执行多次，开启多个窗口方便操作。</p>
+<p>到这里就可以结束了，但是为了方便后续的开发，还有一些建议。</p>
+<ol>
+<li>将代码放在自己的电脑上，Docker仅作为一个开发环境。启动镜像时这么做</li>
+</ol>
+<pre><code class="language-bash">docker run -d --name miniob --privileged -v $PWD/miniob:/root/miniob oceanbase/miniob
+</code></pre>
+<p>其中 <code>-v $PWD/miniob:/root/miniob</code> 是说将本地的 <code>$PWD/miniob</code> 目录映射到容器中的<code>/root/miniob</code> 目录，这里假设  <code>$PWD/miniob</code> 是你本地代码存放的位置，需要按照实际目录来调整。</p>
+<p>代码放在自己的电脑上，好处是如果容器出现什么异常，自己最重要的数据不会丢失。</p>
+<ol start="2">
+<li>启动镜像时忘记增加一些参数，但是又不想重新创建怎么办?</li>
+</ol>
+<p>有时候启动镜像时（docker run），忘记增加一些参数，比如 <code>privileged</code>，但是又在容器中做了蛮多操作，对环境做了调整，不希望启动全新的容器，可以这么做</p>
+<ul>
+<li>提交当前的容器，创建新的镜像</li>
+</ul>
+<pre><code class="language-bash">docker commit -m 'commit message' -t miniob:vx miniob
+docker stop miniob
+docker rm miniob
+</code></pre>
+<ul>
+<li>启动新的镜像</li>
+</ul>
+<pre><code class="language-bash">docker run -d --name miniob xxxx miniob:vx
+</code></pre>
+<div class="callout callout-note" role="note"><div class="callout-title">补充说明 · NOTE</div><div class="callout-body"><p>NOTE: 参数中 miniob:vx 中的vx 是一个版本号，你可以自己设置，每次使用不同的名字即可。</p></div></div>
+<ol start="3">
+<li>在Windows上安装 Windows Terminal 应用</li>
+</ol>
+<p>说实话，Windows自带的PowerShell和命令提示符实在太丑了，而且不支持配置。可以在应用商城中下载Windows Terminal 应用，此应用免费，默认界面非常漂亮并且支持多种终端。</p>
+<p><img loading="lazy" src="../../docs/dev-env/images/windows-terminal.png" alt="应用商店安装Windows Terminal" /></p>
+<p><img loading="lazy" src="../../docs/dev-env/images/windows-terminal-mutli-shell.png" alt="Terminal 支持连接多个终端" /></p>
+<h1 id="faq">FAQ</h1>
+<ul>
+<li>Docker Desktop requires the Server service to be enabled.
+开启Windows服务即可</li>
+</ul>
+<ol>
+<li>
+<p>搜索 service 应用
+<img loading="lazy" src="../../docs/dev-env/images/windows-search-service.png" alt="搜索service应用" /></p>
+</li>
+<li>
+<p>开启server应用
+<img loading="lazy" src="../../docs/dev-env/images/windows-enable-service.png" alt="开启server应用" /></p>
+</li>
+</ol>
+<ul>
+<li>miniob 镜像中当前包含哪些信息
+可以参考miniob镜像的网站首页：<a target="_blank" rel="noopener" href="https://hub.docker.com/r/oceanbase/miniob">miniob 镜像首页</a></li>
+</ul>
+</article>
+<nav class="pager" aria-label="相邻文档导航"><a class="prev" href="how_to_dev_in_docker_container_by_vscode_on_windows.html"><span>← 上一篇</span>在windows上通过docker配置环境并利用vscode调试代码（手把手版）</a><a class="next" href="how_to_dev_miniob_by_vscode.html"><span>下一篇 →</span>环境准备</a></nav>
+<p class="source-line">源文件：<a href="../../docs/dev-env/how_to_dev_miniob_by_docker_on_windows.md">dev-env/how_to_dev_miniob_by_docker_on_windows.md</a></p>
+
+    <footer class="page-footer">
+      <span>由 <code>docs/visual/build.py</code> &amp; <code>draw_diagrams.py</code> 从 <code>docs/docs</code> 生成</span>
+      <span>MiniOB · 可视化技术文档</span>
+    </footer>
+  </main>
+  <aside class="page-toc" aria-label="本页目录"><div class="toc-inner"><p class="toc-title">本页导览</p><ul class="toc-list"><li class="toc-item toc-l2"><a href="#如何开启电脑的虚拟化">如何开启电脑的虚拟化</a></li><li class="toc-item toc-l2"><a href="#下载docker-desktop">下载Docker Desktop</a></li><li class="toc-item toc-l2"><a href="#开启windows-子系统">开启Windows 子系统</a></li><li class="toc-item toc-l2"><a href="#安装docker-1">安装Docker</a></li><li class="toc-item toc-l1"><a href="#运行docker">运行Docker</a></li><li class="toc-item toc-l1"><a href="#faq">FAQ</a></li></ul><a class="toc-top" href="#top">↑ 回到顶部</a></div></aside>
+</div>
+<div class="nav-scrim" id="navScrim"></div>
+<div class="diagram-modal" id="diagramModal" hidden role="dialog" aria-modal="true" aria-label="图表放大检视">
+  <div class="diagram-modal-bar">
+    <span class="diagram-modal-title" id="diagramModalTitle">架构与流程图检视</span>
+    <button type="button" class="diagram-modal-close" id="diagramModalClose" aria-label="关闭">✕ 关闭 (Esc)</button>
+  </div>
+  <div class="diagram-modal-body" id="diagramModalBody"></div>
+</div>
+<script src="../assets/markmap-config.js"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/markmap-autoloader@0.18"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/@highlightjs/cdn-assets@11/highlight.min.js"></script>
+
+<script defer src="../assets/site.js"></script>
+</body>
+</html>

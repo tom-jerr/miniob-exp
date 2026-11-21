@@ -1,0 +1,346 @@
+<!doctype html>
+<html lang="zh-CN" id="top">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>miniob调试篇 · MiniOB 可视化文档</title>
+<link rel="stylesheet" href="../assets/style.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@highlightjs/cdn-assets@11/styles/atom-one-dark.min.css">
+<script src="../assets/theme.js"></script>
+
+</head>
+<body class="">
+<div class="reading-progress" id="readingProgress" aria-hidden="true"></div>
+<header class="topbar">
+  <button class="menu-btn" id="menuBtn" aria-label="切换侧栏" aria-expanded="false">☰</button>
+  <a class="brand" href="../index.html"><span class="brand-mark">M</span><span>MiniOB <em>可视化文档</em></span></a>
+  <div class="top-actions">
+    <a class="top-link" href="../flows.html">动态流程</a>
+    <button class="theme-btn" id="themeBtn" aria-label="切换明暗主题" title="切换明暗主题">◐</button>
+  </div>
+</header>
+<div class="layout has-toc">
+  <aside class="sidebar" id="sidebar"><nav class="site-nav" aria-label="文档目录"><a class="nav-home" href="../index.html"><span class="brand-mark">M</span><span>MiniOB 可视化文档</span></a><details class="nav-group"><summary>快速开始<span>2</span></summary><div class="nav-links"><a href="../how_to_build.html"><span class="nav-link-text">如何编译</span></a><a href="../how_to_run.html"><span class="nav-link-text">如何运行</span></a></div></details><details class="nav-group"><summary>设计文档<span>21</span></summary><div class="nav-links"><a href="../design/miniob-architecture.html"><span class="nav-link-text">MiniOB代码架构框架设计和说明</span><span class="nav-badge" title="含交互流程图或架构图">图</span></a><a href="../design/miniob-buffer-pool.html"><span class="nav-link-text">MiniOB 存储实现</span><span class="nav-badge" title="含交互流程图或架构图">图</span></a><a href="../design/miniob-double-write-buffer.html"><span class="nav-link-text">MiniOB Double Write Buffer 实现</span><span class="nav-badge" title="含交互流程图或架构图">图</span></a><a href="../design/miniob-transaction.html"><span class="nav-link-text">事务模块</span><span class="nav-badge" title="含交互流程图或架构图">图</span></a><a href="../design/miniob-durability.html"><span class="nav-link-text">持久化</span><span class="nav-badge" title="含交互流程图或架构图">图</span></a><a href="../design/miniob-persistence-files.html"><span class="nav-link-text">持久化文件与恢复路径</span><span class="nav-badge" title="含交互流程图或架构图">图</span></a><a href="../design/miniob-checkpoint-wal.html"><span class="nav-link-text">MiniOB 检查点与 WAL 截断</span><span class="nav-badge" title="含交互流程图或架构图">图</span></a><a href="../design/miniob-sql-parser.html"><span class="nav-link-text">SQL 词法语法分析</span></a><a href="../design/miniob-how-to-add-new-sql.html"><span class="nav-link-text">SQL语句执行流程</span><span class="nav-badge" title="含交互流程图或架构图">图</span></a><a href="../design/miniob-sql-expression.html"><span class="nav-link-text">SQL 表达式</span></a><a href="../design/miniob-bplus-tree.html"><span class="nav-link-text">MiniOB B+Tree 实现</span><span class="nav-badge" title="含交互流程图或架构图">图</span></a><a href="../design/miniob-bplus-tree-concurrency.html"><span class="nav-link-text">B+ 树并发操作</span><span class="nav-badge" title="含交互流程图或架构图">图</span></a><a href="../design/miniob-thread-model.html"><span class="nav-link-text">线程模型</span><span class="nav-badge" title="含交互流程图或架构图">图</span></a><a href="../design/miniob-mysql-protocol.html"><span class="nav-link-text">MySQL 通讯协议</span></a><a href="../design/miniob-pax-storage.html"><span class="nav-link-text">MiniOB PAX 存储格式</span><span class="nav-badge" title="含交互流程图或架构图">图</span></a><a href="../design/miniob-aggregation-and-group-by.html"><span class="nav-link-text">MiniOB 向量化执行 aggregation 和 group by 实现</span></a><a href="../design/miniob-lsm-tree.html"><span class="nav-link-text">MiniOB LSM-Tree 存储引擎</span><span class="nav-badge" title="含交互流程图或架构图">图</span></a><a href="../design/introduction.html"><span class="nav-link-text">功能模块设计说明</span></a><a href="../design/miniob-btree-storage-engine.html"><span class="nav-link-text">MiniOB B+Tree 聚簇表存储引擎</span><span class="nav-badge" title="含交互流程图或架构图">图</span></a><a href="../design/miniob-cascade.html"><span class="nav-link-text">Cascade Optimizer(查询优化器)</span><span class="nav-badge" title="含交互流程图或架构图">图</span></a><a href="../design/miniob-update-mvcc-occ.html"><span class="nav-link-text">MiniOB UPDATE、MVCC 与 OCC 方案设计</span><span class="nav-badge" title="含交互流程图或架构图">图</span></a></div></details><details class="nav-group"><summary>课程实验<span>6</span></summary><div class="nav-links"><a href="../db_course_lab/overview.html"><span class="nav-link-text">数据库系统实现原理与实践课程实验</span></a><a href="../db_course_lab/lab0.html"><span class="nav-link-text">LAB#0 C++ 基础</span></a><a href="../db_course_lab/lab1.html"><span class="nav-link-text">LAB#1 LSM-Tree 存储引擎</span></a><a href="../db_course_lab/lab2.html"><span class="nav-link-text">LAB#2 查询引擎</span></a><a href="../db_course_lab/lab3.html"><span class="nav-link-text">LAB#3 事务引擎</span></a><a href="../db_course_lab/lab4.html"><span class="nav-link-text">LAB#4 性能测试</span></a></div></details><details class="nav-group"><summary>简明教程<span>9</span></summary><div class="nav-links"><a href="../lectures/copyright.html"><span class="nav-link-text">版权声明</span></a><a href="../lectures/lecture-1.html"><span class="nav-link-text">第1章 数据库管理系统概述</span></a><a href="../lectures/lecture-2.html"><span class="nav-link-text">第2章 数据库的存储结构</span></a><a href="../lectures/lecture-3.html"><span class="nav-link-text">第3章 索引结构</span></a><a href="../lectures/lecture-4.html"><span class="nav-link-text">第4章 查询处理</span></a><a href="../lectures/lecture-5.html"><span class="nav-link-text">第5章 查询优化</span></a><a href="../lectures/lecture-6.html"><span class="nav-link-text">第6章 事务处理</span></a><a href="../lectures/references.html"><span class="nav-link-text">参考资料</span></a><a href="../lectures/index.html"><span class="nav-link-text">数据库管理系统实现基础讲义</span></a></div></details><details class="nav-group" open><summary>开发环境<span>14</span></summary><div class="nav-links"><a href="introduction.html"><span class="nav-link-text">搭建开发环境</span></a><a href="vscode_dev_with_local_virtual_env.html"><span class="nav-link-text">虚拟机+vscode remote开发</span></a><a href="dev_by_online.html"><span class="nav-link-text">使用在线开发环境开发 MiniOB</span></a><a href="how-to-dev-using-docker.html"><span class="nav-link-text">使用Docker开发MiniOB</span></a><a href="how_to_dev_in_docker_container_by_vscode.html"><span class="nav-link-text">使用 Docker 和 VSCode 远程开发 Miniob</span></a><a href="how_to_dev_in_docker_container_by_vscode_on_windows.html"><span class="nav-link-text">在windows上通过docker配置环境并利用vscode调试代码（手把手版）</span></a><a href="how_to_dev_miniob_by_docker_on_windows.html"><span class="nav-link-text">安装Docker</span></a><a href="how_to_dev_miniob_by_vscode.html"><span class="nav-link-text">环境准备</span></a><a href="miniob-how-to-debug.html" class="active" aria-current="page"><span class="nav-link-text">miniob调试篇</span></a><a href="how_to_submit_for_testing.html"><span class="nav-link-text">训练营平台使用说明</span></a><a href="integration_test.html"><span class="nav-link-text">MiniOB 集成测试使用文档</span></a><a href="cloudlab_setup.html"><span class="nav-link-text">开源学堂在线编程环境开发 MiniOB</span></a><a href="how_to_dev_miniob_by_docker_on_windows_simplified.html"><span class="nav-link-text">在windows上通过docker配置环境并利用vscode编辑、开发、调试代码（简易版）</span></a><a href="how_to_dev_miniob_in_vscodeGUI_by_docker_on_windows.html"><span class="nav-link-text">基于Windows+docker容器在本地利用VSCode编辑、开发及调试miniob</span></a></div></details><details class="nav-group"><summary>大赛与训练<span>9</span></summary><div class="nav-links"><a href="../game/introduction.html"><span class="nav-link-text">OceanBase 数据库大赛</span></a><a href="../game/miniob-output-convention.html"><span class="nav-link-text">输出规范</span></a><a href="../game/debug-output.html"><span class="nav-link-text">输出调试信息</span></a><a href="../game/miniob-memtracer.html"><span class="nav-link-text">MemTracer</span></a><a href="../game/miniob_topics.html"><span class="nav-link-text">OceanBase 数据库大赛2021届题目</span></a><a href="../game/github-introduction.html"><span class="nav-link-text">MiniOB GitHub 在训练营中的使用说明</span></a><a href="../game/gitee-instructions.html"><span class="nav-link-text">MiniOB Gitee 在训练营中的使用说明</span></a><a href="../game/miniob-vectordb.html"><span class="nav-link-text">MiniOB 向量数据库</span></a><a href="../game/git-introduction.html"><span class="nav-link-text">Git 介绍</span></a></div></details><details class="nav-group"><summary>博客<span>2</span></summary><div class="nav-links"><a href="../blog/introduction.html"><span class="nav-link-text">介绍</span></a><a href="../blog/1.html"><span class="nav-link-text">High-Performance Concurrency Control Mechanisms for Main-Memory Databases</span></a></div></details><a class="nav-flows" href="../flows.html"><span class="dot"></span>动态流程<span class="count">13</span></a></nav></aside>
+  <main class="main">
+    
+<nav class="crumbs" aria-label="面包屑导航"><a href="../index.html">首页</a><span>/</span><span>开发环境</span><span>/</span><span aria-current="page">miniob调试篇</span></nav>
+<header class="doc-head">
+  <div class="doc-meta-bar">
+    <span class="eyebrow-pill">开发环境</span>
+    <span class="doc-meta-item">11 个章节</span>
+    <span class="doc-meta-sep">·</span>
+    <span class="doc-meta-item">约 16 分钟阅读</span>
+    <span class="doc-meta-sep">·</span>
+    <a class="doc-meta-source" href="../../docs/dev-env/miniob-how-to-debug.md">Markdown 源文件 ↗</a>
+  </div>
+  <h1>miniob调试篇</h1>
+</header>
+<section class="panel map-panel" id="doc-outline-panel">
+  <div class="panel-head">
+    <div>
+      <h2>章节结构导览</h2>
+      <span>点击任意章节直达正文；支持结构卡片与交互思维导图切换</span>
+    </div>
+    <button type="button" class="map-toggle-btn" data-toggle-markmap aria-expanded="false">⊞ 切换思维导图</button>
+  </div>
+  <div class="tree-view"><div class="tree-grid"><div class="tree-branch"><div class="tree-top"><a class="tree-link" href="#miniob关键代码"><span class="tree-num">1</span><span>miniob关键代码</span></a></div><ul class="tree-sub"><li><a class="tree-link" href="#miniob的关键数据结构"><span class="tree-num">1.1</span><span>miniob的关键数据结构</span></a></li><li><a class="tree-link" href="#miniob的关键接口"><span class="tree-num">1.2</span><span>miniob的关键接口</span></a></li></ul></div><div class="tree-branch"><div class="tree-top"><a class="tree-link" href="#打印日志调试"><span class="tree-num">2</span><span>打印日志调试</span></a></div><ul class="tree-sub"><li><a class="tree-link" href="#miniob提供的日志接口"><span class="tree-num">2.1</span><span>miniob提供的日志接口</span></a></li><li><a class="tree-link" href="#在日志中输出调用栈"><span class="tree-num">2.2</span><span>在日志中输出调用栈</span></a></li></ul></div><div class="tree-branch"><div class="tree-top"><a class="tree-link" href="#gdb调试"><span class="tree-num">3</span><span>gdb调试</span></a></div><ul class="tree-sub"><li><a class="tree-link" href="#visual-studio-code-调试"><span class="tree-num">3.1</span><span>Visual Studio Code 调试</span></a></li></ul></div></div></div>
+  <div class="markmap-wrap" hidden>
+    <div class="markmap"><script type="text/template"># miniob调试篇
+  - [miniob关键代码](#miniob关键代码)
+    - [miniob的关键数据结构](#miniob的关键数据结构)
+    - [miniob的关键接口](#miniob的关键接口)
+  - [打印日志调试](#打印日志调试)
+    - [miniob提供的日志接口](#miniob提供的日志接口)
+    - [在日志中输出调用栈](#在日志中输出调用栈)
+  - [gdb调试](#gdb调试)
+    - [Visual Studio Code 调试](#visual-studio-code-调试)</script></div>
+  </div>
+</section>
+
+<article class="content"><h1 id="miniob调试篇">miniob调试篇</h1>
+<p>调试c/c++程序，常用的有两种方式，一是打印日志调试，二是gdb调试，调试不仅可以定位问题，也可以用来熟悉代码。</p>
+<h2 id="miniob关键代码">miniob关键代码</h2>
+<p>首先，拿到一份陌生的代码，要先确定代码的大致结构，一些关键数据结构和方法，这里的技巧和经验不展开了</p>
+<h3 id="miniob的关键数据结构">miniob的关键数据结构</h3>
+<p>部分关键数据结构：</p>
+<pre><code class="language-c++">parse_def.h:
+	struct Selects;//查询相关
+	struct CreateTable;//建表相关
+	struct DropTable;//删表相关
+	enum SqlCommandFlag;//sql语句对应的command枚举
+	union Queries;//各类dml和ddl操作的联合
+table.h
+	class Table;
+db.h
+	class Db;
+</code></pre>
+<h3 id="miniob的关键接口">miniob的关键接口</h3>
+<p>部分关键接口</p>
+<pre><code class="language-c++">RC parse(const char *st, Query *sqln);//sql parse入口
+ExecuteStage::handle_request
+ExecuteStage::do_select
+DefaultStorageStage::handle_event
+DefaultHandler::create_index
+DefaultHandler::insert_record
+DefaultHandler::delete_record
+DefaultHandler::update_record
+Db::create_table
+Db::find_table
+Table::create
+Table::scan_record
+Table::insert_record
+Table::update_record
+Table::delete_record
+Table::scan_record
+Table::create_index
+</code></pre>
+<h2 id="打印日志调试">打印日志调试</h2>
+<h3 id="miniob提供的日志接口">miniob提供的日志接口</h3>
+<pre><code class="language-c++">deps/common/log/log.h:
+#define LOG_PANIC(fmt, ...)
+#define LOG_ERROR(fmt, ...)
+#define LOG_WARN(fmt, ...)
+#define LOG_INFO(fmt, ...)
+#define LOG_DEBUG(fmt, ...)
+#define LOG_TRACE(fmt, ...)
+</code></pre>
+<p>日志相关配置项<code>observer.ini</code></p>
+<pre><code>LOG_FILE_NAME = observer.log
+#  LOG_LEVEL_PANIC = 0,
+#  LOG_LEVEL_ERR = 1,
+#  LOG_LEVEL_WARN = 2,
+#  LOG_LEVEL_INFO = 3,
+#  LOG_LEVEL_DEBUG = 4,
+#  LOG_LEVEL_TRACE = 5,
+#  LOG_LEVEL_LAST
+LOG_FILE_LEVEL=5
+LOG_CONSOLE_LEVEL=1
+</code></pre>
+<h3 id="在日志中输出调用栈">在日志中输出调用栈</h3>
+<p><code>lbt</code> 函数可以获取当前调用栈，可以在日志中输出调用栈，方便定位问题。</p>
+<p>比如</p>
+<pre><code class="language-c++">LOG_DEBUG(&quot;debug lock %p, lbt=%s&quot;, &amp;lock_, lbt());
+</code></pre>
+<p>可能得到下面的日志</p>
+<pre><code>unlock@mutex.cpp:273] &gt;&gt; debug unlock 0xffffa40fe8c0, lbt=0x4589c 0x5517f8 0x5329e0 0x166308 0x162c2c 0x210438 0x204ee0 0x2373b0 0x2373d0 0x203efc 0x203d88 0x223f6c 0x242fc8 0x274810 0x32bd58 0xca028 0x2dbcf8 0x2da614 0xbbf30 0x2cb908 0x2d4408 0x2d43dc 0x2d435c 0x2d431c 0x2d42d4 0x2d4270 0x2d4244 0x2d4224 0xd31fc 0x7d5c8 0xe5edc
+</code></pre>
+<p>可以用<code>addr2line</code>工具来解析地址，比如</p>
+<pre><code class="language-bash">addr2line -pCfe ./bin/observer 0x4589c 0x5517f8 0x5329e0 0x166308 0x162c2c 0x210438 0x204ee0 0x2373b0 0x2373d0 0x203efc 0x203d88 0x223f6c 0x242fc8 0x274810 0x32bd58 0xca028 0x2dbcf8 0x2da614 0xbbf30 0x2cb908 0x2d4408 0x2d43dc 0x2d435c 0x2d431c 0x2d42d4 0x2d4270 0x2d4244 0x2d4224 0xd31fc 0x7d5c8 0xe5edc
+?? ??:0
+common::lbt() at /root/miniob/deps/common/log/backtrace.cpp:118
+common::DebugMutex::unlock() at /root/miniob/deps/common/lang/mutex.cpp:273 (discriminator 25)
+Frame::write_unlatch(long) at /root/miniob/src/observer/storage/buffer/frame.cpp:113
+Frame::write_unlatch() at /root/miniob/src/observer/storage/buffer/frame.cpp:88
+RecordPageHandler::cleanup() at /root/miniob/src/observer/storage/record/record_manager.cpp:262
+RecordPageHandler::~RecordPageHandler() at /root/miniob/src/observer/storage/record/record_manager.cpp:96
+RowRecordPageHandler::~RowRecordPageHandler() at /root/miniob/src/observer/storage/record/record_manager.h:280
+RowRecordPageHandler::~RowRecordPageHandler() at /root/miniob/src/observer/storage/record/record_manager.h:280
+...
+</code></pre>
+<div class="callout callout-warning" role="note"><div class="callout-title">关键提示 · NOTICE</div><div class="callout-body"><p>注意：./bin/observer 是你的可执行文件路径，这里是一个示例，实际路径可能不同。</p></div></div>
+<h2 id="gdb调试">gdb调试</h2>
+<p>调试工具有很多种，但是它们的关键点都是类似的，比如关联到进程、运行时查看变量值、单步运行、跟踪变量等。GDB是在Linux环境中常用的调试工具。其它环境上也有类似的工具，比如LLDB，或者Windows可能使用Visual Studio直接启动调试。Java的调试工具是jdb。</p>
+<p>另外，很多同学喜欢使用Visual Studio Code(vscode)开发项目，vscode提供了很多插件，包括调试的插件，这些调试插件支持gdb、lldb等，可以按照自己的平台环境，设置不同的调试工具。</p>
+<p>这里介绍了gdb的基本使用，其它工具的使用方法类似。</p>
+<ol>
+<li>
+<p>Attach进程</p>
+<pre><code>[caizj@localhost run]$ gdb -p `pidof observer` 
+
+GNU gdb (GDB) Red Hat Enterprise Linux 8.2-15.el8 Copyright (C) 2018 Free Software Foundation, Inc.
+
+(gdb)
+</code></pre>
+</li>
+<li>
+<p>设置断点</p>
+<pre><code>(gdb) break do_select
+Breakpoint 1 at 0x44b636: file /home/caizj/source/stunning-engine/src/observer/sql/executor/execute_stage.cpp, line 526.
+(gdb) info b
+Num     Type           Disp Enb Address            What
+1       breakpoint     keep y   0x000000000044b636 in ExecuteStage::do_select(char const*, Query*, SessionEvent*)
+                                                   at /home/caizj/source/stunning-engine/src/observer/sql/executor/execute_stage.cpp:526
+</code></pre>
+<pre><code>(gdb) break Table::scan_record
+Breakpoint 2 at 0x50b82b: Table::scan_record. (2 locations)
+(gdb) inf b
+Num     Type           Disp Enb Address            What
+1       breakpoint     keep y   0x000000000044b636 in ExecuteStage::do_select(char const*, Query*, SessionEvent*)
+                                                   at /home/caizj/source/stunning-engine/src/observer/sql/executor/execute_stage.cpp:526
+2       breakpoint     keep y   &lt;MULTIPLE&gt;
+2.1                         y     0x000000000050b82b in Table::scan_record(Trx*, ConditionFilter*, int, void*, void (*)(char const*, void*))
+                                                   at /home/caizj/source/stunning-engine/src/observer/storage/common/table.cpp:421
+2.2                         y     0x000000000050ba00 in Table::scan_record(Trx*, ConditionFilter*, int, void*, RC (*)(Record*, void*))
+                                                   at /home/caizj/source/stunning-engine/src/observer/storage/common/table.cpp:426
+(gdb)
+</code></pre>
+</li>
+<li>
+<p>继续执行</p>
+<pre><code>(gdb) c
+Continuing.
+</code></pre>
+</li>
+<li>
+<p>触发断点</p>
+<p>执行：miniob &gt; select * from t1;</p>
+<pre><code>[Switching to Thread 0x7f51345f9700 (LWP 54706)]
+
+Thread 8 &quot;observer&quot; hit Breakpoint 1, ExecuteStage::do_select (this=0x611000000540,
+    db=0x6040000005e0 &quot;sys&quot;, sql=0x620000023080, session_event=0x608000003d20)
+    at /home/caizj/source/stunning-engine/src/observer/sql/executor/execute_stage.cpp:526
+526	  RC rc = RC::SUCCESS;
+(gdb)
+</code></pre>
+</li>
+<li>
+<p>单步调式</p>
+<pre><code>575	  std::vector&lt;TupleSet&gt; tuple_sets;
+(gdb) next
+576	  for (SelectExeNode *&amp;node: select_nodes) {
+(gdb) n
+577	    TupleSet tuple_set;
+(gdb)
+578	    rc = node-&gt;execute(tuple_set);
+(gdb)
+</code></pre>
+</li>
+<li>
+<p>跳入
+跟踪到函数内部</p>
+<pre><code>(gdb) s
+SelectExeNode::execute (this=0x60700002ce80, tuple_set=...)
+    at /home/caizj/source/stunning-engine/src/observer/sql/executor/execution_node.cpp:43
+43	  CompositeConditionFilter condition_filter;
+(gdb)
+
+</code></pre>
+</li>
+<li>
+<p>打印变量</p>
+<pre><code>(gdb) p tuple_set
+$3 = (TupleSet &amp;) @0x7f51345f1760: {tuples_ = std::vector of length 0, capacity 0, schema_ = {
+    fields_ = std::vector of length 0, capacity 0}}
+(gdb)
+</code></pre>
+</li>
+<li>
+<p>watch变量</p>
+<pre><code>(gdb) n
+443	  RC rc = RC::SUCCESS;
+(gdb) n
+444	  RecordFileScanner scanner;
+(gdb) n
+445	  rc = scanner.open_scan(*data_buffer_pool_, file_id_, filter);
+(gdb) watch -l rc
+Hardware watchpoint 3: -location rc
+(gdb) c
+Continuing.
+
+Thread 8 &quot;observer&quot; hit Hardware watchpoint 3: -location rc
+
+Old value = SUCCESS
+New value = RECORD_EOF
+0x000000000050c2de in Table::scan_record (this=0x60f000007840, trx=0x606000009920,
+    filter=0x7f51345f12a0, limit=2147483647, context=0x7f51345f11c0,
+    record_reader=0x50b74a &lt;scan_record_reader_adapter(Record*, void*)&gt;)
+    at /home/caizj/source/stunning-engine/src/observer/storage/common/table.cpp:454
+454	  for ( ; RC::SUCCESS == rc &amp;&amp; record_count &lt; limit; rc = scanner.get_next_record(&amp;record)) {
+(gdb)
+</code></pre>
+</li>
+<li>
+<p>结束函数调用</p>
+<pre><code>(gdb) finish
+Run till exit from #0  0x000000000050c2de in Table::scan_record (this=0x60f000007840,
+    trx=0x606000009920, filter=0x7f51345f12a0, limit=2147483647, context=0x7f51345f11c0,
+    record_reader=0x50b74a &lt;scan_record_reader_adapter(Record*, void*)&gt;)
+    at /home/caizj/source/stunning-engine/src/observer/storage/common/table.cpp:454
+</code></pre>
+</li>
+<li>
+<p>结束调试</p>
+<pre><code>(gdb) quit
+A debugging session is active.
+
+	Inferior 1 [process 54699] will be detached.
+
+Quit anyway? (y or n) y
+Detaching from program: /home/caizj/local/bin/observer, process 54699
+[Inferior 1 (process 54699) detached]
+</code></pre>
+</li>
+</ol>
+<h3 id="visual-studio-code-调试">Visual Studio Code 调试</h3>
+<p>代码中已经为vscode配置了launch.json，可以直接启动调试。
+launch.json中有两个调试配置，一个是Debug，一个是LLDB。其中Debug使用cppdbg，会自动探测调试工具gdb或lldb，而LLDB会使用lldb调试工具。通常情况下，大家使用Debug就可以了，但是我在测试过程中发现cppdbg不能在macos上正常工作，因而增加了LLDB的配置，以便在macos上调试，如果使用macos的同学，可以使用LLDB配置启动调试程序。</p>
+<h4 id="miniob-中的-tasks">MiniOB 中的 tasks</h4>
+<p>vscode 可以非常方便的运行任务(task)来运行预配置的命令，比如shell。
+miniob 的编译也可以通过脚本来执行(build.sh)。这里预配置了几个编译任务，可以按需自取，也可以按照需要，增加新的配置，运行自己的参数。</p>
+<p>下面是一个 debug 模式编译的示例，也是vscode工程默认的Build配置。这里做个简单介绍，以方便大家有需要的时候，修改配置满足自己需要。
+其中</p>
+<ul>
+<li><code>label</code> 是一个任务名字，在 <code>Run task</code>的时候，可以看到</li>
+<li><code>type</code> 表示任务的类型。这里是一个shell脚本</li>
+<li><code>command</code> 这里是一个shell脚本的话，那command就是运行的命令，跟我们在终端上执行是一样的效果</li>
+<li><code>problemMatcher</code> 告诉vscode如何定位问题。这里不用设置，vscode可以自动检测</li>
+<li><code>group</code> 使用vscode将此任务设置为默认Build任务时，vscode自己设置上来的，不需要调整。</li>
+</ul>
+<pre><code class="language-json">{
+    &quot;label&quot;: &quot;build_debug&quot;,
+    &quot;type&quot;: &quot;shell&quot;,
+    &quot;command&quot;: &quot;bash build.sh debug&quot;,
+    &quot;problemMatcher&quot;: [],
+    &quot;group&quot;: {
+        &quot;kind&quot;: &quot;build&quot;,
+        &quot;isDefault&quot;: true
+    }
+}
+</code></pre>
+<h4 id="miniob-中的-launch">MiniOB 中的 launch</h4>
+<p>很多同学不习惯使用gdb的终端界面来调试程序，那么在 vscode 中调试miniob非常方便，与Visual Studio、Clion中类似，都有一个操作界面。
+vscode中启动调试程序是通过launch.json来配置的，这里简单介绍一下主要内容。</p>
+<p>下面是截取的一段关键内容。这里介绍一些关键字段</p>
+<ul>
+<li><code>type</code> 当前调试使用哪种类型。这里是lldb (我个人习惯了gdb，但是我没有找到，也不想找了)</li>
+<li><code>name</code> 这里会显示在vscode调试窗口启动时的名字中</li>
+<li><code>program</code> 要调试的程序。对miniob来说，我们通常都是调试服务端代码，这里就是observer的路径。workspaceFolder 是当前工程的路径，defaultBuildTask 是默认构建的任务名称，与我们的构建路径刚好一致。observer 是编译完成安装在构建路径的bin下。</li>
+<li><code>args</code> 启动程序时的命令行参数。在终端上，大家也可以这么启动observer: `./bin/observer -f ../etc/observer.ini -s miniob.sock</li>
+<li><code>cwd</code> observer 运行时的工作目录，就是在observer程序中获取当前路径时，就会是这个路径。</li>
+</ul>
+<pre><code class="language-json">{
+    &quot;type&quot;: &quot;lldb&quot;,
+    &quot;request&quot;: &quot;launch&quot;,
+    &quot;name&quot;: &quot;Debug&quot;,
+    &quot;program&quot;: &quot;${workspaceFolder}/${defaultBuildTask}/bin/observer&quot;,
+    &quot;args&quot;: [&quot;-f&quot;, &quot;${workspaceFolder}/etc/observer.ini&quot;, &quot;-s&quot;, &quot;miniob.sock&quot;],
+    &quot;cwd&quot;: &quot;${workspaceFolder}/${defaultBuildTask}/&quot;
+}
+</code></pre>
+<p>注意，如果要调试 release 或者其它任务编译出来的observer，就需要调整这个文件，或者新增一个配置，因为这个配置文件指定的observer路径是默认的build。</p>
+</article>
+<nav class="pager" aria-label="相邻文档导航"><a class="prev" href="how_to_dev_miniob_by_vscode.html"><span>← 上一篇</span>环境准备</a><a class="next" href="how_to_submit_for_testing.html"><span>下一篇 →</span>训练营平台使用说明</a></nav>
+<p class="source-line">源文件：<a href="../../docs/dev-env/miniob-how-to-debug.md">dev-env/miniob-how-to-debug.md</a></p>
+
+    <footer class="page-footer">
+      <span>由 <code>docs/visual/build.py</code> &amp; <code>draw_diagrams.py</code> 从 <code>docs/docs</code> 生成</span>
+      <span>MiniOB · 可视化技术文档</span>
+    </footer>
+  </main>
+  <aside class="page-toc" aria-label="本页目录"><div class="toc-inner"><p class="toc-title">本页导览</p><ul class="toc-list"><li class="toc-item toc-l2"><a href="#miniob关键代码">miniob关键代码</a></li><li class="toc-item toc-l3"><a href="#miniob的关键数据结构">miniob的关键数据结构</a></li><li class="toc-item toc-l3"><a href="#miniob的关键接口">miniob的关键接口</a></li><li class="toc-item toc-l2"><a href="#打印日志调试">打印日志调试</a></li><li class="toc-item toc-l3"><a href="#miniob提供的日志接口">miniob提供的日志接口</a></li><li class="toc-item toc-l3"><a href="#在日志中输出调用栈">在日志中输出调用栈</a></li><li class="toc-item toc-l2"><a href="#gdb调试">gdb调试</a></li><li class="toc-item toc-l3"><a href="#visual-studio-code-调试">Visual Studio Code 调试</a></li></ul><a class="toc-top" href="#top">↑ 回到顶部</a></div></aside>
+</div>
+<div class="nav-scrim" id="navScrim"></div>
+<div class="diagram-modal" id="diagramModal" hidden role="dialog" aria-modal="true" aria-label="图表放大检视">
+  <div class="diagram-modal-bar">
+    <span class="diagram-modal-title" id="diagramModalTitle">架构与流程图检视</span>
+    <button type="button" class="diagram-modal-close" id="diagramModalClose" aria-label="关闭">✕ 关闭 (Esc)</button>
+  </div>
+  <div class="diagram-modal-body" id="diagramModalBody"></div>
+</div>
+<script src="../assets/markmap-config.js"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/markmap-autoloader@0.18"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/@highlightjs/cdn-assets@11/highlight.min.js"></script>
+
+<script defer src="../assets/site.js"></script>
+</body>
+</html>

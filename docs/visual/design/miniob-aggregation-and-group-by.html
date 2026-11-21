@@ -1,0 +1,195 @@
+<!doctype html>
+<html lang="zh-CN" id="top">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>MiniOB 向量化执行 aggregation 和 group by 实现 · MiniOB 可视化文档</title>
+<link rel="stylesheet" href="../assets/style.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@highlightjs/cdn-assets@11/styles/atom-one-dark.min.css">
+<script src="../assets/theme.js"></script>
+
+</head>
+<body class="">
+<div class="reading-progress" id="readingProgress" aria-hidden="true"></div>
+<header class="topbar">
+  <button class="menu-btn" id="menuBtn" aria-label="切换侧栏" aria-expanded="false">☰</button>
+  <a class="brand" href="../index.html"><span class="brand-mark">M</span><span>MiniOB <em>可视化文档</em></span></a>
+  <div class="top-actions">
+    <a class="top-link" href="../flows.html">动态流程</a>
+    <button class="theme-btn" id="themeBtn" aria-label="切换明暗主题" title="切换明暗主题">◐</button>
+  </div>
+</header>
+<div class="layout has-toc">
+  <aside class="sidebar" id="sidebar"><nav class="site-nav" aria-label="文档目录"><a class="nav-home" href="../index.html"><span class="brand-mark">M</span><span>MiniOB 可视化文档</span></a><details class="nav-group"><summary>快速开始<span>2</span></summary><div class="nav-links"><a href="../how_to_build.html"><span class="nav-link-text">如何编译</span></a><a href="../how_to_run.html"><span class="nav-link-text">如何运行</span></a></div></details><details class="nav-group" open><summary>设计文档<span>21</span></summary><div class="nav-links"><a href="miniob-architecture.html"><span class="nav-link-text">MiniOB代码架构框架设计和说明</span><span class="nav-badge" title="含交互流程图或架构图">图</span></a><a href="miniob-buffer-pool.html"><span class="nav-link-text">MiniOB 存储实现</span><span class="nav-badge" title="含交互流程图或架构图">图</span></a><a href="miniob-double-write-buffer.html"><span class="nav-link-text">MiniOB Double Write Buffer 实现</span><span class="nav-badge" title="含交互流程图或架构图">图</span></a><a href="miniob-transaction.html"><span class="nav-link-text">事务模块</span><span class="nav-badge" title="含交互流程图或架构图">图</span></a><a href="miniob-durability.html"><span class="nav-link-text">持久化</span><span class="nav-badge" title="含交互流程图或架构图">图</span></a><a href="miniob-persistence-files.html"><span class="nav-link-text">持久化文件与恢复路径</span><span class="nav-badge" title="含交互流程图或架构图">图</span></a><a href="miniob-checkpoint-wal.html"><span class="nav-link-text">MiniOB 检查点与 WAL 截断</span><span class="nav-badge" title="含交互流程图或架构图">图</span></a><a href="miniob-sql-parser.html"><span class="nav-link-text">SQL 词法语法分析</span></a><a href="miniob-how-to-add-new-sql.html"><span class="nav-link-text">SQL语句执行流程</span><span class="nav-badge" title="含交互流程图或架构图">图</span></a><a href="miniob-sql-expression.html"><span class="nav-link-text">SQL 表达式</span></a><a href="miniob-bplus-tree.html"><span class="nav-link-text">MiniOB B+Tree 实现</span><span class="nav-badge" title="含交互流程图或架构图">图</span></a><a href="miniob-bplus-tree-concurrency.html"><span class="nav-link-text">B+ 树并发操作</span><span class="nav-badge" title="含交互流程图或架构图">图</span></a><a href="miniob-thread-model.html"><span class="nav-link-text">线程模型</span><span class="nav-badge" title="含交互流程图或架构图">图</span></a><a href="miniob-mysql-protocol.html"><span class="nav-link-text">MySQL 通讯协议</span></a><a href="miniob-pax-storage.html"><span class="nav-link-text">MiniOB PAX 存储格式</span><span class="nav-badge" title="含交互流程图或架构图">图</span></a><a href="miniob-aggregation-and-group-by.html" class="active" aria-current="page"><span class="nav-link-text">MiniOB 向量化执行 aggregation 和 group by 实现</span></a><a href="miniob-lsm-tree.html"><span class="nav-link-text">MiniOB LSM-Tree 存储引擎</span><span class="nav-badge" title="含交互流程图或架构图">图</span></a><a href="introduction.html"><span class="nav-link-text">功能模块设计说明</span></a><a href="miniob-btree-storage-engine.html"><span class="nav-link-text">MiniOB B+Tree 聚簇表存储引擎</span><span class="nav-badge" title="含交互流程图或架构图">图</span></a><a href="miniob-cascade.html"><span class="nav-link-text">Cascade Optimizer(查询优化器)</span><span class="nav-badge" title="含交互流程图或架构图">图</span></a><a href="miniob-update-mvcc-occ.html"><span class="nav-link-text">MiniOB UPDATE、MVCC 与 OCC 方案设计</span><span class="nav-badge" title="含交互流程图或架构图">图</span></a></div></details><details class="nav-group"><summary>课程实验<span>6</span></summary><div class="nav-links"><a href="../db_course_lab/overview.html"><span class="nav-link-text">数据库系统实现原理与实践课程实验</span></a><a href="../db_course_lab/lab0.html"><span class="nav-link-text">LAB#0 C++ 基础</span></a><a href="../db_course_lab/lab1.html"><span class="nav-link-text">LAB#1 LSM-Tree 存储引擎</span></a><a href="../db_course_lab/lab2.html"><span class="nav-link-text">LAB#2 查询引擎</span></a><a href="../db_course_lab/lab3.html"><span class="nav-link-text">LAB#3 事务引擎</span></a><a href="../db_course_lab/lab4.html"><span class="nav-link-text">LAB#4 性能测试</span></a></div></details><details class="nav-group"><summary>简明教程<span>9</span></summary><div class="nav-links"><a href="../lectures/copyright.html"><span class="nav-link-text">版权声明</span></a><a href="../lectures/lecture-1.html"><span class="nav-link-text">第1章 数据库管理系统概述</span></a><a href="../lectures/lecture-2.html"><span class="nav-link-text">第2章 数据库的存储结构</span></a><a href="../lectures/lecture-3.html"><span class="nav-link-text">第3章 索引结构</span></a><a href="../lectures/lecture-4.html"><span class="nav-link-text">第4章 查询处理</span></a><a href="../lectures/lecture-5.html"><span class="nav-link-text">第5章 查询优化</span></a><a href="../lectures/lecture-6.html"><span class="nav-link-text">第6章 事务处理</span></a><a href="../lectures/references.html"><span class="nav-link-text">参考资料</span></a><a href="../lectures/index.html"><span class="nav-link-text">数据库管理系统实现基础讲义</span></a></div></details><details class="nav-group"><summary>开发环境<span>14</span></summary><div class="nav-links"><a href="../dev-env/introduction.html"><span class="nav-link-text">搭建开发环境</span></a><a href="../dev-env/vscode_dev_with_local_virtual_env.html"><span class="nav-link-text">虚拟机+vscode remote开发</span></a><a href="../dev-env/dev_by_online.html"><span class="nav-link-text">使用在线开发环境开发 MiniOB</span></a><a href="../dev-env/how-to-dev-using-docker.html"><span class="nav-link-text">使用Docker开发MiniOB</span></a><a href="../dev-env/how_to_dev_in_docker_container_by_vscode.html"><span class="nav-link-text">使用 Docker 和 VSCode 远程开发 Miniob</span></a><a href="../dev-env/how_to_dev_in_docker_container_by_vscode_on_windows.html"><span class="nav-link-text">在windows上通过docker配置环境并利用vscode调试代码（手把手版）</span></a><a href="../dev-env/how_to_dev_miniob_by_docker_on_windows.html"><span class="nav-link-text">安装Docker</span></a><a href="../dev-env/how_to_dev_miniob_by_vscode.html"><span class="nav-link-text">环境准备</span></a><a href="../dev-env/miniob-how-to-debug.html"><span class="nav-link-text">miniob调试篇</span></a><a href="../dev-env/how_to_submit_for_testing.html"><span class="nav-link-text">训练营平台使用说明</span></a><a href="../dev-env/integration_test.html"><span class="nav-link-text">MiniOB 集成测试使用文档</span></a><a href="../dev-env/cloudlab_setup.html"><span class="nav-link-text">开源学堂在线编程环境开发 MiniOB</span></a><a href="../dev-env/how_to_dev_miniob_by_docker_on_windows_simplified.html"><span class="nav-link-text">在windows上通过docker配置环境并利用vscode编辑、开发、调试代码（简易版）</span></a><a href="../dev-env/how_to_dev_miniob_in_vscodeGUI_by_docker_on_windows.html"><span class="nav-link-text">基于Windows+docker容器在本地利用VSCode编辑、开发及调试miniob</span></a></div></details><details class="nav-group"><summary>大赛与训练<span>9</span></summary><div class="nav-links"><a href="../game/introduction.html"><span class="nav-link-text">OceanBase 数据库大赛</span></a><a href="../game/miniob-output-convention.html"><span class="nav-link-text">输出规范</span></a><a href="../game/debug-output.html"><span class="nav-link-text">输出调试信息</span></a><a href="../game/miniob-memtracer.html"><span class="nav-link-text">MemTracer</span></a><a href="../game/miniob_topics.html"><span class="nav-link-text">OceanBase 数据库大赛2021届题目</span></a><a href="../game/github-introduction.html"><span class="nav-link-text">MiniOB GitHub 在训练营中的使用说明</span></a><a href="../game/gitee-instructions.html"><span class="nav-link-text">MiniOB Gitee 在训练营中的使用说明</span></a><a href="../game/miniob-vectordb.html"><span class="nav-link-text">MiniOB 向量数据库</span></a><a href="../game/git-introduction.html"><span class="nav-link-text">Git 介绍</span></a></div></details><details class="nav-group"><summary>博客<span>2</span></summary><div class="nav-links"><a href="../blog/introduction.html"><span class="nav-link-text">介绍</span></a><a href="../blog/1.html"><span class="nav-link-text">High-Performance Concurrency Control Mechanisms for Main-Memory Databases</span></a></div></details><a class="nav-flows" href="../flows.html"><span class="dot"></span>动态流程<span class="count">13</span></a></nav></aside>
+  <main class="main">
+    
+<nav class="crumbs" aria-label="面包屑导航"><a href="../index.html">首页</a><span>/</span><span>设计文档</span><span>/</span><span aria-current="page">MiniOB 向量化执行 aggregation 和 group by 实现</span></nav>
+<header class="doc-head">
+  <div class="doc-meta-bar">
+    <span class="eyebrow-pill">设计文档</span>
+    <span class="doc-meta-item">16 个章节</span>
+    <span class="doc-meta-sep">·</span>
+    <span class="doc-meta-item">约 9 分钟阅读</span>
+    <span class="doc-meta-sep">·</span>
+    <a class="doc-meta-source" href="../../docs/design/miniob-aggregation-and-group-by.md">Markdown 源文件 ↗</a>
+  </div>
+  <h1>MiniOB 向量化执行 aggregation 和 group by 实现</h1>
+</header>
+<section class="panel map-panel" id="doc-outline-panel">
+  <div class="panel-head">
+    <div>
+      <h2>章节结构导览</h2>
+      <span>点击任意章节直达正文；支持结构卡片与交互思维导图切换</span>
+    </div>
+    <button type="button" class="map-toggle-btn" data-toggle-markmap aria-expanded="false">⊞ 切换思维导图</button>
+  </div>
+  <div class="tree-view"><div class="tree-grid"><div class="tree-branch"><div class="tree-top"><a class="tree-link" href="#执行模型processing-model"><span class="tree-num">1</span><span>执行模型（processing model）</span></a></div><ul class="tree-sub"><li><a class="tree-link" href="#火山模型"><span class="tree-num">1.1</span><span>火山模型</span></a></li><li><a class="tree-link" href="#向量化执行模型"><span class="tree-num">1.2</span><span>向量化执行模型</span></a></li><li><a class="tree-link" href="#miniob-中的实现"><span class="tree-num">1.3</span><span>MiniOB 中的实现</span></a></li></ul></div><div class="tree-branch"><div class="tree-top"><a class="tree-link" href="#向量化执行模型中-aggregation-和-group-by-实现"><span class="tree-num">2</span><span>向量化执行模型中 aggregation 和 group by 实现</span></a></div><ul class="tree-sub"><li><a class="tree-link" href="#aggregation-实现"><span class="tree-num">2.1</span><span>aggregation 实现</span></a></li><li><a class="tree-link" href="#group-by-实现"><span class="tree-num">2.2</span><span>group by 实现</span></a></li><li><a class="tree-link" href="#实验"><span class="tree-num">2.3</span><span>实验</span></a></li><li><a class="tree-link" href="#测试"><span class="tree-num">2.4</span><span>测试</span></a></li></ul></div><div class="tree-branch"><div class="tree-top"><a class="tree-link" href="#实现-simd-指令优化的-aggregation-和-group-by"><span class="tree-num">3</span><span>实现 SIMD 指令优化的 aggregation 和 group by</span></a></div><ul class="tree-sub"><li><a class="tree-link" href="#simd-介绍"><span class="tree-num">3.1</span><span>SIMD 介绍</span></a></li><li><a class="tree-link" href="#simd-指令在-miniob-中的应用"><span class="tree-num">3.2</span><span>SIMD 指令在 MiniOB 中的应用</span></a></li><li><a class="tree-link" href="#实验-1"><span class="tree-num">3.3</span><span>实验</span></a></li><li><a class="tree-link" href="#测试-1"><span class="tree-num">3.4</span><span>测试</span></a></li><li><a class="tree-link" href="#参考资料"><span class="tree-num">3.5</span><span>参考资料</span></a></li></ul></div></div></div>
+  <div class="markmap-wrap" hidden>
+    <div class="markmap"><script type="text/template"># MiniOB 向量化执行 aggregation 和 group by 实现
+  - [执行模型（processing model）](#执行模型processing-model)
+    - [火山模型](#火山模型)
+    - [向量化执行模型](#向量化执行模型)
+    - [MiniOB 中的实现](#miniob-中的实现)
+  - [向量化执行模型中 aggregation 和 group by 实现](#向量化执行模型中-aggregation-和-group-by-实现)
+    - [aggregation 实现](#aggregation-实现)
+    - [group by 实现](#group-by-实现)
+    - [实验](#实验)
+    - [测试](#测试)
+  - [实现 SIMD 指令优化的 aggregation 和 group by](#实现-simd-指令优化的-aggregation-和-group-by)
+    - [SIMD 介绍](#simd-介绍)
+    - [SIMD 指令在 MiniOB 中的应用](#simd-指令在-miniob-中的应用)
+    - [实验](#实验-1)
+    - [测试](#测试-1)
+    - [参考资料](#参考资料)</script></div>
+  </div>
+</section>
+
+<article class="content"><h1 id="miniob-向量化执行-aggregation-和-group-by-实现">MiniOB 向量化执行 aggregation 和 group by 实现</h1>
+<p>本篇文档介绍 MiniOB 向量化执行中的简单聚合（ungrouped aggregation）和分组聚合（grouped aggregation）实现。</p>
+<h2 id="执行模型processing-model">执行模型（processing model）</h2>
+<p>首先，介绍下执行模型的概念，数据库执行模型定义了在数据库中如何执行一个查询计划。这里简单介绍下两种执行模型：火山模型(Volcano iteration model) 和向量化模型(Vectorization model)。</p>
+<pre><code>  Volcano iteration model     Vectorization model
+                                                  
+    ┌───────────┐                ┌───────────┐    
+    │           │                │           │    
+    │ operator1 │                │ operator1 │    
+    │           │                │           │    
+    └─┬─────▲───┘                └─┬─────▲───┘    
+      │     │                      │     │        
+next()│     │ tuple    next_chunk()│     │ chunk/batch 
+    ┌─▼─────┴───┐                ┌─▼─────┴───┐    
+    │           │                │           │    
+    │ operator2 │                │ operator2 │    
+    │           │                │           │    
+    └─┬─────▲───┘                └─┬─────▲───┘    
+      │     │                      │     │        
+next()│     │ tuple    next_chunk()│     │ chunk/batch
+    ┌─▼─────┴───┐                ┌─▼─────┴───┐    
+    │           │                │           │    
+    │ operator3 │                │ operator3 │    
+    │           │                │           │    
+    └───────────┘                └───────────┘    
+</code></pre>
+<h3 id="火山模型">火山模型</h3>
+<p>在火山模型中，每个查询计划操作符（operator）都实现了一个 <code>next()</code> 函数。在每次调用时，操作符要么返回一个元组(tuple)，要么在没有更多元组时返回一个空结果。每个操作符在它的子运算符调用 <code>next()</code> 来获取元组，然后对它们进行处理，并向上返回结果。</p>
+<h3 id="向量化执行模型">向量化执行模型</h3>
+<p>向量化执行模型与火山模型类似，其中每个运算符都有一个生成元组的 <code>next_chunk()</code> 方法。然而不同的是，<code>next_chunk()</code>方法的每次调用都会获取一组元组而不是仅仅一个元组，这会分摊迭代调用开销。</p>
+<h3 id="miniob-中的实现">MiniOB 中的实现</h3>
+<p>在 MiniOB 中已经实现了上述的两种执行模型，可以通过配置项 <code>execution_mode</code> 用于区分这两种执行模型。默认使用火山模型，按 <code>tuple</code> 迭代。可通过下述 SQL 语句设置执行模型。</p>
+<p>将执行模型设置为按 <code>chunk</code> 迭代的向量化模型。</p>
+<pre><code class="language-sql">SET execution_mode = 'chunk_iterator';
+</code></pre>
+<p>将执行模型设置为按 <code>tuple</code> 迭代的火山模型。</p>
+<pre><code class="language-sql">SET execution_mode = 'tuple_iterator';
+</code></pre>
+<h2 id="向量化执行模型中-aggregation-和-group-by-实现">向量化执行模型中 aggregation 和 group by 实现</h2>
+<h3 id="aggregation-实现">aggregation 实现</h3>
+<p>aggregation 实现主要位于<code>src/sql/operator/aggregate_vec_physical_operator.cpp</code> 中，这里需要实现不带分组的聚合，即类似 <code>select sum(a),sum(b) from t</code> 的SQL语句。
+在 aggregation 实现中，主要涉及到以下几个步骤：</p>
+<ol>
+<li>在 <code>open()</code> 函数中，通过调用下层算子的 <code>next(Chunk &amp;chunk)</code> 来不断获得下层算子的输出结果（Chunk）。对从下层算子获得的 Chunk 进行表达式计算，聚合计算，并将聚合结果暂存在聚合算子中。</li>
+<li>在 <code>next(Chunk &amp;chunk)</code> 函数中，将暂存的聚合结果按 Chunk 格式向上返回。</li>
+</ol>
+<h3 id="group-by-实现">group by 实现</h3>
+<p>group by 实现主要位于<code>src/sql/operator/group_by_vec_physical_operator.cpp</code>中，这里需要实现分组聚合，即类似<code>select a, sum(b) from t group by a</code>的SQL语句。
+group by 实现采用了基于哈希的分组方式，主要涉及到以下几个步骤：</p>
+<ol>
+<li>在 <code>open()</code> 函数中，通过调用下层算子的<code>next(Chunk &amp;chunk)</code> 来不断获得下层算子的输出结果（Chunk）。对从下层算子获得的 Chunk 进行表达式计算，根据分组列计算出分组位置，并将聚合结果暂存在相应的分组位置中。</li>
+<li>在 <code>next(Chunk &amp;chunk)</code> 函数中，将暂存在哈希表中的聚合结果按 Chunk 格式向上返回。</li>
+</ol>
+<h3 id="实验">实验</h3>
+<ol>
+<li>需要补充 <code>src/observer/sql/parser/yacc_sql.y</code> 中 标注<code>// your code here</code> 位置的 <code>aggregation</code> 和 <code>group by</code> 相关的语法。并通过 <code>src/sql/parser/gen_parser.sh</code> 生成正确的语法分析代码。</li>
+<li>需要实现 <code>src/observer/sql/operator/aggregate_vec_physical_operator.cpp</code> 中标注 <code>// your code here</code> 位置的代码。</li>
+<li>需要完整实现位于 <code>src/observer/sql/operator/group_by_vec_physical_operator.h</code> 的group by 算子。</li>
+<li>需要实现 <code>src/observer/sql/expr/aggregate_hash_table.cpp::StandardAggregateHashTable</code> 中标注 <code>// your code here</code> 位置的代码。</li>
+</ol>
+<h3 id="测试">测试</h3>
+<p>需通过 <code>unittest/observer/parser_test.cpp</code> 和 <code>test/case/test/vectorized-aggregation-and-group-by.test</code>。</p>
+<p>注意1：训练营中的测试采用对MiniOB/MySQL 输入相同的测试 SQL（MiniOB 中建表语句包含 storage format 选项，MySQL 中不包含），对比 MiniOB 执行结果与 MySQL 执行结果的方式进行。训练营中的测试 case 相比 <code>test/case/test/vectorized-aggregation-and-group-by.test</code> 更加多样（包含一些随机生成的 SQL），但不存在更加复杂的 SQL（不需要实现除 <code>sum</code> 之外的聚合函数）。</p>
+<p>注意2：如果需要运行 <code>parser_test</code> 请移除<code>DISABLED_</code> 前缀。</p>
+<h2 id="实现-simd-指令优化的-aggregation-和-group-by">实现 SIMD 指令优化的 aggregation 和 group by</h2>
+<h3 id="simd-介绍">SIMD 介绍</h3>
+<p>如下图所示，Single Instruction Multiple Data(SIMD)，单指令多数据流，可以使用一条指令同时完成多个数据的运算操作。传统的指令架构是SISD就是单指令单数据流，每条指令只能对一个数据执行操作。因此，通过合理使用 SIMD 指令，可以减少运算执行过程中的 CPU 指令数，从而优化计算开销。<a href="#%E5%8F%82%E8%80%83%E8%B5%84%E6%96%99">参考资料</a>中包含了 SIMD 介绍文章及指令手册。</p>
+<pre><code>          SISD                                 SIMD               
+┌────┐      ┌────┐     ┌────┐        ┌────┐      ┌────┐     ┌────┐
+│ a0 │  +   │ b0 │  =  │ c0 │        │ a0 │  +   │ b0 │  =  │ c0 │
+└────┘      └────┘     └────┘        │    │      │    │     │    │
+                                     │    │      │    │     │    │
+┌────┐      ┌────┐     ┌────┐        │    │      │    │     │    │
+│ a1 │  +   │ b1 │  =  │ c1 │        │ a1 │  +   │ b1 │  =  │ c1 │
+└────┘      └────┘     └────┘        │    │      │    │     │    │
+                                     │    │      │    │     │    │
+┌────┐      ┌────┐     ┌────┐        │    │      │    │     │    │
+│ a2 │  +   │ b2 │  =  │ c2 │        │ a2 │  +   │ b2 │  =  │ c2 │
+└────┘      └────┘     └────┘        │    │      │    │     │    │
+                                     │    │      │    │     │    │
+┌────┐      ┌────┐     ┌────┐        │    │      │    │     │    │
+│ a3 │  +   │ b3 │  =  │ c3 │        │ a3 │  +   │ b3 │  =  │ c3 │
+└────┘      └────┘     └────┘        └────┘      └────┘     └────┘
+</code></pre>
+<h3 id="simd-指令在-miniob-中的应用">SIMD 指令在 MiniOB 中的应用</h3>
+<p>通过 SIMD 指令，我们可以优化 MiniOB 向量化执行引擎中的部分批量运算操作，如表达式计算，聚合计算，hash group by等。在 <code>src/observer/sql/expr/arithmetic_operator.hpp</code> 中需要实现基于 SIMD 指令的算术运算；在<code>deps/common/math/simd_util.cpp</code> 中需要实现基于 SIMD 指令的数组求和函数 <code>mm256_sum_epi32</code> 和<code>_mm256_storeu_si256</code>； 使用 SIMD 指令优化 hash group by 的关键在于实按批操作的哈希表，MiniOB 的实现参考了论文：<code>Rethinking SIMD Vectorization for In-Memory Databases</code> 中的线性探测哈希表（Algorithm 5），更多细节可以参考<code>src/observer/sql/expr/aggregate_hash_table.cpp</code>中的注释。</p>
+<p>注意：在编译时，只有使用 <code>-DUSE_SIMD=ON</code> 时（默认关闭），才会编译 SIMD 指令相关代码。</p>
+<h3 id="实验-1">实验</h3>
+<ol>
+<li>需要使用 SIMD 指令实现 <code>src/observer/sql/expr/arithmetic_operator.hpp</code> 中标注 <code>// your code here</code> 位置的代码。</li>
+<li>需要使用 SIMD 指令实现 <code>deps/common/math/simd_util.cpp</code> 中标注 <code>// your code here</code> 位置的代码。</li>
+<li>需要使用 SIMD 指令实现 <code>src/observer/sql/expr/aggregate_hash_table.cpp::LinearProbingAggregateHashTable</code> 中标注 <code>// your code here</code> 位置的代码。</li>
+</ol>
+<h3 id="测试-1">测试</h3>
+<p>需要通过 <code>arithmetic_operator_test</code> 和 <code>aggregate_hash_table_test</code> 单元测试以及 <code>arithmetic_operator_performance_test</code> 和 <code>aggregate_hash_table_performance_test</code> 性能测试。</p>
+<p>注意：如果需要运行 <code>arithmetic_operator_test</code>、<code>aggregate_hash_table_test</code>、<code>arithmetic_operator_performance_test</code>、<code>aggregate_hash_table_performance_test</code> ，请移除<code>DISABLED_</code> 前缀。</p>
+<h3 id="参考资料">参考资料</h3>
+<ol>
+<li><a target="_blank" rel="noopener" href="https://15721.courses.cs.cmu.edu/spring2016/papers/p1493-polychroniou.pdf">Rethinking SIMD Vectorization for In-Memory Databases</a></li>
+<li><a target="_blank" rel="noopener" href="https://15721.courses.cs.cmu.edu/spring2024/slides/06-vectorization.pdf">vectorized hash table</a></li>
+<li><a target="_blank" rel="noopener" href="https://zhuanlan.zhihu.com/p/94649418">SIMD 入门文章</a></li>
+<li><a target="_blank" rel="noopener" href="https://www.intel.com/content/www/us/en/docs/intrinsics-guide/index.html">SIMD 指令手册</a></li>
+</ol>
+</article>
+<nav class="pager" aria-label="相邻文档导航"><a class="prev" href="miniob-pax-storage.html"><span>← 上一篇</span>MiniOB PAX 存储格式</a><a class="next" href="miniob-lsm-tree.html"><span>下一篇 →</span>MiniOB LSM-Tree 存储引擎</a></nav>
+<p class="source-line">源文件：<a href="../../docs/design/miniob-aggregation-and-group-by.md">design/miniob-aggregation-and-group-by.md</a></p>
+
+    <footer class="page-footer">
+      <span>由 <code>docs/visual/build.py</code> &amp; <code>draw_diagrams.py</code> 从 <code>docs/docs</code> 生成</span>
+      <span>MiniOB · 可视化技术文档</span>
+    </footer>
+  </main>
+  <aside class="page-toc" aria-label="本页目录"><div class="toc-inner"><p class="toc-title">本页导览</p><ul class="toc-list"><li class="toc-item toc-l2"><a href="#执行模型processing-model">执行模型（processing model）</a></li><li class="toc-item toc-l3"><a href="#火山模型">火山模型</a></li><li class="toc-item toc-l3"><a href="#向量化执行模型">向量化执行模型</a></li><li class="toc-item toc-l3"><a href="#miniob-中的实现">MiniOB 中的实现</a></li><li class="toc-item toc-l2"><a href="#向量化执行模型中-aggregation-和-group-by-实现">向量化执行模型中 aggregation 和 group by 实现</a></li><li class="toc-item toc-l3"><a href="#aggregation-实现">aggregation 实现</a></li><li class="toc-item toc-l3"><a href="#group-by-实现">group by 实现</a></li><li class="toc-item toc-l3"><a href="#实验">实验</a></li><li class="toc-item toc-l3"><a href="#测试">测试</a></li><li class="toc-item toc-l2"><a href="#实现-simd-指令优化的-aggregation-和-group-by">实现 SIMD 指令优化的 aggregation 和 group by</a></li><li class="toc-item toc-l3"><a href="#simd-介绍">SIMD 介绍</a></li><li class="toc-item toc-l3"><a href="#simd-指令在-miniob-中的应用">SIMD 指令在 MiniOB 中的应用</a></li><li class="toc-item toc-l3"><a href="#实验-1">实验</a></li><li class="toc-item toc-l3"><a href="#测试-1">测试</a></li><li class="toc-item toc-l3"><a href="#参考资料">参考资料</a></li></ul><a class="toc-top" href="#top">↑ 回到顶部</a></div></aside>
+</div>
+<div class="nav-scrim" id="navScrim"></div>
+<div class="diagram-modal" id="diagramModal" hidden role="dialog" aria-modal="true" aria-label="图表放大检视">
+  <div class="diagram-modal-bar">
+    <span class="diagram-modal-title" id="diagramModalTitle">架构与流程图检视</span>
+    <button type="button" class="diagram-modal-close" id="diagramModalClose" aria-label="关闭">✕ 关闭 (Esc)</button>
+  </div>
+  <div class="diagram-modal-body" id="diagramModalBody"></div>
+</div>
+<script src="../assets/markmap-config.js"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/markmap-autoloader@0.18"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/@highlightjs/cdn-assets@11/highlight.min.js"></script>
+
+<script defer src="../assets/site.js"></script>
+</body>
+</html>

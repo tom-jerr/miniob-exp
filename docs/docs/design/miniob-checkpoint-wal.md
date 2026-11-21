@@ -188,6 +188,515 @@ Db::init()
         // 没有 COMMIT 的事务 rollback
     -> MvccGc: 修复/回收 -T 死版本
 ```
+```html
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<script id="artifact-state-bridge">
+(function() {
+'use strict';
+if (window.pageVault) {
+  return;
+}
+// Single-reporter guard: the generic form-snapshot script checks this flag and
+// stays inert.
+window.__GEMINI_STATE_PRESERVER_INSTALLED__ = true;
+
+const MAX_BYTES = 64 * 1024;
+const POST_INTERVAL_MS = 100;
+const ECHO_MEMORY = 8;
+
+let map = {};
+let hostSeed = {};
+let isReady = false;
+let resolveReady = null;
+const readyPromise = new Promise(function(r) {
+  resolveReady = r;
+});
+let queued = [];
+const pending = {};
+const restoreCallbacks = [];
+const recentReports = [];
+let postTimer = null;
+let postDue = false;
+// Write gate. Becomes true on the first trusted user input in this frame.
+// Until then nothing is posted to the host.
+let userActivated = false;
+
+function hasOwn(o, k) {
+  return Object.prototype.hasOwnProperty.call(o, k);
+}
+function isPlainObject(v) {
+  return v !== null && typeof v === 'object' && !Array.isArray(v);
+}
+function clone(v) {
+  return v === undefined ? undefined : JSON.parse(JSON.stringify(v));
+}
+function makeError(code, msg) {
+  const e = new Error('pageVault: ' + msg);
+  e.code = code;
+  return e;
+}
+function byteLength(s) {
+  if (typeof TextEncoder === 'function') {
+    return new TextEncoder().encode(s).length;
+  }
+  return s.length;
+}
+function deepEqual(a, b) {
+  if (a === b) {
+    return true;
+  }
+  if (a === null || b === null || typeof a !== 'object' ||
+      typeof b !== 'object') {
+    return false;
+  }
+  const aArr = Array.isArray(a), bArr = Array.isArray(b);
+  if (aArr !== bArr) {
+    return false;
+  }
+  if (aArr) {
+    if (a.length !== b.length) {
+      return false;
+    }
+    for (let i = 0; i < a.length; i++) {
+      if (!deepEqual(a[i], b[i])) {
+        return false;
+      }
+    }
+    return true;
+  }
+  const ka = Object.keys(a), kb = Object.keys(b);
+  if (ka.length !== kb.length) {
+    return false;
+  }
+  for (let j = 0; j < ka.length; j++) {
+    if (!hasOwn(b, ka[j]) || !deepEqual(a[ka[j]], b[ka[j]])) {
+      return false;
+    }
+  }
+  return true;
+}
+
+function toSeedMap(raw) {
+  if (raw === undefined || raw === null) {
+    return null;
+  }
+  if (typeof raw === 'string') {
+    if (raw.trim() === '') {
+      return {};
+    }
+    try {
+      raw = JSON.parse(raw);
+    } catch (e) {
+      return {};
+    }
+  }
+  if (!isPlainObject(raw)) {
+    return {};
+  }
+  try {
+    return JSON.parse(JSON.stringify(raw));
+  } catch (e) {
+    return {};
+  }
+}
+function unwrapSnapshotEnvelope(seed) {
+  if (seed && seed.version === 1 && isPlainObject(seed.forms) &&
+      isPlainObject(seed.scroll) && hasOwn(seed, 'custom')) {
+    return isPlainObject(seed.custom) ? seed.custom : {};
+  }
+  return seed;
+}
+function takeSeed(raw) {
+  const seed = toSeedMap(raw);
+  if (seed === null) {
+    return;
+  }
+  applySeed(
+      unwrapSnapshotEnvelope(seed), typeof raw === 'string' ? raw : undefined);
+}
+function clearConfirmedPending(seed) {
+  const keys = Object.keys(pending);
+  for (let i = 0; i < keys.length; i++) {
+    const k = keys[i];
+    if (pending[k].removed) {
+      if (!hasOwn(seed, k)) {
+        delete pending[k];
+      }
+    } else if (hasOwn(seed, k) && deepEqual(pending[k].value, seed[k])) {
+      delete pending[k];
+    }
+  }
+}
+function applySeed(seed, rawString) {
+  if (!isReady) {
+    map = seed;
+    hostSeed = clone(seed);
+    isReady = true;
+    drainQueue(Object.keys(seed));
+    resolveReady();
+    return;
+  }
+  if (rawString !== undefined && recentReports.indexOf(rawString) !== -1) {
+    hostSeed = clone(seed);
+    clearConfirmedPending(seed);
+    return;
+  }
+  if (deepEqual(seed, hostSeed)) {
+    clearConfirmedPending(seed);
+    if (userActivated && Object.keys(pending).length > 0) {
+      schedulePost();
+    }
+    return;
+  }
+  const next = {}, changed = [];
+  let k, i;
+  const seedKeys = Object.keys(seed);
+  for (i = 0; i < seedKeys.length; i++) {
+    k = seedKeys[i];
+    if (hasOwn(pending, k)) {
+      if (pending[k].removed) {
+        continue;
+      }
+      next[k] = map[k];
+      if (deepEqual(pending[k].value, seed[k])) {
+        delete pending[k];
+      }
+    } else if (hasOwn(hostSeed, k) && deepEqual(hostSeed[k], seed[k])) {
+      next[k] = hasOwn(map, k) ? map[k] : seed[k];
+    } else {
+      next[k] = seed[k];
+      if (!hasOwn(map, k) || !deepEqual(map[k], seed[k])) {
+        changed.push(k);
+      }
+    }
+  }
+  const mapKeys = Object.keys(map);
+  for (i = 0; i < mapKeys.length; i++) {
+    k = mapKeys[i];
+    if (hasOwn(next, k) || hasOwn(seed, k)) {
+      continue;
+    }
+    if ((hasOwn(pending, k) && !pending[k].removed) || !hasOwn(hostSeed, k)) {
+      next[k] = map[k];
+    } else {
+      changed.push(k);
+    }
+  }
+  const pk = Object.keys(pending);
+  for (i = 0; i < pk.length; i++) {
+    if (pending[pk[i]].removed && !hasOwn(seed, pk[i])) {
+      delete pending[pk[i]];
+    }
+  }
+  hostSeed = clone(seed);
+  if (userActivated && Object.keys(pending).length > 0) {
+    schedulePost();
+  }
+  if (changed.length === 0) {
+    return;
+  }
+  map = next;
+  changed.sort();
+  const cbs = restoreCallbacks.slice();
+  for (i = 0; i < cbs.length; i++) {
+    try {
+      cbs[i](changed.slice());
+    } catch (e) {
+      console.warn('pageVault: onRestore callback failed', e);
+    }
+  }
+}
+
+function normalizeValue(value) {
+  let text;
+  try {
+    text = JSON.stringify(value);
+  } catch (e) {
+    text = undefined;
+  }
+  if (typeof text !== 'string') {
+    return {
+      ok: false,
+      error: makeError('NOT_SERIALIZABLE', 'value is not JSON-serializable')
+    };
+  }
+  return {ok: true, value: JSON.parse(text)};
+}
+function applySave(key, value) {
+  if (hasOwn(map, key) && deepEqual(map[key], value)) {
+    if (userActivated &&
+        (!hasOwn(hostSeed, key) || !deepEqual(hostSeed[key], value)) &&
+        !(hasOwn(pending, key) && !pending[key].removed &&
+          deepEqual(pending[key].value, value))) {
+      trackEdit(key, {value: clone(value)});
+    }
+    return clone(value);
+  }
+  const next = Object.assign({}, map);
+  next[key] = value;
+  if (byteLength(JSON.stringify(next)) > MAX_BYTES) {
+    throw makeError('TOO_LARGE', 'saved data would exceed 64 KB');
+  }
+  map = next;
+  trackEdit(key, {value: clone(value)});
+  return clone(value);
+}
+function applyRemove(key) {
+  if (!hasOwn(map, key)) {
+    if (userActivated && hasOwn(hostSeed, key) &&
+        !(hasOwn(pending, key) && pending[key].removed)) {
+      trackEdit(key, {removed: true});
+    }
+    return false;
+  }
+  const next = Object.assign({}, map);
+  delete next[key];
+  map = next;
+  trackEdit(key, {removed: true});
+  return true;
+}
+// Marks a local edit as pending and schedules a post. Before the first
+// trusted user input an edit only changes `map`: it is not pending, so a seed
+// that arrives later replaces it and onRestore reports the key.
+function trackEdit(key, entry) {
+  if (!userActivated) {
+    return;
+  }
+  pending[key] = entry;
+  schedulePost();
+}
+function drainQueue(seededKeys) {
+  const ops = queued;
+  queued = [];
+  for (let i = 0; i < ops.length; i++) {
+    const op = ops[i];
+    try {
+      if (op.op === 'save') {
+        if (seededKeys.indexOf(op.key) !== -1) {
+          op.resolve(clone(map[op.key]));
+        } else {
+          op.resolve(applySave(op.key, op.value));
+        }
+      } else {
+        if (seededKeys.indexOf(op.key) !== -1) {
+          op.resolve(false);
+        } else {
+          op.resolve(applyRemove(op.key));
+        }
+      }
+    } catch (e) {
+      op.reject(e);
+    }
+  }
+}
+
+function schedulePost() {
+  if (!isReady) {
+    return;
+  }
+  postDue = true;
+  if (postTimer !== null) {
+    return;
+  }
+  postTimer = setTimeout(flush, POST_INTERVAL_MS);
+}
+function flush() {
+  if (postTimer !== null) {
+    clearTimeout(postTimer);
+    postTimer = null;
+  }
+  if (!postDue || !isReady || !userActivated) {
+    return;
+  }
+  postDue = false;
+  let payload;
+  try {
+    payload = JSON.stringify(map);
+  } catch (e) {
+    return;
+  }
+  recentReports.push(payload);
+  if (recentReports.length > ECHO_MEMORY) {
+    recentReports.shift();
+  }
+  try {
+    window.parent.postMessage(
+        {
+          'type': 'WIDGET_STATE_UPDATE',
+          'widgetType': 'artifact',
+          'payload': payload
+        },
+        '*');
+  } catch (e) { /* host unreachable: keep the in-memory session */
+  }
+}
+window.addEventListener('pagehide', flush);
+window.addEventListener('blur', flush);
+if (typeof document !== 'undefined' && document.addEventListener) {
+  document.addEventListener('visibilitychange', function() {
+    if (document.visibilityState === 'hidden') {
+      flush();
+    }
+  });
+}
+
+// The write gate opens on the first trusted pointer, touch, key, wheel,
+// clipboard, form input or drop event in this frame, so startup code,
+// onRestore callbacks and in-memory migrations cannot post on their own.
+// Capture-phase listeners on `window` run before the page's handlers, so a
+// save made while handling that same input is posted. Opening the gate posts
+// nothing by itself: the next save posts the whole map, including earlier
+// in-memory edits.
+const USER_INPUT_EVENTS = [
+  'pointerdown', 'mousedown', 'touchstart', 'keydown', 'input', 'change',
+  'click', 'paste', 'cut', 'drop', 'wheel'
+];
+function onUserInput(event) {
+  if (!event.isTrusted) {
+    return;
+  }
+  userActivated = true;
+  for (let i = 0; i < USER_INPUT_EVENTS.length; i++) {
+    window.removeEventListener(USER_INPUT_EVENTS[i], onUserInput, true);
+  }
+}
+for (let i = 0; i < USER_INPUT_EVENTS.length; i++) {
+  window.addEventListener(
+      USER_INPUT_EVENTS[i], onUserInput, {capture: true, passive: true});
+}
+
+window.addEventListener('message', function(event) {
+  if (event.source !== window.parent) {
+    return;
+  }
+  const d = event.data;
+  if (!d || typeof d !== 'object') {
+    return;
+  }
+  if (d.type === 'SUPPLEMENTAL_DATA_UPDATE') {
+    takeSeed(d.data);
+  } else if (d.type === 'RESTORE_STATE') {
+    takeSeed(d.state);
+  }
+});
+window.__onRestoreState = function(state) {
+  takeSeed(state);
+};
+window.__getWidgetState = function() {
+  return clone(map);
+};
+
+const api = {
+  ready: readyPromise,
+  load: function(key) {
+    return readyPromise.then(function() {
+      return (typeof key === 'string' && hasOwn(map, key)) ? clone(map[key]) :
+                                                             undefined;
+    });
+  },
+  save: function(key, value) {
+    if (typeof key !== 'string' || key === '') {
+      return Promise.reject(
+          makeError('INVALID_KEY', 'key must be a non-empty string'));
+    }
+    const n = normalizeValue(value);
+    if (!n.ok) {
+      return Promise.reject(n.error);
+    }
+    if (!isReady) {
+      return new Promise(function(resolve, reject) {
+        queued.push({
+          op: 'save',
+          key: key,
+          value: n.value,
+          resolve: resolve,
+          reject: reject
+        });
+      });
+    }
+    try {
+      return Promise.resolve(applySave(key, n.value));
+    } catch (e) {
+      return Promise.reject(e);
+    }
+  },
+  remove: function(key) {
+    if (typeof key !== 'string') {
+      return Promise.resolve(false);
+    }
+    if (!isReady) {
+      return new Promise(function(resolve, reject) {
+        queued.push({op: 'remove', key: key, resolve: resolve, reject: reject});
+      });
+    }
+    return Promise.resolve(applyRemove(key));
+  },
+  keys: function() {
+    return readyPromise.then(function() {
+      return Object.keys(map);
+    });
+  },
+  onRestore: function(cb) {
+    if (typeof cb !== 'function') {
+      return function() {};
+    }
+    restoreCallbacks.push(cb);
+    return function() {
+      const i = restoreCallbacks.indexOf(cb);
+      if (i !== -1) {
+        restoreCallbacks.splice(i, 1);
+      }
+    };
+  }
+};
+Object.freeze(api);
+window.pageVault = api;
+
+// `ready` resolves right away, so the page never waits on the host. A host
+// that embeds the saved data before this script runs hands it over through
+// `window.__artifact_seed`. Without an embedded seed the page starts from an
+// empty session. Saved data that the host delivers later (through
+// SUPPLEMENTAL_DATA_UPDATE or RESTORE_STATE) still arrives: applySeed merges
+// it, keeps the keys the page has written since the first user input, and
+// reports the changed keys through onRestore.
+const embeddedSeed = window.__artifact_seed;
+if (embeddedSeed !== undefined && embeddedSeed !== null) {
+  takeSeed(embeddedSeed);
+} else {
+  takeSeed({});
+}
+})();
+
+</script>
+<style id="lumi-runtime">
+/* luminous.css */
+/*
+ * Luminous runtime stylesheet — injected once into every generated widget's
+ * <head> by the C++ widget agent (id="lumi-runtime"). Single Source of Truth
+ * for ALL design tokens and pre-baked .lumi-* component classes. The SI prompts
+ * (design.md / html_generation.jinja2 / chart.jinja2) must NOT re-declare these
+ * tokens or component CSS; they only reference them.
+ *
+ * Sections:
+ *   1. Web fonts (Google Sans Flex + Google Sans Code)
+ *   2. Light token :root (from previewer tokens.css, verbatim)
+ *   3. Dark token overrides — REMAPPED to :root so canvas/D3 readers of
+ *      getComputedStyle(document.documentElement) resolve dark values (D3).
+ *   4. Short diagram/chart aliases (bridge legacy --surface / --chart-N names).
+ *   5. In-scope pre-baked .lumi-* component classes.
+ */
+
+/* ============================================================
+ * 1. WEB FONTS & ICONOGRAPHY
+ *    Loads Google Sans Flex, Google Sans Code, and Material Symbols Outlined.
+ *    Enforces the dual-class iconography rendering protocol.
+ * ============================================================ */
+@import url('https://fonts.googleapis.com/css2?family=Google+Sans+Flex:ital,wght@0,300..700;1,300..700&family=Google+Sans+Code:ital,wght,MONO@0,300..700,0..1;1,300..700,0..1&family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200&display=swap');
+
+/* 
+```
 ## 4. 验证
 
 - `unittest/observer/mvcc_recovery_atomic_test.cpp`
