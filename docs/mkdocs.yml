@@ -32,6 +32,8 @@ nav:
     - design/miniob-double-write-buffer.md
     - design/miniob-transaction.md
     - design/miniob-durability.md
+    - design/miniob-persistence-files.md
+    - design/miniob-checkpoint-wal.md
     - design/miniob-sql-parser.md
     - design/miniob-how-to-add-new-sql.md
     - design/miniob-sql-expression.md
