@@ -120,19 +120,74 @@ for file in sorted(log_files):
 
 ## 3. 恢复保证与失败矩阵
 
+> **关键限制**：当前 `LogFileWriter::write()` 只调用 `write(2)`，没有
+> `fsync/fdatasync`；`DiskLogHandler::wait_lsn()` 等待的是“日志已写入”，
+> 不是“日志已持久化”。因此下面的矩阵是**进程崩溃/同机 page cache 仍在**的
+> 语义；掉电或内核缓存丢失时，尚未 fsync 的 COMMIT 日志可能丢失。
+> 这也是 WAL 截断必须先解决的前置问题。
+
 在“所有 WAL 保留”的前提下：
 
-| 崩溃点 | 结果 |
-| --- | --- |
-| 刷页前/刷页中 | meta 仍是旧 checkpoint，从旧位置重放；未提交事务由 on_done 回滚 |
-| dblwr 写入后、数据 fsync 前 | 页可能旧/新混合；旧 checkpoint 或 dblwr 恢复路径重做 |
-| 数据 fsync 后、meta rename 前 | meta 旧；重放 target 之后的日志，已刷页重做幂等 |
-| meta rename 后、目录 fsync 前 | 可能旧 meta 或新 meta；两者都有完整 WAL，可重放 |
-| meta 持久化后 | 数据页已 fsync，恢复从 target 开始；target 之后日志仍保留并重放 |
+| 崩溃点                        | 结果                                                            |
+| ----------------------------- | --------------------------------------------------------------- |
+| 刷页前/刷页中                 | meta 仍是旧 checkpoint，从旧位置重放；未提交事务由 on_done 回滚 |
+| dblwr 写入后、数据 fsync 前   | 页可能旧/新混合；旧 checkpoint 或 dblwr 恢复路径重做            |
+| 数据 fsync 后、meta rename 前 | meta 旧；重放 target 之后的日志，已刷页重做幂等                 |
+| meta rename 后、目录 fsync 前 | 可能旧 meta 或新 meta；两者都有完整 WAL，可重放                 |
+| meta 持久化后                 | 数据页已 fsync，恢复从 target 开始；target 之后日志仍保留并重放 |
 
 若以后加入 WAL 截断，上表必须改成“日志少于 target 时仍可恢复”的证明，并以
 故障注入测试为准；不能只靠代码审阅。
 
+
+### Db::sync() process:
+```
+Db::sync()
+ 1. 拿 sync_lock_、MVCC checkpoint_gate_（阻止新事务 start）
+ 2. MvccGc::collect()             // 回填 -xid、清理死版本
+ 3. target_lsn = current_lsn()    // 先采样
+ 4. 检查活跃 MVCC 事务              // 有则 can_advance_checkpoint=false
+ 5. 每个 Table::sync()
+      -> HeapTableEngine::sync()
+         -> data_buffer_pool_->flush_all_pages()
+         -> index->sync()
+      -> 每页 flush_page_internal()
+         -> add_page() 写入 dblwr 文件
+ 6. dblwr_buffer_->flush_page()
+      -> fsync(dblwr file)
+      -> 把 dblwr 页写入数据/索引文件
+      -> 标记 dblwr 页 invalid
+ 7. buffer_pool_manager_->fsync_all()   // fsync 所有数据/索引文件
+ 8. dblwr_buffer_->flush_page()         // 再 fsync invalid 标记
+ 9. wait_lsn(target_lsn)                // 确保 target 之前 WAL 落盘
+10. check_point_lsn_ = target_lsn
+11. flush_meta():
+      write sys.db.tmp
+      fsync(tmp fd)
+      rename -> sys.db
+      fsync(db directory)
+```
+
+### Recovery process:
+
+```
+Db::init()
+  open_all_tables()
+  init_dblwr_buffer()
+    -> dblwr.load_pages()        // 读 dblwr 中 checksum 有效的页
+    -> dblwr.recover() = flush_page()
+        // 把 dblwr 页写回数据/索引文件
+  recover()
+    -> log_handler.replay(checkpoint_lsn)
+        -> RecordLogReplayer:
+             if page.lsn >= log_entry.lsn: skip
+             else redo INIT_PAGE/INSERT/DELETE/UPDATE
+        -> MvccTrxLogReplayer: 重建事务状态/操作
+    -> log_handler.start()
+    -> log_replayer.on_done()
+        // 没有 COMMIT 的事务 rollback
+    -> MvccGc: 修复/回收 -T 死版本
+```
 ## 4. 验证
 
 - `unittest/observer/mvcc_recovery_atomic_test.cpp`
@@ -151,6 +206,8 @@ for file in sorted(log_files):
 ## 5. 已知边界
 
 - 没有 WAL 截断；磁盘日志会持续增长。
+- **WAL 没有 fsync**：`wait_lsn` 只保证 write，掉电可能丢未 fsync 的 COMMIT；
+  没有 WAL 尾部半写检测/截断。这是当前最重要的持久化缺口。
 - 没有全局 freeze；有活跃 MVCC 事务时跳过 checkpoint，而不是等待。
 - 非 MVCC 引擎没有 checkpoint gate，仍依赖调用方 quiesce。
 - 表元数据与 LSM 文件没有纳入统一 fsync 屏障。

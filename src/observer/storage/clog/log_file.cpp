@@ -209,6 +209,9 @@ RC LogFileWriter::write(LogEntry &entry)
     return RC::IOERR_WRITE;
   }
 
+  // shortcut: 这里只 write(2)，没有 fsync/fdatasync。wait_lsn 只等待这次 write
+  // 完成，不保证日志在掉电/内核缓存丢失后仍存在。进程崩溃可依赖 page cache，
+  // 但真正的 COMMIT 持久化需要 fsync + WAL 尾部半写恢复；升级前不要声称掉电 durable。
   last_lsn_ = entry.lsn();
   LOG_TRACE("write log entry success. filename=%s, entry=%s", filename_.c_str(), entry.to_string().c_str());
   return RC::SUCCESS;
