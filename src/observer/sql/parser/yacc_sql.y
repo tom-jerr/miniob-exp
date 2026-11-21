@@ -164,6 +164,7 @@ UnboundAggregateExpr *create_aggregate_expression(const char *aggregate_name,
 %type <number>              type
 %type <condition>           condition
 %type <value>               value
+%type <value>               signed_value
 %type <number>              number
 %type <cstring>             relation
 %type <comp>                comp_op
@@ -425,16 +426,30 @@ insert_stmt:        /*insert   语句的语法解析树*/
     ;
 
 value_list:
-    value
+    signed_value
     {
       $$ = new vector<Value>;
       $$->emplace_back(*$1);
       delete $1;
     }
-    | value_list COMMA value { 
+    | value_list COMMA signed_value { 
       $$ = $1;
       $$->emplace_back(*$3);
       delete $3;
+    }
+    ;
+signed_value:
+    value {
+      $$ = $1;
+      @$ = @1;
+    }
+    | '-' NUMBER {
+      $$ = new Value(-(int)$2);
+      @$ = @$;
+    }
+    | '-' FLOAT {
+      $$ = new Value(-(float)$2);
+      @$ = @$;
     }
     ;
 value:
@@ -486,12 +501,13 @@ delete_stmt:    /*  delete 语句的语法解析树*/
     }
     ;
 update_stmt:      /*  update 语句的语法解析树*/
-    UPDATE ID SET ID EQ value where 
+    UPDATE ID SET ID EQ signed_value where 
     {
       $$ = new ParsedSqlNode(SCF_UPDATE);
       $$->update.relation_name = $2;
       $$->update.attribute_name = $4;
       $$->update.value = *$6;
+      delete $6;
       if ($7 != nullptr) {
         $$->update.conditions.swap(*$7);
         delete $7;
@@ -582,7 +598,12 @@ expression:
     | '*' {
       $$ = new StarExpr();
     }
-    // your code here
+    | ID LBRACE expression RBRACE {
+      $$ = create_aggregate_expression($1, $3, sql_string, &@$);
+    }
+    | ID LBRACE RBRACE {
+      $$ = create_aggregate_expression($1, nullptr, sql_string, &@$);
+    }
     ;
 
 rel_attr:
@@ -644,7 +665,7 @@ condition_list:
     }
     ;
 condition:
-    rel_attr comp_op value
+    rel_attr comp_op signed_value
     {
       $$ = new ConditionSqlNode;
       $$->left_is_attr = 1;
@@ -656,7 +677,7 @@ condition:
       delete $1;
       delete $3;
     }
-    | value comp_op value 
+    | signed_value comp_op signed_value 
     {
       $$ = new ConditionSqlNode;
       $$->left_is_attr = 0;
@@ -680,7 +701,7 @@ condition:
       delete $1;
       delete $3;
     }
-    | value comp_op rel_attr
+    | signed_value comp_op rel_attr
     {
       $$ = new ConditionSqlNode;
       $$->left_is_attr = 0;
@@ -742,7 +763,7 @@ explain_stmt:
     ;
 
 set_variable_stmt:
-    SET ID EQ value
+    SET ID EQ signed_value
     {
       $$ = new ParsedSqlNode(SCF_SET_VARIABLE);
       $$->set_variable.name  = $2;

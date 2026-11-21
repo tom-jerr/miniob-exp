@@ -61,7 +61,13 @@ public:
 
   RC redo(Db *db, const LogEntry &log_entry) override;
 
-  ObLsmTransaction *get_trx() { return trx_; }
+  ObLsmTransaction *get_trx()
+  {
+    if (trx_ == nullptr) {
+      start_if_need();
+    }
+    return trx_;
+  }
 
   int32_t id() const override { return 0; }
 

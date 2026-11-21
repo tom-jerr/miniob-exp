@@ -26,4 +26,25 @@ enum class CompactionType
   UNKNOWN,
 };
 
+/**
+ * @enum MemTableType
+ * @brief Defines the underlying ordered indexing structure for ObMemTable.
+ */
+enum class MemTableType
+{
+  SKIPLIST = 0,
+  BPLUS_TREE,
+};
+
+/**
+ * @enum TransactionIsolationLevel
+ * @brief Defines concurrency control and isolation behavior for ObLsmTransaction (MVCC + OCC).
+ */
+enum class TransactionIsolationLevel
+{
+  READ_COMMITTED = 0,  ///< MVCC snapshot read without OCC commit-time conflict abort
+  SNAPSHOT_ISOLATION,  ///< Default: MVCC snapshot read + OCC write-write conflict detection (First-Committer-Wins)
+  SERIALIZABLE,        ///< Full MVCC + OCC: validates both read-write and write-write conflicts at commit
+};
+
 }  // namespace oceanbase

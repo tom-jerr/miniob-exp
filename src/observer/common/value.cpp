@@ -243,6 +243,9 @@ const char *Value::data() const
 
 string Value::to_string() const
 {
+  if (this->attr_type_ == AttrType::UNDEFINED) {
+    return "NULL";
+  }
   string res;
   RC     rc = DataType::type_instance(this->attr_type_)->to_string(*this, res);
   if (OB_FAIL(rc)) {

@@ -55,7 +55,8 @@ Db::~Db()
   LOG_INFO("Db has been closed: %s", name_.c_str());
 }
 
-RC Db::init(const char *name, const char *dbpath, const char *trx_kit_name, const char *log_handler_name, const char *storage_engine)
+RC Db::init(const char *name, const char *dbpath, const char *trx_kit_name, const char *log_handler_name,
+    const char *storage_engine)
 {
   RC rc = RC::SUCCESS;
 
@@ -70,7 +71,11 @@ RC Db::init(const char *name, const char *dbpath, const char *trx_kit_name, cons
   }
 
   oceanbase::ObLsmOptions options;
-  filesystem::path lsm_path = filesystem::path(dbpath) / "lsm";
+  options.memtable_size         = 256 * 1024;
+  options.table_size            = 512 * 1024;
+  options.default_l1_level_size = 2 * 1024 * 1024;
+  options.force_sync_new_log    = false;
+  filesystem::path lsm_path     = filesystem::path(dbpath) / "lsm";
   filesystem::create_directory(lsm_path);
 
   rc = oceanbase::ObLsm::open(options, lsm_path, &lsm_);
@@ -156,7 +161,8 @@ RC Db::init(const char *name, const char *dbpath, const char *trx_kit_name, cons
   return rc;
 }
 
-RC Db::create_table(const char *table_name, span<const AttrInfoSqlNode> attributes, const vector<string>& primary_keys, const StorageFormat storage_format, const StorageEngine storage_engine)
+RC Db::create_table(const char *table_name, span<const AttrInfoSqlNode> attributes, const vector<string> &primary_keys,
+    const StorageFormat storage_format, const StorageEngine storage_engine)
 {
   RC rc = RC::SUCCESS;
   // check table_name
@@ -174,8 +180,15 @@ RC Db::create_table(const char *table_name, span<const AttrInfoSqlNode> attribut
   string  table_file_path = table_meta_file(path_.c_str(), table_name);
   Table  *table           = new Table();
   int32_t table_id        = next_table_id_++;
-  rc = table->create(this, table_id, table_file_path.c_str(), table_name, path_.c_str(), attributes, primary_keys, storage_format,
-                     actual_engine);
+  rc                      = table->create(this,
+      table_id,
+      table_file_path.c_str(),
+      table_name,
+      path_.c_str(),
+      attributes,
+      primary_keys,
+      storage_format,
+      actual_engine);
   if (rc != RC::SUCCESS) {
     LOG_ERROR("Failed to create table %s.", table_name);
     delete table;
@@ -257,9 +270,9 @@ void Db::all_tables(vector<string> &table_names) const
 RC Db::sync()
 {
   std::lock_guard<std::mutex> sync_guard(sync_lock_);
-  RC rc = RC::SUCCESS;
+  RC                          rc = RC::SUCCESS;
 
-  MvccTrxKit *mvcc_kit = dynamic_cast<MvccTrxKit *>(trx_kit_.get());
+  MvccTrxKit                         *mvcc_kit = dynamic_cast<MvccTrxKit *>(trx_kit_.get());
   std::unique_lock<std::shared_mutex> checkpoint_guard;
   if (mvcc_kit != nullptr) {
     checkpoint_guard = std::unique_lock<std::shared_mutex>(mvcc_kit->checkpoint_gate());
@@ -458,7 +471,7 @@ RC Db::flush_meta()
     auto *mvcc_kit = static_cast<MvccTrxKit *>(trx_kit_.get());
     buffer += " " + to_string(mvcc_kit->current_commit_seq());
   }
-  int    n      = write(fd, buffer.c_str(), buffer.size());
+  int n = write(fd, buffer.c_str(), buffer.size());
   if (n < 0) {
     LOG_ERROR("Failed to write db meta file. db=%s, file=%s, errno=%s", 
               name_.c_str(), temp_meta_file_path.c_str(), strerror(errno));

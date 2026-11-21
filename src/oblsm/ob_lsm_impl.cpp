@@ -29,7 +29,7 @@ namespace oceanbase {
 ObLsmImpl::ObLsmImpl(const ObLsmOptions &options, const string &path)
     : options_(options), path_(path), mu_(), mem_table_(nullptr), imem_tables_(), manifest_(path)
 {
-  mem_table_ = make_shared<ObMemTable>();
+  mem_table_ = make_shared<ObMemTable>(options_.memtable_type);
   sstables_  = make_shared<vector<vector<shared_ptr<ObSSTable>>>>();
   if (options_.type == CompactionType::LEVELED) {
     sstables_->resize(options_.default_levels);
@@ -117,16 +117,18 @@ RC ObLsmImpl::put(const string_view &key, const string_view &value)
   // and the skiplist concurently write is not thread safe, so we use mutex here,
   // if the skiplist support `insert_concurrently()` interface, can we remove the mutex?
   unique_lock<mutex> lock(mu_);
-  uint64_t           seq = seq_.fetch_add(1);
+  uint64_t           seq = seq_.fetch_add(1) + 1;
   // Write WAL
   rc = wal_->put(seq, key, value);
   if (rc != RC::SUCCESS) {
+    seq_.fetch_sub(1);
     return rc;
   }
 
   if (options_.force_sync_new_log) {
     rc = wal_->sync();
     if (rc != RC::SUCCESS) {
+      seq_.fetch_sub(1);
       LOG_ERROR("Failed to sync wal logs, rc=%s", strrc(rc));
       return rc;
     }
@@ -169,8 +171,8 @@ RC ObLsmImpl::recover_from_wal()
   uint64_t next_seq = seq_.load();
   for (const WalRecord &record : records) {
     mem_table_->put(record.seq, record.key, record.val);
-    if (record.seq + 1 > next_seq) {
-      next_seq = record.seq + 1;
+    if (record.seq > next_seq) {
+      next_seq = record.seq;
     }
   }
   seq_.store(next_seq);
@@ -183,7 +185,157 @@ RC ObLsmImpl::recover_from_wal()
   return rc;
 }
 
-RC ObLsmImpl::batch_put(const vector<pair<string, string>> &kvs) { return RC::UNIMPLEMENTED; }
+RC ObLsmImpl::batch_put_locked(const vector<pair<string, string>> &kvs, unique_lock<mutex> &lock)
+{
+  if (kvs.empty()) {
+    return RC::SUCCESS;
+  }
+  uint64_t saved_seq = seq_.load();
+  uint64_t base_seq  = saved_seq;
+  RC       rc        = RC::SUCCESS;
+
+  // Phase 1: Write all records to WAL first for atomicity
+  for (size_t i = 0; i < kvs.size(); ++i) {
+    uint64_t cur_seq = base_seq + i + 1;
+    rc               = wal_->put(cur_seq, kvs[i].first, kvs[i].second);
+    if (OB_FAIL(rc)) {
+      seq_.store(saved_seq);
+      return rc;
+    }
+  }
+
+  if (options_.force_sync_new_log) {
+    rc = wal_->sync();
+    if (OB_FAIL(rc)) {
+      seq_.store(saved_seq);
+      LOG_ERROR("Failed to sync wal logs in batch_put, rc=%s", strrc(rc));
+      return rc;
+    }
+  }
+
+  // Phase 2: Commit sequence update and apply all entries to MemTable
+  uint64_t final_seq = base_seq + kvs.size();
+  seq_.store(final_seq);
+
+  for (size_t i = 0; i < kvs.size(); ++i) {
+    uint64_t cur_seq = base_seq + i + 1;
+    mem_table_->put(cur_seq, kvs[i].first, kvs[i].second);
+  }
+
+  if (mem_table_->appro_memory_usage() > options_.memtable_size) {
+    if (imem_tables_.size() >= 1) {
+      cv_.wait(lock);
+    }
+    if (mem_table_->appro_memory_usage() > options_.memtable_size) {
+      manifest_.latest_seq = final_seq;
+      try_freeze_memtable();
+    } else {
+      cv_.notify_one();
+    }
+  }
+  return RC::SUCCESS;
+}
+
+RC ObLsmImpl::batch_put(const vector<pair<string, string>> &kvs)
+{
+  unique_lock<mutex> lock(mu_);
+  return batch_put_locked(kvs, lock);
+}
+
+bool ObLsmImpl::has_key_committed_after_locked(const string_view &user_key, uint64_t start_ts)
+{
+  vector<unique_ptr<ObLsmIterator>> iters;
+  iters.emplace_back(mem_table_->new_iterator());
+  for (auto &imm : imem_tables_) {
+    if (imm != nullptr) {
+      iters.emplace_back(imm->new_iterator());
+    }
+  }
+  for (auto &level : *sstables_) {
+    for (const auto &sst : level) {
+      iters.emplace_back(sst->new_iterator());
+    }
+  }
+
+  unique_ptr<ObLsmIterator> internal_iter(new_merging_iterator(&internal_key_comparator_, std::move(iters)));
+  if (internal_iter == nullptr) {
+    return false;
+  }
+
+  string lookup_key;
+  put_numeric<uint64_t>(&lookup_key, user_key.size() + SEQ_SIZE);
+  lookup_key.append(user_key.data(), user_key.size());
+  put_numeric<uint64_t>(&lookup_key, UINT64_MAX);
+
+  internal_iter->seek(string_view(lookup_key.data(), lookup_key.size()));
+  if (!internal_iter->valid()) {
+    return false;
+  }
+
+  string_view found_user_key = extract_user_key(internal_iter->key());
+  if (default_comparator_.compare(found_user_key, user_key) != 0) {
+    return false;
+  }
+
+  uint64_t latest_seq = extract_sequence(internal_iter->key());
+  return latest_seq > start_ts;
+}
+
+RC ObLsmImpl::commit_transaction(uint64_t start_ts, TransactionIsolationLevel isolation,
+    const std::unordered_set<string> &read_set, const std::unordered_set<string> &write_set,
+    ObLsmIterator *write_batch_iter)
+{
+  unique_lock<mutex> lock(mu_);
+
+  // OCC Validation Phase
+  if (isolation == TransactionIsolationLevel::SNAPSHOT_ISOLATION ||
+      isolation == TransactionIsolationLevel::SERIALIZABLE) {
+    for (const auto &wkey : write_set) {
+      if (has_key_committed_after_locked(wkey, start_ts)) {
+        return RC::LOCKED_CONCURRENCY_CONFLICT;
+      }
+    }
+  }
+
+  if (isolation == TransactionIsolationLevel::SERIALIZABLE) {
+    for (const auto &rkey : read_set) {
+      if (has_key_committed_after_locked(rkey, start_ts)) {
+        return RC::LOCKED_CONCURRENCY_CONFLICT;
+      }
+    }
+  }
+
+  // OCC Write Phase: stream from write_batch_iter in bounded chunks
+  if (write_batch_iter == nullptr) {
+    return RC::SUCCESS;
+  }
+
+  static constexpr size_t      kChunkSize = 2048;
+  vector<pair<string, string>> chunk;
+  chunk.reserve(kChunkSize);
+
+  write_batch_iter->seek_to_first();
+  while (write_batch_iter->valid()) {
+    chunk.emplace_back(string(write_batch_iter->key()), string(write_batch_iter->value()));
+    write_batch_iter->next();
+    if (chunk.size() >= kChunkSize) {
+      RC rc = batch_put_locked(chunk, lock);
+      if (OB_FAIL(rc)) {
+        return rc;
+      }
+      chunk.clear();
+    }
+  }
+
+  if (!chunk.empty()) {
+    RC rc = batch_put_locked(chunk, lock);
+    if (OB_FAIL(rc)) {
+      return rc;
+    }
+  }
+
+  return RC::SUCCESS;
+}
 
 RC ObLsmImpl::remove(const string_view &key) { return put(key, string_view("", 0)); }
 
@@ -191,7 +343,7 @@ RC ObLsmImpl::try_freeze_memtable()
 {
   RC rc = RC::SUCCESS;
   imem_tables_.emplace_back(mem_table_);
-  mem_table_ = make_unique<ObMemTable>();
+  mem_table_ = make_unique<ObMemTable>(options_.memtable_type);
   // frozen previous wal
   if (!options_.force_sync_new_log) {
     rc = wal_->sync();
@@ -240,6 +392,8 @@ void ObLsmImpl::background_compaction(std::shared_ptr<ObLsmBgCompactCtx> ctx)
       compacting_.store(true);
       try_major_compaction();
       compacting_.store(false);
+      unique_lock<mutex> finish_lock(mu_);
+      cv_.notify_all();
     }
     return;
   }
@@ -293,7 +447,46 @@ void ObLsmImpl::try_major_compaction()
       }
     }
   } else if (options_.type == CompactionType::LEVELED) {
-    // TODO: apply the compaction results to sstable
+    new_sstables->resize(levels_size);
+    int         target_level  = picked->level();
+    const auto &inputs_0      = picked->inputs(0);
+    const auto &inputs_1      = picked->inputs(1);
+    mf_record.compaction_type = options_.type;
+    for (const auto &sst : inputs_0) {
+      mf_record.deleted_tables.emplace_back(sst->sst_id(), target_level);
+    }
+    for (const auto &sst : inputs_1) {
+      mf_record.deleted_tables.emplace_back(sst->sst_id(), target_level + 1);
+    }
+    for (const auto &sst : results) {
+      mf_record.added_tables.emplace_back(sst->sst_id(), target_level + 1);
+    }
+
+    for (size_t lvl = 0; lvl < levels_size; ++lvl) {
+      if (static_cast<int>(lvl) == target_level) {
+        for (const auto &sst : sstables_->at(lvl)) {
+          if (!find_sstable(inputs_0, sst)) {
+            new_sstables->at(lvl).push_back(sst);
+          }
+        }
+      } else if (static_cast<int>(lvl) == target_level + 1) {
+        for (const auto &sst : sstables_->at(lvl)) {
+          if (!find_sstable(inputs_1, sst)) {
+            new_sstables->at(lvl).push_back(sst);
+          }
+        }
+        for (const auto &sst : results) {
+          new_sstables->at(lvl).push_back(sst);
+        }
+        std::sort(new_sstables->at(lvl).begin(),
+            new_sstables->at(lvl).end(),
+            [this](const shared_ptr<ObSSTable> &a, const shared_ptr<ObSSTable> &b) {
+              return internal_key_comparator_.compare(a->first_key(), b->first_key()) < 0;
+            });
+      } else {
+        new_sstables->at(lvl) = sstables_->at(lvl);
+      }
+    }
   }
 
   sstables_ = new_sstables;
@@ -303,6 +496,9 @@ void ObLsmImpl::try_major_compaction()
   for (auto &sstable : picked_sstables) {
     sstable->remove();
   }
+  picked_sstables.clear();
+  picked.reset();
+  results.clear();
 
   mf_record.sstable_sequence_id = sstable_id_.load();
   mf_record.seq_id              = manifest_.latest_seq;
@@ -310,7 +506,63 @@ void ObLsmImpl::try_major_compaction()
   try_major_compaction();
 }
 
-vector<shared_ptr<ObSSTable>> ObLsmImpl::do_compaction(ObCompaction *picked) { return {}; }
+vector<shared_ptr<ObSSTable>> ObLsmImpl::do_compaction(ObCompaction *picked)
+{
+  if (picked == nullptr || picked->size() == 0) {
+    return {};
+  }
+
+  vector<unique_ptr<ObLsmIterator>> children;
+  for (const auto &sst : picked->inputs(0)) {
+    children.emplace_back(sst->new_iterator());
+  }
+  for (const auto &sst : picked->inputs(1)) {
+    children.emplace_back(sst->new_iterator());
+  }
+
+  unique_ptr<ObLsmIterator> merger(new_merging_iterator(&internal_key_comparator_, std::move(children)));
+  if (merger == nullptr) {
+    return {};
+  }
+
+  vector<shared_ptr<ObSSTable>> results;
+  unique_ptr<ObSSTableBuilder>  builder = nullptr;
+
+  merger->seek_to_first();
+  while (merger->valid()) {
+    if (builder == nullptr) {
+      uint64_t new_sst_id = sstable_id_.fetch_add(1);
+      builder             = make_unique<ObSSTableBuilder>(&default_comparator_, block_cache_.get());
+      RC rc               = builder->open(get_sstable_path(new_sst_id), new_sst_id);
+      if (OB_FAIL(rc)) {
+        LOG_ERROR("Failed to open sstable builder during compaction, rc=%s", strrc(rc));
+        return results;
+      }
+    }
+
+    RC rc = builder->add(merger->key(), merger->value());
+    if (OB_FAIL(rc)) {
+      LOG_ERROR("Failed to add entry to sstable builder during compaction, rc=%s", strrc(rc));
+      return results;
+    }
+
+    if (builder->estimated_size() >= options_.table_size) {
+      builder->finish();
+      results.push_back(builder->get_built_table());
+      builder.reset();
+    }
+
+    merger->next();
+  }
+
+  if (builder != nullptr && builder->entry_count() > 0) {
+    builder->finish();
+    results.push_back(builder->get_built_table());
+    builder.reset();
+  }
+
+  return results;
+}
 
 void ObLsmImpl::build_sstable(shared_ptr<ObMemTable> imem)
 {

@@ -292,9 +292,11 @@ template <typename Key, class ObComparator>
 int ObSkipList<Key, ObComparator>::random_height()
 {
   // Increase height with probability 1 in kBranching
-  static const unsigned int kBranching = 4;
-  int                       height     = 1;
-  while (height < kMaxHeight && rnd.next(kBranching) == 0) {
+  // Use thread_local RandomGenerator to ensure lock-free thread safety across concurrent writers
+  thread_local common::RandomGenerator tls_rnd;
+  static const unsigned int            kBranching = 4;
+  int                                  height     = 1;
+  while (height < kMaxHeight && tls_rnd.next(kBranching) == 0) {
     height++;
   }
   ASSERT(height > 0, "height > 0");
@@ -416,8 +418,76 @@ void ObSkipList<Key, ObComparator>::insert(const Key &key)
 template <typename Key, class ObComparator>
 void ObSkipList<Key, ObComparator>::insert_concurrently(const Key &key)
 {
-  // 写入由上层互斥保护；链接顺序与 insert 相同，可供并发读者使用
-  insert(key);
+  const int height   = random_height();
+  int       curr_max = get_max_height();
+  while (height > curr_max) {
+    if (max_height_.compare_exchange_weak(curr_max, height, std::memory_order_relaxed)) {
+      break;
+    }
+  }
+
+  Node *x = new_node(key, height);
+  for (int i = 0; i < height; i++) {
+    x->nobarrier_set_next(i, nullptr);
+  }
+
+  auto find_splice_for_level = [this](const Key &k, Node *start, int level, Node **out_prev, Node **out_succ) {
+    Node *curr = start;
+    while (true) {
+      Node *next = curr->next(level);
+      if (next != nullptr && compare_(next->key, k) < 0) {
+        curr = next;
+      } else {
+        *out_prev = curr;
+        *out_succ = next;
+        return;
+      }
+    }
+  };
+
+  auto find_all_levels = [this, &find_splice_for_level](const Key &k, Node **prev, Node **succ) {
+    Node *curr  = head_;
+    int   level = get_max_height() - 1;
+    while (level >= 0) {
+      find_splice_for_level(k, curr, level, &prev[level], &succ[level]);
+      curr = prev[level];
+      level--;
+    }
+  };
+
+  Node *prev[kMaxHeight];
+  Node *succ[kMaxHeight];
+  for (int i = 0; i < kMaxHeight; i++) {
+    prev[i] = head_;
+    succ[i] = nullptr;
+  }
+
+  // Step 1: Anchor node at level 0 via CAS
+  while (true) {
+    find_all_levels(key, prev, succ);
+    ASSERT(succ[0] == nullptr || !equal(key, succ[0]->key), "inserted key must not exist");
+
+    for (int i = 0; i < height; i++) {
+      x->nobarrier_set_next(i, succ[i]);
+    }
+
+    if (prev[0]->cas_next(0, succ[0], x)) {
+      break;
+    }
+  }
+
+  // Step 2: Link upper levels [1 .. height-1] bottom-up via CAS
+  for (int level = 1; level < height; level++) {
+    while (true) {
+      Node *s = succ[level];
+      // Verify x->next(level) is still consistent before publishing x at this level
+      x->set_next(level, s);
+      if (prev[level]->cas_next(level, s, x)) {
+        break;
+      }
+      find_splice_for_level(key, head_, level, &prev[level], &succ[level]);
+    }
+  }
 }
 
 template <typename Key, class ObComparator>

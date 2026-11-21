@@ -18,6 +18,7 @@ See the Mulan PSL v2 for more details. */
 #include "common/lang/condition_variable.h"
 #include "common/lang/utility.h"
 #include "common/thread/thread_pool_executor.h"
+#include <unordered_set>
 #include "oblsm/include/ob_lsm_transaction.h"
 #include "oblsm/memtable/ob_memtable.h"
 #include "oblsm/table/ob_sstable.h"
@@ -38,10 +39,12 @@ struct ObLsmBgCompactCtx
 class ObLsmImpl : public ObLsm
 {
 public:
+  friend class ObLsmTransaction;
+
   ObLsmImpl(const ObLsmOptions &options, const string &path);
   ~ObLsmImpl() override
   {
-    if (!options_.force_sync_new_log) {
+    if (!options_.force_sync_new_log && wal_ != nullptr) {
       wal_->sync();
     }
     executor_.shutdown();
@@ -58,20 +61,40 @@ public:
 
   ObLsmIterator *new_iterator(ObLsmReadOptions options) override;
 
-  SSTablesPtr get_sstables() { return sstables_; }
+  SSTablesPtr get_sstables()
+  {
+    unique_lock<mutex> lock(mu_);
+    cv_.wait(lock, [this]() { return imem_tables_.empty() && !compacting_.load(); });
+    return sstables_;
+  }
 
   RC recover();
   RC batch_put(const std::vector<pair<string, string>> &kvs) override;
+
+  /**
+   * @brief Validates OCC read/write sets against MVCC versions committed after `start_ts`
+   *        and atomically commits the transaction's key-value stream if validation passes.
+   */
+  RC commit_transaction(uint64_t start_ts, TransactionIsolationLevel isolation,
+      const std::unordered_set<string> &read_set, const std::unordered_set<string> &write_set,
+      ObLsmIterator *write_batch_iter);
+
+  const ObLsmOptions                        &options() const { return options_; }
+  const string                              &path() const { return path_; }
+  const ObComparator                        *default_comparator() const { return &default_comparator_; }
+  ObLRUCache<uint64_t, shared_ptr<ObBlock>> *block_cache() const { return block_cache_.get(); }
 
   // used for debug
   void dump_sstables() override;
 
 private:
-  RC recover_from_wal();
-  RC recover_from_manifest_records(const std::vector<ObManifestCompaction> &records);
-  RC load_manifest_snapshot(const ObManifestSnapshot &snapshot);
-  RC load_manifest_sstable(const std::vector<std::vector<uint64_t>> &sstables);
-  RC write_manifest_snapshot();
+  bool has_key_committed_after_locked(const string_view &user_key, uint64_t start_ts);
+  RC   batch_put_locked(const std::vector<pair<string, string>> &kvs, unique_lock<mutex> &lock);
+  RC   recover_from_wal();
+  RC   recover_from_manifest_records(const std::vector<ObManifestCompaction> &records);
+  RC   load_manifest_snapshot(const ObManifestSnapshot &snapshot);
+  RC   load_manifest_sstable(const std::vector<std::vector<uint64_t>> &sstables);
+  RC   write_manifest_snapshot();
 
 private:
   /**

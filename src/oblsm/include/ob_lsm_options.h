@@ -21,7 +21,7 @@ namespace oceanbase {
  */
 struct ObLsmOptions
 {
-  ObLsmOptions(){};
+  ObLsmOptions() {};
 
   // TODO: all params are used for test, need to reset to appropriate values.
   size_t memtable_size = 8 * 1024;
@@ -42,12 +42,21 @@ struct ObLsmOptions
 
   // it is used to control whether the WAL is forced to be written to the disk every time a new key is written.
   bool force_sync_new_log = true;
+
+  // Pluggable memtable type: SKIPLIST (default) or BPLUS_TREE
+  MemTableType memtable_type = MemTableType::SKIPLIST;
+
+  // MVCC + OCC isolation level: SNAPSHOT_ISOLATION by default, configurable to SERIALIZABLE
+  TransactionIsolationLevel isolation_level = TransactionIsolationLevel::SNAPSHOT_ISOLATION;
+
+  // Maximum in-memory WriteBatch bytes per transaction before spilling to temporary disk SSTable (default 4MB)
+  size_t max_write_batch_size = 4 * 1024 * 1024;
 };
 
 // TODO: UNIMPLEMENTED
 struct ObLsmReadOptions
 {
-  ObLsmReadOptions(){};
+  ObLsmReadOptions() {};
 
   int64_t seq = -1;
 };

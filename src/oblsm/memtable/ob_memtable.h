@@ -14,28 +14,29 @@ See the Mulan PSL v2 for more details. */
 #include "common/lang/string.h"
 #include "common/lang/string_view.h"
 #include "common/lang/memory.h"
+#include "oblsm/ob_lsm_define.h"
 #include "oblsm/memtable/ob_skiplist.h"
+#include "oblsm/memtable/ob_bplus_tree_mem.h"
 #include "oblsm/util/ob_comparator.h"
 #include "oblsm/util/ob_arena.h"
+#include "oblsm/util/ob_coding.h"
 #include "oblsm/include/ob_lsm_iterator.h"
 
 namespace oceanbase {
 
 /**
  * @class ObMemTable
- * @brief MemTable implementation for LSM-Tree.
- *
- * The `ObMemTable` represents an in-memory structure that stores key-value pairs
- * before they are flushed to disk as SSTables. It supports key-value insertion,
- * querying, and iteration. The implementation currently uses a skip list as
- * the underlying data structure.
+ * @brief MemTable implementation for LSM-Tree supporting pluggable index structures (SkipList or B+Tree).
  */
 class ObMemTable : public enable_shared_from_this<ObMemTable>
 {
 public:
-  ObMemTable() : comparator_(), table_(comparator_){};
+  explicit ObMemTable(MemTableType type = MemTableType::SKIPLIST)
+      : type_(type), comparator_(), table_(comparator_), bptree_table_(comparator_) {};
 
   ~ObMemTable() = default;
+
+  MemTableType type() const { return type_; }
 
   /**
    * @brief Retrieves a shared pointer to the current ObMemTable instance.
@@ -82,21 +83,6 @@ public:
    */
   ObLsmIterator *new_iterator();
 
-private:
-  friend class ObMemTableIterator;
-  /**
-   * @brief Compares two keys.
-   *
-   * Uses the internal comparator to perform lexicographical comparison between
-   * two keys.
-   *
-   * @param a Pointer to the first key.
-   * @param b Pointer to the second key.
-   * @return An integer indicating the result of the comparison:
-   *         - Negative value if `a < b`
-   *         - Zero if `a == b`
-   *         - Positive value if `a > b`
-   */
   struct KeyComparator
   {
     const ObInternalKeyComparator comparator;
@@ -104,62 +90,59 @@ private:
     int operator()(const char *a, const char *b) const;
   };
 
-  // TODO: currently the memtable use skiplist as the underlying data structure,
-  // it is possible to use other data structure, for example, hash table.
-  typedef ObSkipList<const char *, KeyComparator> Table;
+  typedef ObSkipList<const char *, KeyComparator>     Table;
+  typedef ObMemBPlusTree<const char *, KeyComparator> BPlusTable;
 
-  /**
-   * @brief Comparator used for ordering keys in the memtable.
-   *
-   * This member defines the rules for comparing keys in the skip list.
-   * TODO: support user-defined comparator
-   */
+private:
+  template <typename TableType>
+  friend class ObMemTableTypedIterator;
+
+  MemTableType  type_ = MemTableType::SKIPLIST;
   KeyComparator comparator_;
-
-  /**
-   * @brief The underlying data structure used for key-value storage.
-   *
-   * Currently implemented as a skip list. Future versions may support
-   * alternative data structures, such as hash tables.
-   */
-  Table table_;
-
-  /**
-   * @brief Memory arena used for memory management in the memtable.
-   *
-   * Allocates and tracks memory usage for the skip list and other internal
-   * components of the memtable.
-   */
-  ObArena arena_;
+  Table         table_;
+  BPlusTable    bptree_table_;
+  ObArena       arena_;
 };
 
 /**
- * @class ObMemTableIterator
- * @brief An iterator for traversing the contents of an `ObMemTable`.
+ * @class ObMemTableTypedIterator
+ * @brief A generic iterator for traversing an `ObMemTable` backed by either ObSkipList or ObMemBPlusTree.
  */
-class ObMemTableIterator : public ObLsmIterator
+template <typename TableType>
+class ObMemTableTypedIterator : public ObLsmIterator
 {
 public:
-  explicit ObMemTableIterator(shared_ptr<ObMemTable> mem, ObMemTable::Table *table) : mem_(mem), iter_(table) {}
+  explicit ObMemTableTypedIterator(shared_ptr<ObMemTable> mem, TableType *table) : mem_(mem), iter_(table) {}
 
-  ObMemTableIterator(const ObMemTableIterator &)            = delete;
-  ObMemTableIterator &operator=(const ObMemTableIterator &) = delete;
+  ObMemTableTypedIterator(const ObMemTableTypedIterator &)            = delete;
+  ObMemTableTypedIterator &operator=(const ObMemTableTypedIterator &) = delete;
 
-  ~ObMemTableIterator() override = default;
+  ~ObMemTableTypedIterator() override = default;
 
-  void seek(const string_view &k) override;
+  void seek(const string_view &k) override
+  {
+    tmp_.clear();
+    iter_.seek(k.data());
+  }
   void seek_to_first() override { iter_.seek_to_first(); }
   void seek_to_last() override { iter_.seek_to_last(); }
 
   bool        valid() const override { return iter_.valid(); }
   void        next() override { iter_.next(); }
-  string_view key() const override;
-  string_view value() const override;
+  string_view key() const override { return get_length_prefixed_string(iter_.key()); }
+  string_view value() const override
+  {
+    string_view key_slice = get_length_prefixed_string(iter_.key());
+    return get_length_prefixed_string(key_slice.data() + key_slice.size());
+  }
 
 private:
-  shared_ptr<ObMemTable>      mem_;
-  ObMemTable::Table::Iterator iter_;
-  string                      tmp_;  // For seek key
+  shared_ptr<ObMemTable>       mem_;
+  typename TableType::Iterator iter_;
+  string                       tmp_;  // For seek key
 };
+
+using ObMemTableIterator      = ObMemTableTypedIterator<ObMemTable::Table>;
+using ObMemTableBPlusIterator = ObMemTableTypedIterator<ObMemTable::BPlusTable>;
 
 }  // namespace oceanbase

@@ -103,18 +103,22 @@ RC LsmTableEngine::delete_record_with_trx(const Record &record, Trx *trx)
 
 RC LsmTableEngine::update_record_with_trx(const Record &old_record, const Record &new_record, Trx *trx)
 {
-  if (trx != nullptr && trx->type() != TrxKit::Type::VACUOUS) {
+  if (trx != nullptr && trx->type() != TrxKit::Type::VACUOUS && trx->type() != TrxKit::Type::LSM) {
     return RC::UNSUPPORTED;
   }
-  if (old_record.key().empty() || new_record.data() == nullptr ||
-      new_record.len() != table_meta_->record_size()) {
+  if (old_record.key().empty() || new_record.data() == nullptr || new_record.len() != table_meta_->record_size()) {
     return RC::INVALID_ARGUMENT;
   }
 
-  bytes   lsm_key(old_record.key().begin(), old_record.key().end());
-  int64_t table_id = 0;
-  uint64_t rid     = 0;
-  RC rc = Codec::decode(lsm_key, table_id, rid);
+  ObLsmTransaction *lsm_trx = lsm_transaction(trx);
+  if (trx != nullptr && trx->type() == TrxKit::Type::LSM && lsm_trx == nullptr) {
+    return RC::UNSUPPORTED;
+  }
+
+  bytes    lsm_key(old_record.key().begin(), old_record.key().end());
+  int64_t  table_id = 0;
+  uint64_t rid      = 0;
+  RC       rc       = Codec::decode(lsm_key, table_id, rid);
   if (OB_FAIL(rc)) {
     return rc;
   }
@@ -124,14 +128,30 @@ RC LsmTableEngine::update_record_with_trx(const Record &old_record, const Record
 
   const string_view key_view(reinterpret_cast<char *>(lsm_key.data()), lsm_key.size());
   string            old_value;
-  rc = lsm_->get(key_view, &old_value);
+  rc = (lsm_trx == nullptr) ? lsm_->get(key_view, &old_value) : lsm_trx->get(key_view, &old_value);
   if (OB_FAIL(rc)) {
     return rc;
   }
 
-  rc = lsm_->put(key_view, string_view(new_record.data(), new_record.len()));
+  const string_view new_value_view(new_record.data(), new_record.len());
+  rc = (lsm_trx == nullptr) ? lsm_->put(key_view, new_value_view) : lsm_trx->put(key_view, new_value_view);
   if (OB_FAIL(rc)) {
     return rc;
+  }
+
+  if (lsm_trx != nullptr) {
+    // Under LSM MVCC, keep old index entries for older snapshots; insert new index entry if key changed.
+    for (Index *index : indexes_) {
+      rc = index->insert_entry(new_record.data(), reinterpret_cast<const char *>(&rid), sizeof(rid));
+      if (rc == RC::RECORD_DUPLICATE_KEY) {
+        rc = RC::SUCCESS;
+      }
+      if (OB_FAIL(rc)) {
+        lsm_trx->put(key_view, old_value);
+        return rc;
+      }
+    }
+    return RC::SUCCESS;
   }
 
   rc = delete_entry_of_indexes(old_record.data(), rid, false);
@@ -159,10 +179,10 @@ RC LsmTableEngine::erase_record(const Record &record, ObLsmTransaction *trx)
     return RC::INVALID_ARGUMENT;
   }
 
-  bytes   lsm_key(record.key().begin(), record.key().end());
-  int64_t table_id = 0;
-  uint64_t rid     = 0;
-  RC rc = Codec::decode(lsm_key, table_id, rid);
+  bytes    lsm_key(record.key().begin(), record.key().end());
+  int64_t  table_id = 0;
+  uint64_t rid      = 0;
+  RC       rc       = Codec::decode(lsm_key, table_id, rid);
   if (rc != RC::SUCCESS) {
     return rc;
   }
@@ -171,9 +191,14 @@ RC LsmTableEngine::erase_record(const Record &record, ObLsmTransaction *trx)
     return RC::INVALID_ARGUMENT;
   }
 
-  if (record.data() != nullptr) {
+  // Only remove secondary index entries eagerly in non-MVCC (vacuous) mode;
+  // under MVCC keep index entries so concurrent older snapshots still locate the row.
+  if (trx == nullptr && record.data() != nullptr) {
     for (Index *index : indexes_) {
       rc = index->delete_entry(record.data(), reinterpret_cast<const char *>(&rid), sizeof(rid));
+      if (rc == RC::RECORD_NOT_EXIST) {
+        continue;
+      }
       ASSERT(RC::SUCCESS == rc, "failed to delete entry from index. table name=%s, index name=%s, rc=%s",
           table_->name(), index->index_meta().name(), strrc(rc));
     }
@@ -260,7 +285,7 @@ RC LsmTableEngine::create_index(Trx *trx, const FieldMeta *field_meta, const cha
 
   LsmSecondaryIndex *index      = new LsmSecondaryIndex();
   const string       index_file = table_index_file(db_->path().c_str(), table_meta_->name(), index_name);
-  rc = index->create(table_, index_file.c_str(), new_index_meta, *field_meta);
+  rc                            = index->create(table_, index_file.c_str(), new_index_meta, *field_meta);
   if (rc != RC::SUCCESS) {
     LOG_WARN("failed to create index. table=%s, index=%s, rc=%s", table_meta_->name(), index_name, strrc(rc));
     delete index;

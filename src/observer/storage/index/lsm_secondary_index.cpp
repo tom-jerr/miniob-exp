@@ -13,8 +13,14 @@ See the Mulan PSL v2 for more details. */
 #include "storage/common/codec.h"
 #include "storage/db/db.h"
 #include "storage/table/table.h"
+#include "storage/trx/lsm_mvcc_trx.h"
 
 RC LsmSecondaryIndex::get_record(Table *table, const char *value, int value_len, Record &record)
+{
+  return get_record(table, value, value_len, record, nullptr);
+}
+
+RC LsmSecondaryIndex::get_record(Table *table, const char *value, int value_len, Record &record, Trx *trx)
 {
   if (value == nullptr || value_len != static_cast<int>(sizeof(uint64_t))) {
     LOG_WARN("lsm index value must be a rid. value length=%d", value_len);
@@ -30,8 +36,17 @@ RC LsmSecondaryIndex::get_record(Table *table, const char *value, int value_len,
     return rc;
   }
 
-  string lsm_value;
-  rc = table->db()->lsm()->get(string_view(reinterpret_cast<char *>(lsm_key.data()), lsm_key.size()), &lsm_value);
+  const string_view key_view(reinterpret_cast<char *>(lsm_key.data()), lsm_key.size());
+  string            lsm_value;
+  LsmMvccTrx       *lsm_mvcc_trx = dynamic_cast<LsmMvccTrx *>(trx);
+  if (lsm_mvcc_trx != nullptr && lsm_mvcc_trx->get_trx() != nullptr) {
+    rc = lsm_mvcc_trx->get_trx()->get(key_view, &lsm_value);
+    if (rc == RC::NOT_EXIST) {
+      return RC::RECORD_INVISIBLE;
+    }
+  } else {
+    rc = table->db()->lsm()->get(key_view, &lsm_value);
+  }
   if (rc != RC::SUCCESS) {
     return rc;
   }
@@ -41,6 +56,6 @@ RC LsmSecondaryIndex::get_record(Table *table, const char *value, int value_len,
     return rc;
   }
   record.set_rid(RID{0, 0});
-  record.set_key(string(reinterpret_cast<char *>(lsm_key.data()), lsm_key.size()));
+  record.set_key(string(key_view));
   return RC::SUCCESS;
 }

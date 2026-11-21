@@ -493,8 +493,26 @@ public:
 
   ExprType type() const override { return ExprType::AGGREGATION; }
 
-  AttrType value_type() const override { return child_->value_type(); }
-  int      value_length() const override { return child_->value_length(); }
+  AttrType value_type() const override
+  {
+    if (aggregate_type_ == Type::COUNT) {
+      return AttrType::INTS;
+    }
+    if (aggregate_type_ == Type::AVG) {
+      return AttrType::FLOATS;
+    }
+    return child_->value_type();
+  }
+  int value_length() const override
+  {
+    if (aggregate_type_ == Type::COUNT) {
+      return sizeof(int);
+    }
+    if (aggregate_type_ == Type::AVG) {
+      return sizeof(float);
+    }
+    return child_->value_length();
+  }
 
   RC get_value(const Tuple &tuple, Value &value) const override;
 

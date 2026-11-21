@@ -1,0 +1,1103 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>MiniOB LSM-Tree · MVCC/OCC · SQL 聚合与 TPC-C 排障复盘手册</title>
+  <style>
+    :root {
+      --bg: #f8fafc;
+      --surface: #ffffff;
+      --surface-alt: #f1f5f9;
+      --text: #0f172a;
+      --text-muted: #475569;
+      --border: #e2e8f0;
+      --accent: #2563eb;
+      --accent-soft: #eff6ff;
+      --danger: #dc2626;
+      --danger-soft: #fef2f2;
+      --warn: #d97706;
+      --warn-soft: #fffbeb;
+      --ok: #16a34a;
+      --ok-soft: #f0fdf4;
+      --purple: #7c3aed;
+      --purple-soft: #f5f3ff;
+      --code-bg: #0f172a;
+      --code-text: #e2e8f0;
+      --shadow: 0 1px 3px rgba(15, 23, 42, 0.06), 0 4px 12px rgba(15, 23, 42, 0.04);
+      --radius: 12px;
+    }
+
+    [data-theme="dark"] {
+      --bg: #0b1120;
+      --surface: #111827;
+      --surface-alt: #1e293b;
+      --text: #f1f5f9;
+      --text-muted: #94a3b8;
+      --border: #1f2937;
+      --accent: #60a5fa;
+      --accent-soft: rgba(59, 130, 246, 0.14);
+      --danger: #f87171;
+      --danger-soft: rgba(239, 68, 68, 0.14);
+      --warn: #fbbf24;
+      --warn-soft: rgba(245, 158, 11, 0.14);
+      --ok: #4ade80;
+      --ok-soft: rgba(34, 197, 94, 0.14);
+      --purple: #c084fc;
+      --purple-soft: rgba(168, 85, 247, 0.14);
+      --code-bg: #020617;
+      --code-text: #e2e8f0;
+      --shadow: 0 2px 10px rgba(0, 0, 0, 0.35);
+    }
+
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      line-height: 1.68;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    .container {
+      max-width: 1120px;
+      margin: 0 auto;
+      padding: 28px 20px 64px;
+    }
+
+    /* Header */
+    .hero {
+      background: linear-gradient(135deg, #1d4ed8 0%, #0f172a 100%);
+      color: #ffffff;
+      border-radius: 16px;
+      padding: 32px 36px;
+      margin-bottom: 24px;
+      position: relative;
+      box-shadow: var(--shadow);
+    }
+    .hero-top {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      gap: 16px;
+      flex-wrap: wrap;
+    }
+    .hero h1 {
+      margin: 0 0 8px;
+      font-size: 1.75rem;
+      line-height: 1.3;
+      letter-spacing: -0.01em;
+    }
+    .hero p {
+      margin: 0;
+      color: #cbd5e1;
+      font-size: 0.96rem;
+      max-width: 780px;
+    }
+    .theme-toggle {
+      background: rgba(255, 255, 255, 0.14);
+      border: 1px solid rgba(255, 255, 255, 0.25);
+      color: #fff;
+      padding: 8px 14px;
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 0.86rem;
+      font-weight: 600;
+      transition: background 0.15s;
+    }
+    .theme-toggle:hover { background: rgba(255, 255, 255, 0.24); }
+
+    /* Stats Grid */
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
+      gap: 14px;
+      margin-bottom: 24px;
+    }
+    .stat-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 16px 18px;
+      box-shadow: var(--shadow);
+    }
+    .stat-label {
+      font-size: 0.8rem;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+    }
+    .stat-value {
+      font-size: 1.5rem;
+      font-weight: 700;
+      margin: 4px 0 2px;
+      color: var(--text);
+    }
+    .stat-sub {
+      font-size: 0.82rem;
+      color: var(--text-muted);
+    }
+    .stat-value.ok { color: var(--ok); }
+    .stat-value.accent { color: var(--accent); }
+
+    /* Benchmark Comparison Banner */
+    .bench-box {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-left: 4px solid var(--ok);
+      border-radius: var(--radius);
+      padding: 18px 22px;
+      margin-bottom: 24px;
+      box-shadow: var(--shadow);
+    }
+    .bench-box h2 {
+      margin: 0 0 10px;
+      font-size: 1.05rem;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    table.bench-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.88rem;
+    }
+    table.bench-table th, table.bench-table td {
+      padding: 8px 12px;
+      border-bottom: 1px solid var(--border);
+      text-align: left;
+    }
+    table.bench-table th {
+      color: var(--text-muted);
+      font-weight: 600;
+      background: var(--surface-alt);
+    }
+    table.bench-table tr:last-child td { border-bottom: none; }
+
+    /* Controls */
+    .controls {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      align-items: center;
+      margin-bottom: 20px;
+      background: var(--surface);
+      padding: 14px 16px;
+      border-radius: var(--radius);
+      border: 1px solid var(--border);
+      box-shadow: var(--shadow);
+    }
+    .search-input {
+      flex: 1 1 240px;
+      padding: 9px 14px;
+      border-radius: 8px;
+      border: 1px solid var(--border);
+      background: var(--bg);
+      color: var(--text);
+      font-size: 0.9rem;
+      outline: none;
+    }
+    .search-input:focus { border-color: var(--accent); }
+    .filter-group {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+    }
+    .filter-btn {
+      border: 1px solid var(--border);
+      background: var(--surface-alt);
+      color: var(--text);
+      padding: 6px 12px;
+      border-radius: 999px;
+      font-size: 0.83rem;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+    .filter-btn.active {
+      background: var(--accent);
+      border-color: var(--accent);
+      color: #fff;
+    }
+
+    /* Section Headers */
+    .section-title {
+      margin: 28px 0 14px;
+      font-size: 1.2rem;
+      font-weight: 700;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding-bottom: 8px;
+      border-bottom: 2px solid var(--border);
+    }
+    .section-badge {
+      font-size: 0.78rem;
+      padding: 2px 10px;
+      border-radius: 999px;
+      background: var(--accent-soft);
+      color: var(--accent);
+      font-weight: 600;
+    }
+
+    /* Bug Cards */
+    .bug-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      margin-bottom: 16px;
+      box-shadow: var(--shadow);
+      overflow: hidden;
+      transition: transform 0.12s ease;
+    }
+    .bug-header {
+      padding: 16px 20px;
+      cursor: pointer;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 12px;
+      background: var(--surface);
+      border-bottom: 1px solid transparent;
+    }
+    .bug-card.open .bug-header {
+      border-bottom-color: var(--border);
+      background: var(--surface-alt);
+    }
+    .bug-title-wrap {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 10px;
+    }
+    .bug-id {
+      font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+      font-weight: 700;
+      font-size: 0.82rem;
+      padding: 2px 8px;
+      border-radius: 6px;
+      background: var(--surface-alt);
+      border: 1px solid var(--border);
+      color: var(--text-muted);
+    }
+    .bug-title {
+      margin: 0;
+      font-size: 1.02rem;
+      font-weight: 650;
+    }
+    .tag {
+      font-size: 0.75rem;
+      font-weight: 600;
+      padding: 2px 9px;
+      border-radius: 999px;
+    }
+    .tag-p0 { background: var(--danger-soft); color: var(--danger); }
+    .tag-p1 { background: var(--warn-soft); color: var(--warn); }
+    .tag-p2 { background: var(--purple-soft); color: var(--purple); }
+    .tag-cat { background: var(--accent-soft); color: var(--accent); }
+    .chevron {
+      font-size: 0.9rem;
+      color: var(--text-muted);
+      transition: transform 0.2s;
+      user-select: none;
+    }
+    .bug-card.open .chevron { transform: rotate(90deg); }
+
+    .bug-body {
+      display: none;
+      padding: 18px 22px 20px;
+    }
+    .bug-card.open .bug-body { display: block; }
+
+    .triad {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 12px;
+    }
+    .pane {
+      border-radius: 10px;
+      padding: 13px 16px;
+      border: 1px solid var(--border);
+    }
+    .pane-symptom {
+      background: var(--danger-soft);
+      border-color: rgba(220, 38, 38, 0.22);
+    }
+    .pane-cause {
+      background: var(--warn-soft);
+      border-color: rgba(217, 119, 6, 0.22);
+    }
+    .pane-fix {
+      background: var(--ok-soft);
+      border-color: rgba(22, 163, 74, 0.22);
+    }
+    .pane-label {
+      font-size: 0.8rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+      margin-bottom: 6px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .pane-symptom .pane-label { color: var(--danger); }
+    .pane-cause .pane-label { color: var(--warn); }
+    .pane-fix .pane-label { color: var(--ok); }
+    .pane p, .pane ul {
+      margin: 4px 0 0;
+      font-size: 0.92rem;
+    }
+    .pane ul { padding-left: 20px; }
+
+    .meta-files {
+      margin-top: 12px;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      align-items: center;
+      font-size: 0.82rem;
+      color: var(--text-muted);
+    }
+    code {
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+      font-size: 0.85em;
+      background: var(--surface-alt);
+      padding: 2px 6px;
+      border-radius: 5px;
+      border: 1px solid var(--border);
+    }
+    pre {
+      background: var(--code-bg);
+      color: var(--code-text);
+      padding: 12px 14px;
+      border-radius: 8px;
+      overflow-x: auto;
+      font-size: 0.83rem;
+      line-height: 1.5;
+      margin: 8px 0 0;
+    }
+    pre code {
+      background: none;
+      border: none;
+      padding: 0;
+      color: inherit;
+    }
+
+    /* Takeaways */
+    .takeaways {
+      margin-top: 32px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 22px 26px;
+      box-shadow: var(--shadow);
+    }
+    .takeaways h2 {
+      margin: 0 0 12px;
+      font-size: 1.15rem;
+    }
+    .takeaways ol {
+      margin: 0;
+      padding-left: 22px;
+    }
+    .takeaways li {
+      margin-bottom: 8px;
+      font-size: 0.93rem;
+    }
+
+    .footer {
+      margin-top: 36px;
+      text-align: center;
+      font-size: 0.82rem;
+      color: var(--text-muted);
+    }
+
+    .hidden { display: none !important; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header class="hero">
+      <div class="hero-top">
+        <div>
+          <h1>MiniOB LSM-Tree · MVCC/OCC · SQL 聚合与 TPC-C 排障复盘手册</h1>
+          <p>系统记录 LAB#1 LSM-Tree 核心实现、可插拔 MemTable、MVCC/OCC 事务与 Spill WriteBatch、SQL 聚合函数（MIN/MAX/COUNT/SUM/AVG）、UPDATE/DELETE 及 TPC-C 全链路压测中遇到的 15 类典型故障：完整覆盖「现象 → 根因推导 → 解决方案 → 经验沉淀」。</p>
+        </div>
+        <button class="theme-toggle" id="themeBtn" type="button">切换深色 / 浅色</button>
+      </div>
+    </header>
+
+    <section class="stats-grid">
+      <div class="stat-card">
+        <div class="stat-label">复盘问题总数</div>
+        <div class="stat-value accent">15 项</div>
+        <div class="stat-sub">LSM 内核 6 · 事务 MVCC 4 · SQL/TPC-C 5</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">LSM 1-Thread TPC-C</div>
+        <div class="stat-value ok">51.28 TPS</div>
+        <div class="stat-sub">200/200 提交 · 0 中止 · CC1~CC6 全通过</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">LSM 4-Thread 并发 TPC-C</div>
+        <div class="stat-value ok">21.20 TPS</div>
+        <div class="stat-sub">245 提交 / 155 OCC 冲突回滚 · 零脏写</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">跨引擎确定性摘要</div>
+        <div class="stat-value"><code>321cebcfaac7f6ad</code></div>
+        <div class="stat-sub">LSM+LSM 与 Heap+MVCC 逐位一致</div>
+      </div>
+    </section>
+
+    <section class="bench-box">
+      <h2>端到端验证基准（TPC-C 200 / 400 事务，seed=42）</h2>
+      <table class="bench-table">
+        <thead>
+          <tr>
+            <th>存储引擎 / 事务引擎</th>
+            <th>线程数</th>
+            <th>数据加载</th>
+            <th>执行耗时</th>
+            <th>吞吐 (TPS / tpmC)</th>
+            <th>P95 延迟</th>
+            <th>状态摘要 (Digest)</th>
+            <th>一致性不变量</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><code>engine=lsm, trx=lsm</code></td>
+            <td>1 线程（确定性）</td>
+            <td>0.68 s</td>
+            <td><strong>3.90 s</strong></td>
+            <td><strong>51.28 TPS / 1369.20 tpmC</strong></td>
+            <td>37.85 ms</td>
+            <td><code>321cebcfaac7f6ad</code></td>
+            <td>6 / 6 PASS</td>
+          </tr>
+          <tr>
+            <td><code>engine=heap, trx=mvcc</code></td>
+            <td>1 线程（确定性）</td>
+            <td>195.85 s</td>
+            <td>251.23 s</td>
+            <td>0.80 TPS / 21.26 tpmC</td>
+            <td>2246.04 ms</td>
+            <td><code>321cebcfaac7f6ad</code></td>
+            <td>6 / 6 PASS</td>
+          </tr>
+          <tr>
+            <td><code>engine=lsm, trx=lsm</code></td>
+            <td>4 线程（高冲突并发）</td>
+            <td>0.69 s</td>
+            <td>11.56 s</td>
+            <td>21.20 TPS / 389.39 tpmC</td>
+            <td>240.18 ms</td>
+            <td><code>925c96e72d419b33</code></td>
+            <td>6 / 6 PASS</td>
+          </tr>
+        </tbody>
+      </table>
+    </section>
+
+    <div class="controls">
+      <input class="search-input" id="searchInput" type="search" placeholder="按关键词检索（如：SEGV、FD、unlink、rollback、NULL、负数、Bison、OCC）..." />
+      <div class="filter-group" id="filterGroup">
+        <button class="filter-btn active" data-cat="all" type="button">全部 (15)</button>
+        <button class="filter-btn" data-cat="lsm" type="button">LSM 存储内核 (6)</button>
+        <button class="filter-btn" data-cat="mvcc" type="button">MVCC / OCC 事务 (4)</button>
+        <button class="filter-btn" data-cat="sql" type="button">SQL 解析 / 聚合 / TPC-C (5)</button>
+        <button class="filter-btn" data-action="toggle-all" type="button">全部展开 / 收起</button>
+      </div>
+    </div>
+
+    <!-- SECTION 1: LSM -->
+    <div class="section-title" data-section="lsm">
+      <span>一、LSM-Tree 存储内核与并发内存安全</span>
+      <span class="section-badge">6 个问题</span>
+    </div>
+
+    <article class="bug-card open" data-cat="lsm">
+      <div class="bug-header">
+        <div class="bug-title-wrap">
+          <span class="bug-id">#01</span>
+          <span class="tag tag-p0">P0 · 内存安全</span>
+          <span class="tag tag-cat">Compaction</span>
+          <h3 class="bug-title">LeveledCompactionPicker 悬垂 <code>string_view</code>（ASan <code>stack-use-after-scope</code>）</h3>
+        </div>
+        <span class="chevron">▶</span>
+      </div>
+      <div class="bug-body">
+        <div class="triad">
+          <div class="pane pane-symptom">
+            <div class="pane-label">现象</div>
+            <p>开启 ASan 运行 <code>ob_compaction_test</code> 时，在 <code>ob_compaction_picker.cpp:107</code> 触发 <code>ERROR: AddressSanitizer: stack-use-after-scope</code> 崩溃。</p>
+          </div>
+          <div class="pane pane-cause">
+            <div class="pane-label">根因分析</div>
+            <p><code>ObSSTable::first_key()</code> 与 <code>last_key()</code> 返回的是按值拷贝的临时 <code>std::string</code>。代码中直接写成 <code>string_view min_user_key = extract_user_key(sst-&gt;first_key());</code>，完整表达式结束后临时 <code>std::string</code> 立即析构，导致 <code>min_user_key</code> 成为悬垂视图，在后续遍历 L<sub>i+1</sub> 层比较键区间时读取已释放栈内存。</p>
+          </div>
+          <div class="pane pane-fix">
+            <div class="pane-label">解决方案</div>
+            <p>将 <code>first_key()</code> / <code>last_key()</code> 的返回值以及提取出的最小/最大用户键统一存为具名 <code>std::string</code> 持有所有权，再构造 <code>string_view</code> 参与比较。</p>
+            <pre><code>std::string fk0 = sst-&gt;first_key();
+std::string lk0 = sst-&gt;last_key();
+std::string min_user_key(extract_user_key(fk0));
+std::string max_user_key(extract_user_key(lk0));</code></pre>
+          </div>
+        </div>
+        <div class="meta-files">涉及文件：<code>src/oblsm/compaction/ob_compaction_picker.cpp</code></div>
+      </div>
+    </article>
+
+    <article class="bug-card open" data-cat="lsm">
+      <div class="bug-header">
+        <div class="bug-title-wrap">
+          <span class="bug-id">#02</span>
+          <span class="tag tag-p0">P0 · 崩溃/泄漏</span>
+          <span class="tag tag-cat">文件描述符</span>
+          <h3 class="bug-title">10 万级 <code>ob_compaction_test</code> 段错误：重复 <code>open_file()</code> 耗尽 FD（<code>EMFILE</code>）</h3>
+        </div>
+        <span class="chevron">▶</span>
+      </div>
+      <div class="bug-body">
+        <div class="triad">
+          <div class="pane pane-symptom">
+            <div class="pane-label">现象</div>
+            <p>写入约 100k 记录并频繁触发多轮 Flush / Compaction 时，程序在 <code>ObFileWriter::open_file()</code> 处以 <code>SEGV on unknown address 0x000000000098</code> 崩溃。</p>
+          </div>
+          <div class="pane pane-cause">
+            <div class="pane-label">根因分析</div>
+            <p>地址 <code>0x98</code> 对应 <code>this == nullptr</code> 的成员偏移，说明 <code>ObFileWriter::create_file_writer()</code> 返回了 <code>nullptr</code>（系统调用 <code>open()</code> 失败）。沿调用链回溯发现：<code>ObFileReader::create_file_reader()</code> 内部已经打开了文件，而 <code>ObSSTable::init()</code> 又重复调用了一次 <code>file_reader_-&gt;open_file()</code>，直接覆写了 <code>fd_</code> 却未关闭旧 <code>fd</code>，导致每生成一个 SSTable 泄漏 1 个文件描述符；当进程打开文件数触达 <code>ulimit -n</code>（1024）时，新 SSTable 写入因 <code>EMFILE</code> 失败返回空指针。</p>
+          </div>
+          <div class="pane pane-fix">
+            <div class="pane-label">解决方案</div>
+            <ul>
+              <li>删除 <code>ObSSTable::init()</code> 中冗余的 <code>file_reader_-&gt;open_file()</code> 调用；</li>
+              <li>在 <code>ObSSTableBuilder::open()</code> 中对 <code>file_writer_ == nullptr</code> 增加保护并返回 <code>RC::IOERR_OPEN</code>；</li>
+              <li>在 <code>try_major_compaction()</code> 递归触发下一轮压缩前先清空 <code>picked_sstables</code>，尽早释放旧 SSTable 的 <code>shared_ptr</code> 与文件句柄。</li>
+            </ul>
+          </div>
+        </div>
+        <div class="meta-files">涉及文件：<code>src/oblsm/table/ob_sstable.cpp</code> <code>src/oblsm/table/ob_sstable_builder.cpp</code> <code>src/oblsm/ob_lsm_impl.cpp</code></div>
+      </div>
+    </article>
+
+    <article class="bug-card open" data-cat="lsm">
+      <div class="bug-header">
+        <div class="bug-title-wrap">
+          <span class="bug-id">#03</span>
+          <span class="tag tag-p0">P0 · 并发竞态</span>
+          <span class="tag tag-cat">POSIX unlink</span>
+          <h3 class="bug-title">10 万并发读写 <code>ConcurrentPutAndGetTest/4</code> 段错误：提前 <code>close(fd)</code> 破坏并发读快照</h3>
+        </div>
+        <span class="chevron">▶</span>
+      </div>
+      <div class="bug-body">
+        <div class="triad">
+          <div class="pane pane-symptom">
+            <div class="pane-label">现象</div>
+            <p>多线程并发写入 + 读取触发后台 Compaction 时，读线程在 <code>ObBlock::size()</code> 处空指针解引用（<code>0x28</code>）崩溃；此外 <code>check_compaction</code> 偶尔读到未收敛的层级快照。</p>
+          </div>
+          <div class="pane pane-cause">
+            <div class="pane-label">根因分析</div>
+            <p>后台 Compaction 完成后调用 <code>ObSSTable::remove()</code>，原先在其内部主动调用了 <code>file_reader_-&gt;close_file()</code> 将 <code>fd_</code> 关闭并置为 <code>-1</code>。但此时并发读线程仍持有旧版 <code>shared_ptr&lt;ObSSTable&gt;</code>，其 <code>TableIterator</code> 继续执行 <code>::pread(fd_, ...)</code> 失败，返回空 <code>ObBlock</code> 指针导致崩溃。同时 <code>get_sstables()</code> 未同步等待后台 Compaction 结束。</p>
+          </div>
+          <div class="pane pane-fix">
+            <div class="pane-label">解决方案</div>
+            <ul>
+              <li>利用 POSIX <code>unlink</code> 语义：<code>ObSSTable::remove()</code> 仅调用 <code>std::filesystem::remove(file_name_)</code> 删除目录项，<strong>绝不主动关闭 <code>fd_</code></strong>；仍在读该文件的线程继续通过有效 <code>fd_</code> 安全 <code>pread</code>，直到最后一个 <code>shared_ptr&lt;ObSSTable&gt;</code> 析构时由 <code>~ObFileReader()</code> 自动 <code>close(fd_)</code> 并由内核回收 inode；</li>
+              <li>在 <code>ObLsmImpl::get_sstables()</code> 中通过条件变量 <code>cv_.wait</code> 等待后台 Compaction 完成并由工作线程 <code>notify_all()</code>。</li>
+            </ul>
+          </div>
+        </div>
+        <div class="meta-files">涉及文件：<code>src/oblsm/table/ob_sstable.cpp</code> <code>src/oblsm/util/ob_file_reader.cpp</code> <code>src/oblsm/ob_lsm_impl.cpp</code></div>
+      </div>
+    </article>
+
+    <article class="bug-card" data-cat="lsm">
+      <div class="bug-header">
+        <div class="bug-title-wrap">
+          <span class="bug-id">#04</span>
+          <span class="tag tag-p1">P1 · 持久化恢复</span>
+          <span class="tag tag-cat">Manifest</span>
+          <h3 class="bug-title"><code>ob_lsm_manifest_test</code> 崩溃：<code>ObFileReader</code> 缓存陈旧 <code>file_size_</code></h3>
+        </div>
+        <span class="chevron">▶</span>
+      </div>
+      <div class="bug-body">
+        <div class="triad">
+          <div class="pane pane-symptom">
+            <div class="pane-label">现象</div>
+            <p><code>manifest_without_currentfile:86</code> 测试在读取刚写入的 Manifest 记录时读到 0 字节，后续反序列化空指针崩溃。</p>
+          </div>
+          <div class="pane pane-cause">
+            <div class="pane-label">根因分析</div>
+            <p>为了减少系统调用，曾在 <code>ObFileReader::open_file()</code> 中一次性缓存 <code>file_size_</code>。但 <code>ObManifest</code> 的使用模式是：先打开 <code>reader_</code>（此时文件大小为 0），再通过独立的 <code>writer_</code> 持续追加写入记录，随后直接用同一个 <code>reader_</code> 读取最新内容——静态缓存的 <code>file_size_</code> 永远停留在 0。</p>
+          </div>
+          <div class="pane pane-fix">
+            <div class="pane-label">解决方案</div>
+            <p>将 <code>ObFileReader::file_size()</code> 改为基于 <code>::fstat(fd_, &amp;st)</code> 动态获取长度：既能实时感知追加写入后的最新大小，又在文件被 <code>unlink</code> 后依然对已打开的 <code>fd_</code> 有效（优于基于路径的 <code>stat()</code>）。</p>
+          </div>
+        </div>
+        <div class="meta-files">涉及文件：<code>src/oblsm/util/ob_file_reader.h</code> <code>src/oblsm/util/ob_file_reader.cpp</code></div>
+      </div>
+    </article>
+
+    <article class="bug-card" data-cat="lsm">
+      <div class="bug-header">
+        <div class="bug-title-wrap">
+          <span class="bug-id">#05</span>
+          <span class="tag tag-p1">P1 · 并发迭代器</span>
+          <span class="tag tag-cat">MemTable B+Tree</span>
+          <h3 class="bug-title"><code>bplus_tree_concurrent_insert_and_scan</code> 重复键（<code>actual: 2003 vs 2003</code>）</h3>
+        </div>
+        <span class="chevron">▶</span>
+      </div>
+      <div class="bug-body">
+        <div class="triad">
+          <div class="pane pane-symptom">
+            <div class="pane-label">现象</div>
+            <p>多线程并发向 <code>ObMemBPlusTree</code> 插入数据同时执行顺序扫描，迭代器校验单调严格递增时报错：连续两次返回键 <code>2003</code>。</p>
+          </div>
+          <div class="pane pane-cause">
+            <div class="pane-label">根因分析</div>
+            <p>游标漂移（Cursor Drift）：迭代器在 <code>key()</code> 返回后释放了树级 <code>shared_lock</code>；在调用 <code>next()</code> 重新加锁的窗口期内，写线程向同一叶子节点插入了一个小于 <code>2003</code> 的新键，导致 <code>leaf_-&gt;keys</code> 数组整体右移 1 位。随后 <code>next()</code> 单纯执行 <code>idx_++</code>，恰好再次命中右移后的 <code>2003</code>。</p>
+          </div>
+          <div class="pane pane-fix">
+            <div class="pane-label">解决方案</div>
+            <p>在 <code>ObMemBPlusTree::Iterator</code> 内缓存上一次访问的 <code>current_key_</code>：<code>next()</code> 重新持锁后，先走 O(1) 快速路径判断当前位置是否仍为 <code>current_key_</code>；若发生位移或节点分裂，则回退使用 <code>std::upper_bound</code> 重新定位首个严格大于 <code>current_key_</code> 的键，确保并发扫描严格单调不重不漏。</p>
+          </div>
+        </div>
+        <div class="meta-files">涉及文件：<code>src/oblsm/memtable/ob_bplus_tree_mem.h</code></div>
+      </div>
+    </article>
+
+    <article class="bug-card" data-cat="lsm">
+      <div class="bug-header">
+        <div class="bug-title-wrap">
+          <span class="bug-id">#06</span>
+          <span class="tag tag-p2">P2 · 编译期契约</span>
+          <span class="tag tag-cat">C++ 模板/Const</span>
+          <h3 class="bug-title">可插拔 MemTable 与 SSTableBuilder 的头文件、私有别名及 <code>const</code> 签名冲突</h3>
+        </div>
+        <span class="chevron">▶</span>
+      </div>
+      <div class="bug-body">
+        <div class="triad">
+          <div class="pane pane-symptom">
+            <div class="pane-label">现象</div>
+            <p>初次编译报错：<code>extract_user_key</code> / <code>get_length_prefixed_string</code> 未声明；外层 <code>ObMemTableTypedIterator</code> 无法访问 <code>ObMemTable::Table</code> 私有别名；<code>ObSSTableBuilder::estimated_size() const</code> 无法调用非 <code>const</code> 的 <code>ObBlockBuilder::appro_size()</code>。</p>
+          </div>
+          <div class="pane pane-cause">
+            <div class="pane-label">根因分析</div>
+            <p>新增可插拔 MemTable（SkipList / B+Tree 统一模板迭代器）与流式 SSTableBuilder 时，类型别名放在了 <code>private</code> 区域且遗漏了编码头文件；<code>appro_size()</code> 在原有接口中未标记 <code>const</code>。</p>
+          </div>
+          <div class="pane pane-fix">
+            <div class="pane-label">解决方案</div>
+            <p>在 <code>ob_compaction_picker.cpp</code> 与 <code>ob_memtable.h</code> 补全 <code>#include "oblsm/util/ob_coding.h"</code>，将 <code>Table</code> / <code>BPlusTable</code> 类型别名提升为 <code>public</code>，并移除 <code>estimated_size()</code> 的 <code>const</code> 修饰以对齐原有接口契约。</p>
+          </div>
+        </div>
+        <div class="meta-files">涉及文件：<code>src/oblsm/memtable/ob_memtable.h</code> <code>src/oblsm/table/ob_sstable_builder.h</code> <code>src/oblsm/compaction/ob_compaction_picker.cpp</code></div>
+      </div>
+    </article>
+
+    <!-- SECTION 2: MVCC & OCC -->
+    <div class="section-title" data-section="mvcc">
+      <span>二、MVCC / OCC 事务并发控制与引擎集成</span>
+      <span class="section-badge">4 个问题</span>
+    </div>
+
+    <article class="bug-card open" data-cat="mvcc">
+      <div class="bug-header">
+        <div class="bug-title-wrap">
+          <span class="bug-id">#07</span>
+          <span class="tag tag-p0">P0 · 数据丢失/死锁</span>
+          <span class="tag tag-cat">MVCC Rollback &amp; GC</span>
+          <h3 class="bug-title"><code>mvcc_concurrency_test</code> <code>gc_stress</code> 丢失已提交行 <code>id=2</code>，以及误加锁引发 <code>sync;</code> 超时</h3>
+        </div>
+        <span class="chevron">▶</span>
+      </div>
+      <div class="bug-body">
+        <div class="triad">
+          <div class="pane pane-symptom">
+            <div class="pane-label">现象</div>
+            <ul>
+              <li>原始现象：高并发回滚 + GC 压测（<code>gc_stress</code>）中，已明确收到 <code>COMMIT SUCCESS</code> 的记录 <code>(id=2, v=8)</code> 神秘消失；</li>
+              <li>中途踩坑：尝试在 <code>MvccTrx</code> 的 DML/提交/回滚路径加 <code>shared_lock(checkpoint_gate())</code> 后，导致 <code>sync;</code> 命令 10 秒超时。</li>
+            </ul>
+          </div>
+          <div class="pane pane-cause">
+            <div class="pane-label">根因分析</div>
+            <ul>
+              <li><strong>数据丢失竞态时序</strong>：<code>MvccTrx::rollback()</code> 先调用 <code>abort_trx(trx_id_)</code> 公开标记事务已中止，<strong>之后</strong>才遍历 <code>operations_</code> 逐条删除已插入的 RID；更致命的是，检查记录归属的 <code>begin_xid != -trx_id_</code> 仅在 <code>if (recovering_)</code> 分支生效！于是并发 <code>MvccGc::collect()</code> 看到 <code>ABORTED</code> 后立刻清理了该 RID；紧接着另一个并发事务复用该空槽 RID 写入并提交了 <code>(id=2, v=8)</code>；最后慢线程的 <code>rollback()</code> 执行无条件 <code>delete_record(rid)</code>，一刀误删了刚提交的新记录！</li>
+              <li><strong><code>sync;</code> 超时根因</strong>：<code>Db::sync()</code> 在全库 <code>fsync_all()</code> 期间持有 <code>unique_lock(checkpoint_gate())</code>，与高频 DML 争抢 <code>shared_mutex</code> 导致长尾阻塞与写者饥饿。</li>
+            </ul>
+          </div>
+          <div class="pane pane-fix">
+            <div class="pane-label">解决方案</div>
+            <ul>
+              <li>放弃在 <code>MvccTrx</code> 中加 <code>checkpoint_gate()</code> 锁；</li>
+              <li>调整 <code>MvccTrx::rollback()</code> 顺序：先完成所有 <code>operations_</code> 的 Undo 清理，<strong>最后</strong>再调用 <code>abort_trx(trx_id_); started_ = false;</code>，确保 GC 不会与正在 Undo 的事务并发抢占同一 RID；</li>
+              <li>将 <code>Operation::Type::INSERT</code> 撤回时的 <code>begin_xid != -trx_id_</code> 归属校验改为<strong>无条件执行</strong>（双保险防御 RID 复用）。修复后 <code>mvcc_concurrency_test.py</code> 全部并发用例 100% 通过。</li>
+            </ul>
+          </div>
+        </div>
+        <div class="meta-files">涉及文件：<code>src/observer/storage/trx/mvcc_trx.cpp</code> <code>test/case/concurrency/mvcc_concurrency_test.py</code></div>
+      </div>
+    </article>
+
+    <article class="bug-card open" data-cat="mvcc">
+      <div class="bug-header">
+        <div class="bug-title-wrap">
+          <span class="bug-id">#08</span>
+          <span class="tag tag-p0">P0 · 事务隔离/UPDATE</span>
+          <span class="tag tag-cat">LSM 二级索引</span>
+          <h3 class="bug-title">LSM 引擎下 <code>UPDATE</code> 未实现、二级索引绕过 MVCC 快照及唯一键误冲突</h3>
+        </div>
+        <span class="chevron">▶</span>
+      </div>
+      <div class="bug-body">
+        <div class="triad">
+          <div class="pane pane-symptom">
+            <div class="pane-label">现象</div>
+            <p>将 TPC-C 切换到 <code>--engine lsm --trx lsm</code> 时，<code>UPDATE</code> 报错不支持；主键/二级索引扫描读到未提交或已删除记录；更新非索引列时报错 <code>RC::RECORD_DUPLICATE_KEY</code>。</p>
+          </div>
+          <div class="pane pane-cause">
+            <div class="pane-label">根因分析</div>
+            <ul>
+              <li><code>LsmTableEngine::update_record_with_trx</code> 仅处理了 <code>VACUOUS</code>，未覆盖 <code>TrxKit::Type::LSM</code>；</li>
+              <li><code>Index::get_record()</code> 接口未传入 <code>Trx *</code>，导致 <code>LsmSecondaryIndex::get_record()</code> 直接读取底层 <code>ObLsm::get()</code> 而绕过了当前事务的 <code>ObLsmTransaction</code> 快照与未提交写集；</li>
+              <li>更新非索引列时，若重复执行唯一索引插入会撞到自己之前的索引项；若物理删除旧索引项又会破坏并发老快照的索引读取。</li>
+            </ul>
+          </div>
+          <div class="pane pane-fix">
+            <div class="pane-label">解决方案</div>
+            <ul>
+              <li>为 <code>Index::get_record</code> 增加带 <code>Trx *trx</code> 的重载，使 <code>LsmSecondaryIndex::get_record</code> 通过 <code>LsmMvccTrx</code> 的 <code>ObLsmTransaction::get()</code> 按快照读取主表记录，不存在时返回 <code>RC::RECORD_INVISIBLE</code>；</li>
+              <li>在 <code>IndexScanPhysicalOperator::next()</code> 中遇到 <code>RC::RECORD_INVISIBLE</code> 自动跳过继续扫描下一索引项；</li>
+              <li>实现 <code>LsmTableEngine::update_record_with_trx</code> 的 LSM MVCC 分支，保留旧二级索引条目供历史快照回表过滤，并在更新非索引列时忽略同键 <code>RC::RECORD_DUPLICATE_KEY</code>；</li>
+              <li>完善 <code>LsmMvccTrx</code> 自动 <code>start_if_need()</code> 与 <code>commit/rollback</code> 后置空指针防二次释放。</li>
+            </ul>
+          </div>
+        </div>
+        <div class="meta-files">涉及文件：<code>src/observer/storage/index/index.h</code> <code>src/observer/storage/index/lsm_secondary_index.cpp</code> <code>src/observer/sql/operator/index_scan_physical_operator.cpp</code> <code>src/observer/storage/table/lsm_table_engine.cpp</code> <code>src/observer/storage/trx/lsm_mvcc_trx.cpp</code></div>
+      </div>
+    </article>
+
+    <article class="bug-card" data-cat="mvcc">
+      <div class="bug-header">
+        <div class="bug-title-wrap">
+          <span class="bug-id">#09</span>
+          <span class="tag tag-p1">P1 · 快照边界</span>
+          <span class="tag tag-cat">Sequence Number</span>
+          <h3 class="bug-title">LSM 事务序号 0-based 导致空库 Snapshot Isolation 边界击穿</h3>
+        </div>
+        <span class="chevron">▶</span>
+      </div>
+      <div class="bug-body">
+        <div class="triad">
+          <div class="pane pane-symptom">
+            <div class="pane-label">现象</div>
+            <p>空库启动事务 T1（快照时间戳 <code>ts_ = 0</code>），随后 T2 插入并提交首条记录后，T1 竟然能读到 T2 新提交的数据，破坏了快照隔离（SI）。</p>
+          </div>
+          <div class="pane pane-cause">
+            <div class="pane-label">根因分析</div>
+            <p><code>seq_</code> 初始为 <code>0</code>，原先 <code>put()</code> 使用 <code>seq_.fetch_add(1)</code>（0-based），使第一次提交分配到了 <code>seq = 0</code>。由于可见性判断为 <code>entry_seq &lt;= ts_</code>，<code>0 &lt;= 0</code> 成立导致 T1 看到了在它之后提交的 T2！</p>
+          </div>
+          <div class="pane pane-fix">
+            <div class="pane-label">解决方案</div>
+            <p>统一 <code>ObLsmImpl::put()</code> 与 <code>batch_put()</code> 采用 1-based 分配（<code>seq_.fetch_add(1) + 1</code>），严格维护不变量：<code>seq_.load()</code> 始终等于「最新已提交版本号」。空库开启的事务 <code>ts_ = 0</code>，任何后续提交都有 <code>seq &gt;= 1 &gt; ts_</code>，彻底消除边界漏洞，OCC 写冲突检测 <code>latest_seq &gt; ts_</code> 也完全精确。</p>
+          </div>
+        </div>
+        <div class="meta-files">涉及文件：<code>src/oblsm/ob_lsm_impl.cpp</code> <code>src/oblsm/ob_lsm_transaction.cpp</code></div>
+      </div>
+    </article>
+
+    <article class="bug-card" data-cat="mvcc">
+      <div class="bug-header">
+        <div class="bug-title-wrap">
+          <span class="bug-id">#10</span>
+          <span class="tag tag-p2">P2 · 性能调优</span>
+          <span class="tag tag-cat">LSM Options</span>
+          <h3 class="bug-title"><code>Db::init()</code> 默认 LSM 阈值过小导致高频 Flush / Compaction 放大</h3>
+        </div>
+        <span class="chevron">▶</span>
+      </div>
+      <div class="bug-body">
+        <div class="triad">
+          <div class="pane pane-symptom">
+            <div class="pane-label">现象</div>
+            <p>在 TPC-C 多表写入负载下，若使用极小的单测默认 MemTable/SSTable 阈值并开启每条日志强刷盘，会频繁触发刷盘与多层压缩，拉低吞吐。</p>
+          </div>
+          <div class="pane pane-cause">
+            <div class="pane-label">根因分析</div>
+            <p>教学单测为了快速构造多层 SSTable，将 <code>ObLsmOptions</code> 默认值设得很小；直接用于真实 SQL/TPC-C 服务器会造成严重写放大。</p>
+          </div>
+          <div class="pane pane-fix">
+            <div class="pane-label">解决方案</div>
+            <p>在 <code>Db::init()</code> 中为 Observer LSM 实例配置合理的运行期参数：<code>memtable_size = 256KB</code>、<code>table_size = 512KB</code>、<code>default_l1_level_size = 2MB</code>、<code>force_sync_new_log = false</code>，使 LSM 在 TPC-C 1 线程场景达到 <code>51.28 TPS</code>（较 <code>heap+mvcc</code> 提速 <strong>64 倍</strong>）。</p>
+          </div>
+        </div>
+        <div class="meta-files">涉及文件：<code>src/observer/storage/db/db.cpp</code></div>
+      </div>
+    </article>
+
+    <!-- SECTION 3: SQL & TPC-C -->
+    <div class="section-title" data-section="sql">
+      <span>三、SQL 语法解析、聚合函数与 TPC-C 门禁链路</span>
+      <span class="section-badge">5 个问题</span>
+    </div>
+
+    <article class="bug-card open" data-cat="sql">
+      <div class="bug-header">
+        <div class="bug-title-wrap">
+          <span class="bug-id">#11</span>
+          <span class="tag tag-p0">P0 · 核心功能</span>
+          <span class="tag tag-cat">SQL 聚合</span>
+          <h3 class="bug-title">聚合函数（MIN/MAX/COUNT/SUM/AVG）语法规则缺失与空表聚合返回 0 行</h3>
+        </div>
+        <span class="chevron">▶</span>
+      </div>
+      <div class="bug-body">
+        <div class="triad">
+          <div class="pane pane-symptom">
+            <div class="pane-label">现象</div>
+            <p>执行 <code>SELECT min(NO_O_ID) FROM NEW_ORDER WHERE NO_D_ID = 1 AND NO_W_ID = 1;</code> 或 TPC-C 校验 <code>select sum(d_ytd) ...</code> 时语法解析失败（TPC-C 脚本抛出 <code>IndexError</code>）；当 <code>WHERE</code> 过滤后无记录时，标量聚合不输出行。</p>
+          </div>
+          <div class="pane pane-cause">
+            <div class="pane-label">根因分析</div>
+            <ul>
+              <li><code>yacc_sql.y:585</code> 处仅留有 <code>// your code here</code>，未定义函数调用语法产生式；</li>
+              <li><code>AggregateExpr::create_aggregator()</code> 仅实现了 <code>SUM</code>，<code>MIN/MAX/COUNT/AVG</code> 缺失；且 <code>COUNT(*)</code> 返回类型未固定为 <code>INTS</code>，<code>AVG</code> 未固定为 <code>FLOATS</code>；</li>
+              <li><code>ScalarGroupByPhysicalOperator::open()</code> 在子算子 0 行输入时未初始化空分组，导致输出 0 行；</li>
+              <li><code>Value::to_string()</code> 对 <code>AttrType::UNDEFINED</code>（空聚合结果）未输出 <code>"NULL"</code>。</li>
+            </ul>
+          </div>
+          <div class="pane pane-fix">
+            <div class="pane-label">解决方案</div>
+            <ul>
+              <li>在 <code>yacc_sql.y</code> 增加 <code>ID LBRACE expression RBRACE</code> 与 <code>ID LBRACE RBRACE</code>，调用 <code>create_aggregate_expression(...)</code>；</li>
+              <li>在 <code>aggregator.h/.cpp</code> 完整实现 NULL-safe <code>SumAggregator</code>、<code>CountAggregator</code>、<code>MinAggregator</code>、<code>MaxAggregator</code>、<code>AvgAggregator</code>；</li>
+              <li>在 <code>expression.cpp</code> 补全 5 类聚合器的工厂方法与 <code>value_type()</code> / <code>value_length()</code> 推导；</li>
+              <li>在 <code>ScalarGroupByPhysicalOperator</code> 中确保 0 行输入时仍初始化聚合器并产出 1 行（<code>COUNT(*)=0</code>，其余为 <code>NULL</code>）；在 <code>Value::to_string()</code> 对 <code>UNDEFINED</code> 返回 <code>"NULL"</code>。</li>
+            </ul>
+          </div>
+        </div>
+        <div class="meta-files">涉及文件：<code>src/observer/sql/parser/yacc_sql.y</code> <code>src/observer/sql/expr/aggregator.h</code> <code>src/observer/sql/expr/aggregator.cpp</code> <code>src/observer/sql/expr/expression.cpp</code> <code>src/observer/sql/operator/scalar_group_by_physical_operator.cpp</code> <code>src/observer/common/value.cpp</code></div>
+      </div>
+    </article>
+
+    <article class="bug-card open" data-cat="sql">
+      <div class="bug-header">
+        <div class="bug-title-wrap">
+          <span class="bug-id">#12</span>
+          <span class="tag tag-p0">P0 · 双层隐蔽 Bug</span>
+          <span class="tag tag-cat">Parser &amp; TPC-C</span>
+          <h3 class="bug-title"><code>select sum(c_balance) from customer;</code> 返回 <code>NULL</code>：负数字面量解析失败 + 测试脚本静默吞错</h3>
+        </div>
+        <span class="chevron">▶</span>
+      </div>
+      <div class="bug-body">
+        <div class="triad">
+          <div class="pane pane-symptom">
+            <div class="pane-label">现象</div>
+            <p>聚合函数上线后运行 <code>miniob_tpcc.py --engine lsm --trx lsm</code>，数据加载“顺利完成”，200 笔事务跑完且 CC1~CC6 全通过，却在最后一行快照查询 <code>select sum(c_balance) from customer;</code> 时抛出 <code>ValueError: could not convert string to float: 'NULL'</code>！</p>
+          </div>
+          <div class="pane pane-cause">
+            <div class="pane-label">根因分析（经典双层叠加故障）</div>
+            <ol>
+              <li><strong>语法层缺口</strong>：<code>lex_sql.l</code> 将 <code>-10.0</code> 切分为 <code>'-'</code> 与 <code>FLOAT(10.0)</code>，但 <code>yacc_sql.y</code> 的 <code>value:</code> 规则仅匹配无符号 <code>NUMBER | FLOAT | SSS</code>！因此 TPC-C 中 <code>insert into customer values(..., -10.0, ...)</code>、<code>update customer set c_balance=-20.5 ...</code>、<code>where i_id=-1</code> 全部返回 <code>Failed to parse sql</code>；</li>
+              <li><strong>测试脚本盲区</strong>：<code>miniob_tpcc.py</code> 的 <code>exec_ok()</code> 仅判断 <code>out.upper().startswith("FAILURE")</code>，漏掉了 MiniOB 解析错误文本 <code>"Failed to parse sql"</code>！结果 <code>customer</code> 表一条数据都没插进去，New-Order/Payment 全因查不到客户而回滚，空的初始状态“侥幸”蒙混过了 CC1~CC6！</li>
+            </ol>
+          </div>
+          <div class="pane pane-fix">
+            <div class="pane-label">解决方案</div>
+            <ul>
+              <li>为避免与 <code>expression: '-' expression %prec UMINUS</code> 产生 Bison shift/reduce 冲突，在 <code>yacc_sql.y</code> 新增独立非终结符 <code>signed_value</code>（支持 <code>value | '-' NUMBER | '-' FLOAT</code>），将其用于 <code>value_list</code>、<code>update_stmt</code>、<code>condition</code> 和 <code>set_variable_stmt</code>（Bison 编译实现 <strong>0 冲突</strong>），顺带修复 <code>update_stmt</code> 遗漏 <code>delete $6;</code> 的内存泄漏；</li>
+              <li>加固 <code>miniob_tpcc.py</code> 的 <code>exec_ok()</code>、<code>query_rows()</code>、<code>run_sql_in_trx()</code>：任何包含 <code>"FAILED TO PARSE"</code> 的响应立即抛出 <code>RuntimeError</code>，杜绝静默吞错。</li>
+            </ul>
+          </div>
+        </div>
+        <div class="meta-files">涉及文件：<code>src/observer/sql/parser/yacc_sql.y</code> <code>test/tpcc/miniob_tpcc.py</code></div>
+      </div>
+    </article>
+
+    <article class="bug-card" data-cat="sql">
+      <div class="bug-header">
+        <div class="bug-title-wrap">
+          <span class="bug-id">#13</span>
+          <span class="tag tag-p1">P1 · 配置失配</span>
+          <span class="tag tag-cat">CI / Pre-commit</span>
+          <h3 class="bug-title"><code>--engine btree --trx mvcc</code> 组合不兼容导致 TPC-C 首条 <code>INSERT</code> 即失败</h3>
+        </div>
+        <span class="chevron">▶</span>
+      </div>
+      <div class="bug-body">
+        <div class="triad">
+          <div class="pane pane-symptom">
+            <div class="pane-label">现象</div>
+            <p>运行 <code>pre_commit_check.sh</code> 中的 TPC-C 门禁时，在 <code>load_tpcc_data</code> 第一条 <code>INSERT INTO item</code> 即返回 <code>FAILURE</code>。</p>
+          </div>
+          <div class="pane pane-cause">
+            <div class="pane-label">根因分析</div>
+            <p>MiniOB 的 <code>BtreeTableEngine</code> 设计上明确拒绝 <code>MvccTrx</code>（仅支持 <code>vacuous</code> 事务，<code>MvccTrx</code> 会返回 <code>RC::UNSUPPORTED</code>）。合法的「引擎 × 事务」矩阵为：<code>heap + mvcc/occ</code>、<code>lsm + lsm/vacuous</code>、<code>btree + vacuous</code>。</p>
+          </div>
+          <div class="pane pane-fix">
+            <div class="pane-label">解决方案</div>
+            <p>将本地 <code>tools/pre_commit_check.sh</code> 与 <code>.github/workflows/test.yml</code> 的 TPC-C 门禁统一配置为 <code>--engine lsm --trx lsm</code>，全面覆盖 LSM 存储 + MVCC/OCC 事务 + 聚合 + UPDATE/DELETE 全链路回归。</p>
+          </div>
+        </div>
+        <div class="meta-files">涉及文件：<code>tools/pre_commit_check.sh</code> <code>.github/workflows/test.yml</code></div>
+      </div>
+    </article>
+
+    <article class="bug-card" data-cat="sql">
+      <div class="bug-header">
+        <div class="bug-title-wrap">
+          <span class="bug-id">#14</span>
+          <span class="tag tag-p2">P2 · 静态门禁</span>
+          <span class="tag tag-cat">Release / clang-tidy</span>
+          <h3 class="bug-title">Release <code>-Werror=maybe-uninitialized</code> 与 <code>clang-tidy</code> 静态检查拦截</h3>
+        </div>
+        <span class="chevron">▶</span>
+      </div>
+      <div class="bug-body">
+        <div class="triad">
+          <div class="pane pane-symptom">
+            <div class="pane-label">现象</div>
+            <p>Release 模式编译在 <code>bplus_tree.cpp:1739</code> 报 <code>error: 'rid' may be used uninitialized</code>；pre-commit 门禁的 <code>clang-tidy</code> 在 <code>ob_lsm_transaction.cpp</code> 提示 <code>db_</code> 潜在空指针解引用，测试文件提示 <code>unused-lambda-capture</code>。</p>
+          </div>
+          <div class="pane pane-cause">
+            <div class="pane-label">根因分析</div>
+            <p>Debug 模式下未开启跨过程数据流优化，因此未触发 GCC 的 <code>-Wmaybe-uninitialized</code>；而 <code>clang-tidy</code> 的静态分析对分支后指针可空性检查更严格。</p>
+          </div>
+          <div class="pane pane-fix">
+            <div class="pane-label">解决方案</div>
+            <p>将 <code>bplus_tree.cpp:1739</code> 的 <code>RID rid;</code> 改为值初始化 <code>RID rid{0, 0};</code>；在 <code>ob_lsm_transaction.cpp</code> 补齐 <code>else if (db_ != nullptr)</code> 防御判空；清理单测 lambda 中多余的 <code>const int</code> 捕获。</p>
+          </div>
+        </div>
+        <div class="meta-files">涉及文件：<code>src/observer/storage/index/bplus_tree.cpp</code> <code>src/oblsm/ob_lsm_transaction.cpp</code> <code>unittest/oblsm/ob_lsm_transaction_test.cpp</code></div>
+      </div>
+    </article>
+
+    <article class="bug-card" data-cat="sql">
+      <div class="bug-header">
+        <div class="bug-title-wrap">
+          <span class="bug-id">#15</span>
+          <span class="tag tag-p2">P2 · 单元测试</span>
+          <span class="tag tag-cat">GTest</span>
+          <h3 class="bug-title">GTest 未实例化参数化套件告警与 <code>lsm_table_engine_test</code> 参数倒置</h3>
+        </div>
+        <span class="chevron">▶</span>
+      </div>
+      <div class="bug-body">
+        <div class="triad">
+          <div class="pane pane-symptom">
+            <div class="pane-label">现象</div>
+            <p>运行 <code>ob_lsm_transaction_test</code> 报 <code>UninstantiatedParameterizedTestSuite</code> 失败；<code>lsm_table_engine_test</code> 中 <code>db-&gt;init(...)</code> 返回 <code>RC::INVALID_ARGUMENT</code>。</p>
+          </div>
+          <div class="pane pane-cause">
+            <div class="pane-label">根因分析</div>
+            <p>前者在全是 <code>TEST_F</code> 的测试文件中残留了 <code>INSTANTIATE_TEST_SUITE_P</code>；后者调用 <code>db-&gt;init</code> 时将 <code>trx_kit_name</code>（<code>"lsm"</code>）与 <code>log_handler_name</code>（<code>"vacuous"</code>）两个字符串参数位置写反。</p>
+          </div>
+          <div class="pane pane-fix">
+            <div class="pane-label">解决方案</div>
+            <p>删除无用的参数化实例化宏并修正 <code>db-&gt;init</code> 参数顺序。修复后 <code>oblsm</code> 相关 72 项 GTest（含 ASan 与并发压测）及全库 <code>ctest</code> 全部通过。</p>
+          </div>
+        </div>
+        <div class="meta-files">涉及文件：<code>unittest/oblsm/ob_lsm_transaction_test.cpp</code> <code>unittest/observer/lsm_table_engine_test.cpp</code></div>
+      </div>
+    </article>
+
+    <section class="takeaways">
+      <h2>核心工程经验沉淀（Checklist）</h2>
+      <ol>
+        <li><strong>资源生命周期与并发读解耦（POSIX <code>unlink</code> 原则）</strong>：在 LSM-Tree 等只读文件架构中，Compaction 删除旧 SSTable 只能 <code>unlink</code> 目录项，绝不能抢先 <code>close(fd)</code>；让 <code>shared_ptr</code> 引用计数和 RAII 析构器自然管理文件描述符的关闭时机，并用 <code>fstat(fd)</code> 替代静态大小缓存。</li>
+        <li><strong>MVCC 状态公开必须晚于 Undo 完成</strong>：事务回滚时，必须在所有记录清理完成后才对外公开 <code>ABORTED</code> 状态，且 Undo 操作必须校验记录当前的事务归属标记（<code>begin_xid == -trx_id</code>），防止与 GC 和 RID 复用交织造成误删已提交数据。</li>
+        <li><strong><code>string_view</code> 严禁绑定按值返回的临时对象</strong>：始终在 Debug 构建开启 AddressSanitizer（ASan）跑满高并发单测，能在毫秒级揪出 <code>stack-use-after-scope</code> 与越界访问。</li>
+        <li><strong>语法扩展与 Bison 零冲突设计</strong>：在已有 <code>'-' expression %prec UMINUS</code> 的文法中支持负数字面量时，不要直接修改 <code>expression</code> 引用的 <code>value</code>，而是拆分独立的 <code>signed_value</code> 给 <code>INSERT/UPDATE/WHERE/SET</code> 使用，天然保证 0 shift/reduce 冲突。</li>
+        <li><strong>测试断言必须拒绝静默失败，善用跨引擎确定性摘要</strong>：端到端 SQL 脚本必须同时拦截 <code>FAILURE</code> 与 <code>Failed to parse sql</code>；使用相同随机种子在 <code>lsm+lsm</code> 与 <code>heap+mvcc</code> 上比对最终状态哈希（<code>321cebcfaac7f6ad</code>），是验证新存储引擎语义等价性的最强金标准。</li>
+      </ol>
+    </section>
+
+    <footer class="footer">
+      MiniOB LSM-Tree &amp; MVCC Engineering Postmortem · Generated for offline review &amp; knowledge retention
+    </footer>
+  </div>
+
+  <script>
+    (function () {
+      const root = document.documentElement;
+      const themeBtn = document.getElementById("themeBtn");
+      const savedTheme = localStorage.getItem("miniob-pm-theme");
+      if (savedTheme === "dark") root.setAttribute("data-theme", "dark");
+
+      themeBtn.addEventListener("click", () => {
+        const next = root.getAttribute("data-theme") === "dark" ? "" : "dark";
+        if (next) {
+          root.setAttribute("data-theme", "dark");
+          localStorage.setItem("miniob-pm-theme", "dark");
+        } else {
+          root.removeAttribute("data-theme");
+          localStorage.removeItem("miniob-pm-theme");
+        }
+      });
+
+      const cards = Array.from(document.querySelectorAll(".bug-card"));
+      const sections = Array.from(document.querySelectorAll(".section-title"));
+      const searchInput = document.getElementById("searchInput");
+      const filterBtns = Array.from(document.querySelectorAll(".filter-btn[data-cat]"));
+      const toggleAllBtn = document.querySelector(".filter-btn[data-action='toggle-all']");
+      let activeCat = "all";
+
+      cards.forEach((card) => {
+        card.querySelector(".bug-header").addEventListener("click", () => {
+          card.classList.toggle("open");
+        });
+      });
+
+      function applyFilter() {
+        const q = searchInput.value.trim().toLowerCase();
+        const visibleBySection = {};
+        cards.forEach((card) => {
+          const catOk = activeCat === "all" || card.dataset.cat === activeCat;
+          const textOk = !q || card.innerText.toLowerCase().includes(q);
+          const show = catOk && textOk;
+          card.classList.toggle("hidden", !show);
+          if (show) {
+            visibleBySection[card.dataset.cat] = (visibleBySection[card.dataset.cat] || 0) + 1;
+          }
+        });
+        sections.forEach((sec) => {
+          const cat = sec.dataset.section;
+          sec.classList.toggle("hidden", !visibleBySection[cat]);
+        });
+      }
+
+      filterBtns.forEach((btn) => {
+        btn.addEventListener("click", () => {
+          filterBtns.forEach((b) => b.classList.remove("active"));
+          btn.classList.add("active");
+          activeCat = btn.dataset.cat;
+          applyFilter();
+        });
+      });
+
+      searchInput.addEventListener("input", applyFilter);
+
+      let allOpen = false;
+      toggleAllBtn.addEventListener("click", () => {
+        allOpen = !allOpen;
+        cards.forEach((c) => {
+          if (!c.classList.contains("hidden")) {
+            c.classList.toggle("open", allOpen);
+          }
+        });
+      });
+    })();
+  </script>
+</body>
+</html>

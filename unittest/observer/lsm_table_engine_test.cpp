@@ -88,8 +88,7 @@ TEST(LsmTableEngine, crud_index_and_reopen)
   ASSERT_EQ(RC::SUCCESS, db->init(dbname, dir.c_str(), "vacuous", "vacuous"));
 
   vector<AttrInfoSqlNode> attrs = int_attrs();
-  ASSERT_EQ(RC::SUCCESS,
-      db->create_table("t_lsm", attrs, {}, StorageFormat::ROW_FORMAT, StorageEngine::LSM));
+  ASSERT_EQ(RC::SUCCESS, db->create_table("t_lsm", attrs, {}, StorageFormat::ROW_FORMAT, StorageEngine::LSM));
   Table *table = db->find_table("t_lsm");
   ASSERT_NE(nullptr, table);
 
@@ -140,7 +139,7 @@ TEST(LsmTableEngine, crud_index_and_reopen)
   ASSERT_EQ(5, record_int(to_delete, 0));
   ASSERT_EQ(RC::SUCCESS, table->delete_record(to_delete));
 
-  key = 50;
+  key     = 50;
   scanner = v_index->create_scanner(
       reinterpret_cast<const char *>(&key), sizeof(key), true, reinterpret_cast<const char *>(&key), sizeof(key), true);
   ASSERT_NE(nullptr, scanner);
@@ -164,7 +163,7 @@ TEST(LsmTableEngine, crud_index_and_reopen)
 
   v_index = table->find_index("idx_v");
   ASSERT_NE(nullptr, v_index);
-  key = 40;
+  key     = 40;
   scanner = v_index->create_scanner(
       reinterpret_cast<const char *>(&key), sizeof(key), true, reinterpret_cast<const char *>(&key), sizeof(key), true);
   ASSERT_NE(nullptr, scanner);
@@ -234,8 +233,12 @@ TEST(LsmTableEngine, update_rewrites_value_and_indexes_and_survives_reopen)
   int           probe     = 99;
   const char   *idx_value = nullptr;
   int           idx_len   = 0;
-  IndexScanner *scanner   = v_index->create_scanner(reinterpret_cast<const char *>(&probe), sizeof(probe), true,
-      reinterpret_cast<const char *>(&probe), sizeof(probe), true);
+  IndexScanner *scanner   = v_index->create_scanner(reinterpret_cast<const char *>(&probe),
+      sizeof(probe),
+      true,
+      reinterpret_cast<const char *>(&probe),
+      sizeof(probe),
+      true);
   ASSERT_NE(nullptr, scanner);
   ASSERT_EQ(RC::SUCCESS, scanner->next_entry(idx_value, idx_len));
   Record fetched;
@@ -250,7 +253,7 @@ TEST(LsmTableEngine, update_rewrites_value_and_indexes_and_survives_reopen)
   ASSERT_EQ(RC::SUCCESS, id_changed.reset_filed(id_field->offset(), id_field->len()));
   ASSERT_EQ(RC::SUCCESS, table->set_value_to_record(id_changed.data(), value, id_field));
   ASSERT_EQ(RC::SUCCESS, table->update_record_with_trx(new_record, id_changed, trx));
-  records = scan_all(table, trx);
+  records           = scan_all(table, trx);
   bool found_new_id = false;
   for (const Record &record : records) {
     if (record_int(record, 0) == 5) {
@@ -285,9 +288,13 @@ TEST(LsmTableEngine, update_rewrites_value_and_indexes_and_survives_reopen)
 
   v_index = table->find_index("i_v");
   ASSERT_NE(nullptr, v_index);
-  probe = 99;
-  scanner = v_index->create_scanner(reinterpret_cast<const char *>(&probe), sizeof(probe), true,
-      reinterpret_cast<const char *>(&probe), sizeof(probe), true);
+  probe   = 99;
+  scanner = v_index->create_scanner(reinterpret_cast<const char *>(&probe),
+      sizeof(probe),
+      true,
+      reinterpret_cast<const char *>(&probe),
+      sizeof(probe),
+      true);
   ASSERT_NE(nullptr, scanner);
   ASSERT_EQ(RC::SUCCESS, scanner->next_entry(idx_value, idx_len));
   ASSERT_EQ(RC::SUCCESS, v_index->get_record(table, idx_value, idx_len, fetched));
@@ -296,6 +303,97 @@ TEST(LsmTableEngine, update_rewrites_value_and_indexes_and_survives_reopen)
 
   ASSERT_EQ(RC::SUCCESS, trx->commit());
   db->trx_kit().destroy_trx(trx);
+  db.reset();
+  filesystem::remove_all(dir);
+}
+
+TEST(LsmTableEngine, lsm_mvcc_occ_two_clients_interleaved_and_concurrent_update)
+{
+  filesystem::path dir = "lsm_table_engine_mvcc_test";
+  filesystem::remove_all(dir);
+  filesystem::create_directories(dir);
+
+  const char *dbname = "lsm_mvcc_db";
+  auto        db     = make_unique<Db>();
+  ASSERT_EQ(RC::SUCCESS, db->init(dbname, dir.c_str(), "lsm", "vacuous"));
+
+  vector<AttrInfoSqlNode> attrs = int_attrs();
+  ASSERT_EQ(RC::SUCCESS, db->create_table("t1", attrs, {}, StorageFormat::ROW_FORMAT, StorageEngine::LSM));
+  Table           *table   = db->find_table("t1");
+  const FieldMeta *v_field = table->table_meta().field("v");
+  ASSERT_NE(nullptr, table);
+  ASSERT_NE(nullptr, v_field);
+
+  // insert into t1 values(0, 0);
+  Record r0 = make_int_record(table, 0, 0);
+  ASSERT_EQ(RC::SUCCESS, table->insert_record(r0));
+
+  // client 1: begin;  client 2: begin;
+  Trx *c1 = db->trx_kit().create_trx(db->log_handler());
+  Trx *c2 = db->trx_kit().create_trx(db->log_handler());
+  ASSERT_EQ(RC::SUCCESS, c1->start_if_need());
+  ASSERT_EQ(RC::SUCCESS, c2->start_if_need());
+
+  // client 1: insert into t1 values(1, 1);
+  Record r1 = make_int_record(table, 1, 1);
+  ASSERT_EQ(RC::SUCCESS, c1->insert_record(table, r1));
+
+  // client 1 sees (0,0) and (1,1); client 2 only sees (0,0)
+  vector<Record> c1_rows = scan_all(table, c1);
+  vector<Record> c2_rows = scan_all(table, c2);
+  ASSERT_EQ(2u, c1_rows.size());
+  ASSERT_EQ(1u, c2_rows.size());
+  EXPECT_EQ(0, record_int(c2_rows[0], 0));
+
+  // client 1: delete from t1 where id = 0; update t1 set v = 101 where id = 1;
+  ASSERT_EQ(RC::SUCCESS, c1->delete_record(table, c1_rows[0]));
+  Record r1_updated = c1_rows[1];
+  Value  v101;
+  v101.set_int(101);
+  ASSERT_EQ(RC::SUCCESS, r1_updated.reset_filed(v_field->offset(), v_field->len()));
+  ASSERT_EQ(RC::SUCCESS, table->set_value_to_record(r1_updated.data(), v101, v_field));
+  ASSERT_EQ(RC::SUCCESS, c1->update_record(table, c1_rows[1], r1_updated));
+
+  // client 1 sees only (1, 101); client 2 still sees only (0, 0)
+  c1_rows = scan_all(table, c1);
+  c2_rows = scan_all(table, c2);
+  ASSERT_EQ(1u, c1_rows.size());
+  EXPECT_EQ(1, record_int(c1_rows[0], 0));
+  EXPECT_EQ(101, record_int(c1_rows[0], 1));
+  ASSERT_EQ(1u, c2_rows.size());
+  EXPECT_EQ(0, record_int(c2_rows[0], 0));
+
+  // client 2: insert into t1 values(3, 3);
+  Record r3 = make_int_record(table, 3, 3);
+  ASSERT_EQ(RC::SUCCESS, c2->insert_record(table, r3));
+  c2_rows = scan_all(table, c2);
+  ASSERT_EQ(2u, c2_rows.size());
+
+  // client 1: commit;
+  ASSERT_EQ(RC::SUCCESS, c1->commit());
+
+  // client 2 still sees its own snapshot {(0,0), (3,3)} before commit
+  c2_rows = scan_all(table, c2);
+  ASSERT_EQ(2u, c2_rows.size());
+  EXPECT_EQ(0, record_int(c2_rows[0], 0));
+  EXPECT_EQ(3, record_int(c2_rows[1], 0));
+
+  // client 2: commit;
+  ASSERT_EQ(RC::SUCCESS, c2->commit());
+
+  // New transaction sees merged result: {(1, 101), (3, 3)}
+  Trx *c3 = db->trx_kit().create_trx(db->log_handler());
+  ASSERT_EQ(RC::SUCCESS, c3->start_if_need());
+  vector<Record> c3_rows = scan_all(table, c3);
+  ASSERT_EQ(2u, c3_rows.size());
+  EXPECT_EQ(1, record_int(c3_rows[0], 0));
+  EXPECT_EQ(101, record_int(c3_rows[0], 1));
+  EXPECT_EQ(3, record_int(c3_rows[1], 0));
+  EXPECT_EQ(3, record_int(c3_rows[1], 1));
+
+  db->trx_kit().destroy_trx(c1);
+  db->trx_kit().destroy_trx(c2);
+  db->trx_kit().destroy_trx(c3);
   db.reset();
   filesystem::remove_all(dir);
 }

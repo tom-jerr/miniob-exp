@@ -46,6 +46,11 @@ public:
    *
    */
   RC                    build(shared_ptr<ObMemTable> mem_table, const string &file_name, uint32_t sst_id);
+  RC                    open(const string &file_name, uint32_t sst_id);
+  RC                    add(const string_view &key, const string_view &value);
+  RC                    finish();
+  size_t                estimated_size() { return curr_offset_ + block_builder_.appro_size(); }
+  uint32_t              entry_count() const { return entry_count_; }
   size_t                file_size() const { return file_size_; }
   shared_ptr<ObSSTable> get_built_table();
   void                  reset();
@@ -61,6 +66,7 @@ private:
   uint32_t                 curr_offset_ = 0;
   uint32_t                 sst_id_      = 0;
   size_t                   file_size_   = 0;
+  uint32_t                 entry_count_ = 0;
 
   ObLRUCache<uint64_t, shared_ptr<ObBlock>> *block_cache_ = nullptr;
 };

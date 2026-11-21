@@ -29,16 +29,28 @@ LogReplayer *LsmMvccTrxKit::create_log_replayer(Db &, LogHandler &) { return new
 
 RC LsmMvccTrx::insert_record(Table *table, Record &record)
 {
-   return table->insert_record_with_trx(record, this);
+  RC rc = start_if_need();
+  if (OB_FAIL(rc)) {
+    return rc;
+  }
+  return table->insert_record_with_trx(record, this);
 }
 
 RC LsmMvccTrx::delete_record(Table *table, Record &record)
 {
+  RC rc = start_if_need();
+  if (OB_FAIL(rc)) {
+    return rc;
+  }
   return table->delete_record_with_trx(record, this);
 }
 
 RC LsmMvccTrx::update_record(Table *table, Record &old_record, Record &new_record)
 {
+  RC rc = start_if_need();
+  if (OB_FAIL(rc)) {
+    return rc;
+  }
   return table->update_record_with_trx(old_record, new_record, this);
 }
 /**
@@ -60,7 +72,10 @@ RC LsmMvccTrx::commit()
   if (trx_ == nullptr) {
     return RC::SUCCESS;
   }
-  return trx_->commit();
+  RC rc = trx_->commit();
+  delete trx_;
+  trx_ = nullptr;
+  return rc;
 }
 
 RC LsmMvccTrx::rollback()
@@ -68,7 +83,10 @@ RC LsmMvccTrx::rollback()
   if (trx_ == nullptr) {
     return RC::SUCCESS;
   }
-  return trx_->rollback();
+  RC rc = trx_->rollback();
+  delete trx_;
+  trx_ = nullptr;
+  return rc;
 }
 
 /**

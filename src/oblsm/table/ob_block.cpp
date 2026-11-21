@@ -16,7 +16,28 @@ namespace oceanbase {
 
 RC ObBlock::decode(const string &data)
 {
-  return RC::UNIMPLEMENTED;
+  if (data.size() < 2 * sizeof(uint32_t)) {
+    return RC::INVALID_ARGUMENT;
+  }
+  const char *raw_ptr      = data.data();
+  uint32_t    offset_start = get_numeric<uint32_t>(raw_ptr + data.size() - sizeof(uint32_t));
+  if (offset_start + sizeof(uint32_t) > data.size() - sizeof(uint32_t)) {
+    return RC::INVALID_ARGUMENT;
+  }
+  data_.assign(raw_ptr, offset_start);
+  const char *meta_ptr    = raw_ptr + offset_start;
+  uint32_t    num_offsets = get_numeric<uint32_t>(meta_ptr);
+  meta_ptr += sizeof(uint32_t);
+  if (offset_start + (1 + num_offsets + 1) * sizeof(uint32_t) != data.size()) {
+    return RC::INVALID_ARGUMENT;
+  }
+  offsets_.clear();
+  offsets_.reserve(num_offsets);
+  for (uint32_t i = 0; i < num_offsets; ++i) {
+    offsets_.push_back(get_numeric<uint32_t>(meta_ptr));
+    meta_ptr += sizeof(uint32_t);
+  }
+  return RC::SUCCESS;
 }
 
 string_view ObBlock::get_entry(uint32_t offset) const
@@ -52,7 +73,7 @@ string BlockMeta::encode() const
 
 RC BlockMeta::decode(const string &data)
 {
-  RC rc = RC::SUCCESS;
+  RC          rc             = RC::SUCCESS;
   const char *data_ptr       = data.c_str();
   uint32_t    first_key_size = get_numeric<uint32_t>(data_ptr);
   data_ptr += sizeof(uint32_t);
@@ -70,13 +91,13 @@ RC BlockMeta::decode(const string &data)
 
 void BlockIterator::seek(const string_view &lookup_key)
 {
-   index_ = 0;
-   while(valid()) {
+  index_ = 0;
+  while (valid()) {
     parse_entry();
     if (comparator_->compare(extract_user_key(key_), extract_user_key_from_lookup_key(lookup_key)) >= 0) {
       break;
     }
     index_++;
-   }
+  }
 }
 }  // namespace oceanbase

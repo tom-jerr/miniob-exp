@@ -24,6 +24,7 @@ See the Mulan PSL v2 for more details. */
 
 class IndexScanner;
 class Table;
+class Trx;
 
 /**
  * @brief 索引
@@ -77,9 +78,12 @@ public:
    * @details 默认实现不支持。value 的语义由索引实现决定，
    * 例如 B+树二级索引保存 RID，聚簇索引保存主键编码。
    */
-  virtual RC get_record(Table *table, const char *value, int value_len, Record &record)
+  virtual RC get_record(Table *table, const char *value, int value_len, Record &record) { return RC::UNSUPPORTED; }
+
+  virtual RC get_record(Table *table, const char *value, int value_len, Record &record, Trx *trx)
   {
-    return RC::UNSUPPORTED;
+    (void)trx;
+    return get_record(table, value, value_len, record);
   }
 
   /**
@@ -126,5 +130,5 @@ public:
    * 如果没有更多的元素，返回RECORD_EOF
    */
   virtual RC next_entry(const char *&value, int &value_len) = 0;
-  virtual RC destroy()                              = 0;
+  virtual RC destroy()                                      = 0;
 };

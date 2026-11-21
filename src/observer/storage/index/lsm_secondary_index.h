@@ -23,4 +23,5 @@ public:
   ~LsmSecondaryIndex() override = default;
 
   RC get_record(Table *table, const char *value, int value_len, Record &record) override;
+  RC get_record(Table *table, const char *value, int value_len, Record &record, Trx *trx) override;
 };

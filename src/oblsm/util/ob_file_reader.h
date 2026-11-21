@@ -108,7 +108,8 @@ private:
    * This integer represents the file descriptor used for reading the file.
    * If no file is open, it is set to `-1`.
    */
-  int fd_ = -1;
+  int      fd_        = -1;
+  uint32_t file_size_ = 0;
 };
 
 }  // namespace oceanbase

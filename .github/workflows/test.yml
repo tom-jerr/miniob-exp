@@ -1,170 +1,213 @@
-# name: test
+name: test
 
-# on:
-#   pull_request:
-#     branches: [ "main" ]
+on:
+  push:
+    branches: [ "main", "feat/**", "fix/**" ]
+  pull_request:
+    branches: [ "main" ]
+  workflow_dispatch:
 
-# env:
-#   # Customize the CMake build type here (Release, Debug, RelWithDebInfo, etc.)
-#   BUILD_TYPE: Release
+concurrency:
+  group: test-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
 
-# jobs:
-#   basic-test:
-#     runs-on: ubuntu-latest
+permissions:
+  contents: read
+  pull-requests: write
 
-#     steps:
-#       - name: Checkout repository and submodules
-#         uses: actions/checkout@v4
+jobs:
+  real-sql-tests:
+    runs-on: ubuntu-latest
 
-#       - name: run basic test
-#         shell: bash
-#         run: |
-#           sudo bash build.sh init
-#           echo "begin test..."
-#           python3 test/case/miniob_test.py --test-cases=basic | tail -1 | grep "basic is success"
+    steps:
+      - name: Checkout repository and submodules
+        uses: actions/checkout@v4
+        with:
+          submodules: recursive
 
-#   # I found that sysbench would send more request before receiving last response
-#   sysbench-test:
-#     strategy:
-#       matrix:
-#         thread_model: ['one-thread-per-connection', 'java-thread-pool']
-#         test_case: ['miniob_insert', 'miniob_delete', 'miniob_select']
+      - name: Install build dependencies
+        shell: bash
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y bison flex cmake build-essential libssl-dev
 
-#     runs-on: ubuntu-latest
-#     steps:
-#       - name: Checkout repository and submodules
-#         uses: actions/checkout@v4
+      - name: Cache third-party dependencies
+        id: cache-deps
+        uses: actions/cache@v4
+        with:
+          path: deps/3rd/usr
+          key: deps-3rd-${{ runner.os }}-${{ hashFiles('build.sh', '.gitmodules') }}
 
-#       - name: install sysbench and mariadb-client
-#         shell: bash
-#         run: |
-#           curl -s https://packagecloud.io/install/repositories/akopytov/sysbench/script.deb.sh -o script.deb.sh
-#           sudo bash script.deb.sh
-#           sudo apt -y install sysbench mariadb-client
+      - name: Init third-party dependencies
+        if: steps.cache-deps.outputs.cache-hit != 'true'
+        shell: bash
+        run: sudo bash build.sh init
 
-#       - name: build miniob
-#         shell: bash
-#         run: |
-#           sudo bash build.sh init
-#           bash build.sh release -DCONCURRENCY=ON -DWITH_UNIT_TESTS=OFF
+      - name: Build Release observer
+        shell: bash
+        run: bash build.sh release -DCONCURRENCY=ON -DENABLE_ASAN=OFF -DWITH_UNIT_TESTS=OFF --make -j$(nproc)
 
-#       - name: start server
-#         shell: bash
-#         run: |
-#           nohup ./build_release/bin/observer -T ${{ matrix.thread_model }} -s /tmp/miniob.sock -f etc/observer.ini -P mysql -t mvcc -d disk 2>&1 &
-#           sleep 10 && echo "wake up"
-#           mysql --version
-#           mysql -S /tmp/miniob.sock -e "show tables"
+      - name: Run SQL regression tests (default & btree engines)
+        shell: bash
+        run: |
+          mkdir -p /tmp/miniob-sql-default
+          ln -sfn "${PWD}/build_release" /tmp/miniob-sql-default/build
+          python3 test/case/miniob_test.py \
+            --work-dir=/tmp/miniob-sql-default \
+            --compile-cmake-args="-DCMAKE_BUILD_TYPE=Release;-DCONCURRENCY=ON;-DENABLE_ASAN=OFF;-DWITH_UNIT_TESTS=OFF" \
+            --compile-make-args="-j$(nproc)" \
+            --test-cases=basic,vectorized-basic,update_heap,update_index,btree_engine,update_btree
 
-#       # error number 41 is LOCKED_CONCURRENCY_CONFLICT
-#       # we should change the error number if we update the code
-#       - name: sysbench test
-#         shell: bash
-#         run: |
-#           cd test/sysbench
-#           sysbench --mysql-socket=/tmp/miniob.sock --mysql-ignore-errors=41 --threads=10 ${{ matrix.test_case }} prepare
-#           sysbench --mysql-socket=/tmp/miniob.sock --mysql-ignore-errors=41 --threads=10 ${{ matrix.test_case }} run || { cat ../../nohup.txt*; exit 1; }
+      - name: Run SQL regression tests (Heap MVCC + disk)
+        shell: bash
+        run: |
+          mkdir -p /tmp/miniob-sql-mvcc
+          ln -sfn "${PWD}/build_release" /tmp/miniob-sql-mvcc/build
+          python3 test/case/miniob_test.py \
+            --work-dir=/tmp/miniob-sql-mvcc \
+            --server-args="-t mvcc -d disk" \
+            --compile-cmake-args="-DCMAKE_BUILD_TYPE=Release;-DCONCURRENCY=ON;-DENABLE_ASAN=OFF;-DWITH_UNIT_TESTS=OFF" \
+            --compile-make-args="-j$(nproc)" \
+            --test-cases=mvcc_update,trx_semantics
 
-#       - name: stop server
-#         shell: bash
-#         run: |
-#           mysql -S /tmp/miniob.sock -e "create table t(id int)"
-#           mysql -S /tmp/miniob.sock -e "show tables"
-#           killall observer
+      - name: Run SQL regression tests (LSM MVCC + disk)
+        shell: bash
+        run: |
+          mkdir -p /tmp/miniob-sql-lsm
+          ln -sfn "${PWD}/build_release" /tmp/miniob-sql-lsm/build
+          python3 test/case/miniob_test.py \
+            --work-dir=/tmp/miniob-sql-lsm \
+            --server-args="-t lsm -d disk" \
+            --compile-cmake-args="-DCMAKE_BUILD_TYPE=Release;-DCONCURRENCY=ON;-DENABLE_ASAN=OFF;-DWITH_UNIT_TESTS=OFF" \
+            --compile-make-args="-j$(nproc)" \
+            --test-cases=lsm_engine,update_lsm
 
-#       - name: restart server
-#         shell: bash
-#         run: |
-#           nohup ./build_release/bin/observer -T ${{ matrix.thread_model }} -s /tmp/miniob.sock -f etc/observer.ini -P mysql -t mvcc -d disk 2>&1 &
-#           sleep 10 && echo "wake up"
-#           mysql -S /tmp/miniob.sock -e "show tables"
+      - name: Run real-concurrency SQL tests (MVCC / OCC / GC)
+        shell: bash
+        run: |
+          python3 test/case/concurrency/mvcc_concurrency_test.py \
+            --observer "${PWD}/build_release/bin/observer"
 
-#       - name: sysbench test again
-#         shell: bash
-#         run: |
-#           cd test/sysbench
-#           sysbench --mysql-socket=/tmp/miniob.sock --mysql-ignore-errors=41 --threads=10 ${{ matrix.test_case }} run || { cat ../../nohup.txt*; exit 1; }
+  tpcc-correctness-and-perf:
+    runs-on: ubuntu-latest
 
-#   benchmark-test:
-#     runs-on: ubuntu-latest
-#     steps:
-#       - name: Checkout repository and submodules
-#         uses: actions/checkout@v4
+    steps:
+      - name: Checkout head repository and submodules
+        uses: actions/checkout@v4
+        with:
+          submodules: recursive
 
-#       - name: build observer and benchmark
-#         shell: bash
-#         run: |
-#           sudo bash build.sh init
-#           bash build.sh release -DCONCURRENCY=ON -DWITH_UNIT_TESTS=OFF -DWITH_BENCHMARK=ON
+      - name: Install build dependencies
+        shell: bash
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y bison flex cmake build-essential libssl-dev
 
-#       - name: concurrency-test
-#         shell: bash
-#         run: |
-#           cd build_release/bin/
-#           for file in `find ./ -name "*_concurrency_test" -executable`; do $file; if [ $? -ne 0 ]; then exit 1; fi; done
-#   memtracer-test:
-#     strategy:
-#       matrix:
-#         memtracer: ['LD_PRELOAD=./lib/libmemtracer.so', '']
-#     runs-on: ubuntu-latest
-#     steps:
-#       - name: Checkout repository and submodules
-#         uses: actions/checkout@v4
+      - name: Cache third-party dependencies
+        id: cache-deps
+        uses: actions/cache@v4
+        with:
+          path: deps/3rd/usr
+          key: deps-3rd-${{ runner.os }}-${{ hashFiles('build.sh', '.gitmodules') }}
 
-#       - name: build
-#         shell: bash
-#         run: |
-#           sudo bash build.sh init
-#           bash build.sh release -DWITH_BENCHMARK=ON -DENABLE_ASAN=OFF -DCONCURRENCY=ON -DWITH_MEMTRACER=ON
+      - name: Init third-party dependencies
+        if: steps.cache-deps.outputs.cache-hit != 'true'
+        shell: bash
+        run: sudo bash build.sh init
 
-#       - name: memtracer-performance-test
-#         shell: bash
-#         run: |
-#           cd build_release
-#           ${{matrix.memtracer}} ./benchmark/memtracer_performance_test
-#       - name: memtracer-unittest
-#         shell: bash
-#         run: |
-#           cd build_release
-#           LD_PRELOAD=./lib/libmemtracer.so ./unittest/memtracer_test
-#       - name: memtracer-sysbench
-#         shell: bash
-#         run: |
-#           curl -s https://packagecloud.io/install/repositories/akopytov/sysbench/script.deb.sh -o script.deb.sh
-#           sudo bash script.deb.sh
-#           sudo apt -y install sysbench mariadb-client
-#           nohup sh -c '${{matrix.memtracer}} ./build_release/bin/observer -T one-thread-per-connection -s /tmp/miniob.sock -f etc/observer.ini -P mysql -t mvcc -d disk' &
-#           sleep 10 && echo "wake up"
-#           mysql --version
-#           mysql -S /tmp/miniob.sock -e "show tables"
-#           cd test/sysbench
-#           sysbench --mysql-socket=/tmp/miniob.sock --mysql-ignore-errors=41 --threads=10 miniob_insert prepare
-#           sysbench --mysql-socket=/tmp/miniob.sock --mysql-ignore-errors=41 --threads=10 miniob_insert run
-#           killall observer
-#           cd ../..
-#           nohup ./build_release/bin/observer -T one-thread-per-connection -s /tmp/miniob.sock -f etc/observer.ini -P mysql -t mvcc -d disk &
-#           sleep 10 && echo "wake up"
-#           mysql -S /tmp/miniob.sock -e "show tables"
-#   integration-test:
-#     runs-on: ubuntu-latest
-#     steps:
-#       - name: Checkout repository and submodules
-#         uses: actions/checkout@v4
+      - name: Build Head Release observer
+        shell: bash
+        run: bash build.sh release -DCONCURRENCY=ON -DENABLE_ASAN=OFF -DWITH_UNIT_TESTS=OFF --make -j$(nproc)
 
-#       - name: init mysql
-#         uses: shogo82148/actions-setup-mysql@v1
-#         with:
-#           mysql-version: "8.0"
-#       - name: init
-#         shell: bash
-#         run: |
-#           sudo bash build.sh init
-#           sudo apt -y install pip python3-pymysql python3-psutil
+      - name: Run TPC-C Deterministic & Concurrent on Head
+        shell: bash
+        run: |
+          mkdir -p tpcc_reports
+          python3 test/tpcc/miniob_tpcc.py \
+            --observer "${PWD}/build_release/bin/observer" \
+            --engine lsm --trx lsm --threads 1 --transactions 200 --seed 42 \
+            --output-json tpcc_reports/head_det.json
+          python3 test/tpcc/miniob_tpcc.py \
+            --observer "${PWD}/build_release/bin/observer" \
+            --engine lsm --trx lsm --threads 4 --transactions 400 --seed 42 \
+            --output-json tpcc_reports/head_conc.json
 
-#       - name: integration test
-#         shell: bash
-#         run: |
-#           cd test/integration_test/
-#           bash ./miniob_test_docker_entry.sh
-#           python3 ./libminiob_test.py -c conf.ini
+      - name: Run TPC-C on Base branch (for PR comparison)
+        if: github.event_name == 'pull_request'
+        shell: bash
+        run: |
+          git fetch origin "${{ github.base_ref }}" --depth=1
+          git worktree add --detach _base_repo FETCH_HEAD || git clone --depth=1 --branch "${{ github.base_ref }}" . _base_repo
+          cd _base_repo
+          if [ -d ../deps/3rd/usr ]; then
+            mkdir -p deps/3rd
+            ln -sfn "${PWD}/../deps/3rd/usr" deps/3rd/usr
+          else
+            sudo bash build.sh init
+          fi
+          bash build.sh release -DCONCURRENCY=ON -DENABLE_ASAN=OFF -DWITH_UNIT_TESTS=OFF --make -j$(nproc)
+          cd ..
+          python3 test/tpcc/miniob_tpcc.py \
+            --observer "${PWD}/_base_repo/build_release/bin/observer" \
+            --engine lsm --trx lsm --threads 1 --transactions 200 --seed 42 \
+            --output-json tpcc_reports/base_det.json || true
+          python3 test/tpcc/miniob_tpcc.py \
+            --observer "${PWD}/_base_repo/build_release/bin/observer" \
+            --engine lsm --trx lsm --threads 4 --transactions 400 --seed 42 \
+            --output-json tpcc_reports/base_conc.json || true
 
+      - name: Verify TPC-C Consistency and Compare Performance
+        shell: bash
+        run: |
+          python3 test/tpcc/compare_tpcc.py \
+            --head tpcc_reports/head_det.json \
+            --base tpcc_reports/base_det.json \
+            --label "TPC-C Deterministic (1-Thread)" \
+            --check-digest \
+            --markdown-out tpcc_reports/summary_det.md
+          python3 test/tpcc/compare_tpcc.py \
+            --head tpcc_reports/head_conc.json \
+            --base tpcc_reports/base_conc.json \
+            --label "TPC-C Concurrent MVCC (4-Thread)" \
+            --markdown-out tpcc_reports/summary_conc.md
+
+      - name: Comment TPC-C Report on PR
+        if: always() && github.event_name == 'pull_request' && hashFiles('tpcc_reports/summary_*.md') != ''
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const fs = require('fs');
+            const parts = ['tpcc_reports/summary_det.md', 'tpcc_reports/summary_conc.md']
+              .filter(p => fs.existsSync(p))
+              .map(p => fs.readFileSync(p, 'utf8'));
+            if (parts.length === 0) return;
+            const marker = '<!-- miniob-tpcc-report -->';
+            const body = `${marker}\n## MiniOB CI: TPC-C 一致性与性能对比\n\n${parts.join('\n')}`;
+            const { data: comments } = await github.rest.issues.listComments({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.issue.number,
+            });
+            const existing = comments.find(c => c.body && c.body.includes(marker));
+            if (existing) {
+              await github.rest.issues.updateComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                comment_id: existing.id,
+                body,
+              });
+            } else {
+              await github.rest.issues.createComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: context.issue.number,
+                body,
+              });
+            }
+
+      - name: Upload TPC-C Reports
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: tpcc-reports
+          path: tpcc_reports/

@@ -10,6 +10,7 @@ See the Mulan PSL v2 for more details. */
 
 #include "oblsm/util/ob_file_reader.h"
 #include <fcntl.h>
+#include <sys/stat.h>
 #include <unistd.h>
 #include "common/lang/filesystem.h"
 
@@ -28,13 +29,17 @@ string ObFileReader::read_pos(uint32_t pos, uint32_t size)
     LOG_WARN("Failed to read file %s, read_size=%ld, size=%ld", filename_.c_str(), read_size, size);
     return "";
   }
-  
+
   return buf;
 }
 
 uint32_t ObFileReader::file_size()
 {
-  return filesystem::file_size(filename_);
+  struct stat st;
+  if (fd_ >= 0 && ::fstat(fd_, &st) == 0) {
+    return static_cast<uint32_t>(st.st_size);
+  }
+  return file_size_;
 }
 
 unique_ptr<ObFileReader> ObFileReader::create_file_reader(const string &filename)
@@ -50,17 +55,25 @@ unique_ptr<ObFileReader> ObFileReader::create_file_reader(const string &filename
 RC ObFileReader::open_file()
 {
   RC rc = RC::SUCCESS;
+  if (fd_ >= 0) {
+    return RC::SUCCESS;
+  }
   fd_ = ::open(filename_.c_str(), O_RDONLY);
   if (fd_ < 0) {
     LOG_WARN("Failed to open file %s", filename_.c_str());
     rc = RC::INTERNAL;
+  } else {
+    file_size_ = filesystem::file_size(filename_);
   }
   return rc;
 }
 
 void ObFileReader::close_file()
 {
-  ::close(fd_);
+  if (fd_ >= 0) {
+    ::close(fd_);
+    fd_ = -1;
+  }
 }
 
 }  // namespace oceanbase

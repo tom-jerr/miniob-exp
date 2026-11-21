@@ -1,78 +1,54 @@
-# name: build
+name: build
 
-# on:
-#   push:
-#     branches: [ "main" ]
-#   pull_request:
-#     branches: [ "main" ]
+on:
+  push:
+    branches: [ "main", "feat/**", "fix/**" ]
+  pull_request:
+    branches: [ "main" ]
+  workflow_dispatch:
 
-# env:
-#   # Customize the CMake build type here (Release, Debug, RelWithDebInfo, etc.)
-#   BUILD_TYPE: Release
+concurrency:
+  group: build-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
 
-# jobs:
-#   build-and-test-on-ubuntu:
-#     # The CMake configure and build commands are platform agnostic and should work equally well on Windows or Mac.
-#     # You can convert this to a matrix build if you need cross-platform coverage.
-#     # See: https://docs.github.com/en/free-pro-team@latest/actions/learn-github-actions/managing-complex-workflows#using-a-build-matrix
-#     runs-on: ubuntu-latest
+jobs:
+  build-and-unittest:
+    runs-on: ubuntu-latest
 
-#     steps:
-#     - name: Checkout repository and submodules
-#       uses: actions/checkout@v4
+    steps:
+      - name: Checkout repository and submodules
+        uses: actions/checkout@v4
+        with:
+          submodules: recursive
 
-#     - name: Init
-#       shell: bash
-#       run: sudo bash build.sh init
+      - name: Install build dependencies
+        shell: bash
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y bison flex cmake build-essential libssl-dev
 
-#     - name: BuildRelease
-#       shell: bash
-#       run: bash build.sh release --make -j4
+      - name: Cache third-party dependencies
+        id: cache-deps
+        uses: actions/cache@v4
+        with:
+          path: deps/3rd/usr
+          key: deps-3rd-${{ runner.os }}-${{ hashFiles('build.sh', '.gitmodules') }}
 
-#     - name: BuildDebug
-#       shell: bash
-#       run: bash build.sh debug -DCONCURRENCY=ON -DENABLE_COVERAGE=ON --make -j4
+      - name: Init third-party dependencies
+        if: steps.cache-deps.outputs.cache-hit != 'true'
+        shell: bash
+        run: sudo bash build.sh init
 
-#     # `memtracer_test` unittest runs in `memtracer-test` action.
-#     - name: Test
-#       shell: bash
-#       run: |
-#         cd build_debug
-#         ctest -E memtracer_test --verbose
+      - name: Build Debug with Concurrency
+        shell: bash
+        run: bash build.sh debug -DCONCURRENCY=ON --make -j$(nproc)
 
-#     - name: lcov
-#       shell: bash
-#       run: |
-#         export DEBIAN_FRONTEND=noninteractive
-#         sudo apt-get update && sudo apt-get install -y lcov
-#         cd build_debug
-#         rm -rf unittest
-#         lcov -c -d ./ -o coverage.info --ignore-errors source
+      - name: Run Unit Tests (CTest)
+        shell: bash
+        run: |
+          cd build_debug
+          ctest -E memtracer_test --output-on-failure
 
-#     - uses: codecov/codecov-action@v3
-#       with:
-#         file: build_debug/coverage.info
-#         token: ${{ secrets.CODECOV_TOKEN }}
-
-#   build-on-mac:
-#     # The CMake configure and build commands are platform agnostic and should work equally well on Windows or Mac.
-#     # You can convert this to a matrix build if you need cross-platform coverage.
-#     # See: https://docs.github.com/en/free-pro-team@latest/actions/learn-github-actions/managing-complex-workflows#using-a-build-matrix
-#     runs-on: macos-latest
-
-#     steps:
-#     - name: Init environment
-#       shell: bash
-#       run: |
-#         brew install bison
-
-#     - name: Checkout repository and submodules
-#       uses: actions/checkout@v4
-
-#     - name: Build
-#       shell: bash
-#       run: |
-#         export ASAN_OPTIONS=detect_container_overflow=0
-#         export PATH="/opt/homebrew/opt/bison/bin:$PATH"
-#         sudo bash build.sh init
-#         bash build.sh release --make -j4
+      - name: Build Release
+        shell: bash
+        run: bash build.sh release -DCONCURRENCY=ON -DWITH_UNIT_TESTS=OFF --make -j$(nproc)

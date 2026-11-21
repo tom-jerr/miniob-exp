@@ -13,10 +13,14 @@ See the Mulan PSL v2 for more details. */
 #include "common/sys/rc.h"
 #include "common/lang/string_view.h"
 #include "common/lang/string.h"
+#include "common/lang/vector.h"
+#include "common/lang/memory.h"
+#include <unordered_set>
 #include "oblsm/include/ob_lsm_iterator.h"
 #include "oblsm/include/ob_lsm_options.h"
 #include "oblsm/include/ob_lsm.h"
 #include "oblsm/memtable/ob_skiplist.h"
+#include "oblsm/table/ob_sstable.h"
 #include "oblsm/util/ob_arena.h"
 #include "oblsm/util/ob_coding.h"
 #include "common/lang/map.h"
@@ -25,93 +29,51 @@ namespace oceanbase {
 
 /**
  * @class ObLsmTransaction
- * @brief A class representing a transaction in oblsm.
- *
- * The `ObLsmTransaction` class provides functionality for transactional operations
- * on oblsm. It enables reading, writing, deleting, and iterating
- * over keys/values in the database within a transactional scope. Transactions can be
- * committed or rollback, ensuring atomicity and isolation.
+ * @brief A class representing a transaction in oblsm supporting MVCC + OCC and Spill-to-Disk WriteBatch.
  */
 class ObLsmTransaction
 {
 public:
-  /**
-   * @brief Constructor.
-   *
-   * Initializes a transaction object and associates it with a specific LSM database.
-   * Assigns a unique timestamp (`ts`) to the transaction.
-   *
-   * @param db A pointer to the `ObLsm` database on which this transaction operates.
-   * @param ts The timestamp for the transaction.
-   */
   ObLsmTransaction(ObLsm *db, uint64_t ts);
 
-  ~ObLsmTransaction() = default;
+  ~ObLsmTransaction();
 
-  /*
-   * @brief Retrieves the value associated with a given key.
-   *
-   * @param key The key to look up within the database.
-   * @param value A pointer to a string where the associated value will be stored, if found.
-   */
   RC get(const string_view &key, string *value);
 
-  /**
-   * @brief Adds or updates a key-value pair within the transaction's in-memory store.
-   */
   RC put(const string_view &key, const string_view &value);
 
-  /**
-   * @brief Removes a key from the database within the transaction's scope.
-   *
-   * This method marks the specified key for removal, but it is not persisted to the database until the transaction is
-   * committed.
-   */
   RC remove(const string_view &key);
 
-  /**
-   * The iterator allows traversal of keys and values within the database. Options can define
-   * how data is accessed, such as timestamp.
-   *
-   * @param options The `ObLsmReadOptions` that define the read behavior of the iterator.
-   * @return A pointer to the newly created `ObLsmIterator` object.
-   */
   ObLsmIterator *new_iterator(ObLsmReadOptions options);
 
-  /**
-   * @brief Commits the transaction, persisting all transaction changes to the database.
-   *
-   */
   RC commit();
 
-  /**
-   * @brief Rollback the transaction, discarding all uncommitted changes.
-   */
   RC rollback();
 
+  void                      set_isolation_level(TransactionIsolationLevel level) { isolation_level_ = level; }
+  TransactionIsolationLevel isolation_level() const { return isolation_level_; }
+  uint64_t                  ts() const { return ts_; }
+  size_t                    spill_count() const { return spill_sstables_.size(); }
+
 private:
-  /**
-   * @brief Pointer to the associated `ObLsm` database.
-   *
-   * This member variable links the transaction to its underlying database, ensuring that
-   * all transactional operations target the correct storage layer.
-   */
-  ObLsm *db_ = nullptr;
+  RC             spill_inner_store_to_disk();
+  void           cleanup_spill_files();
+  ObLsmIterator *new_write_batch_iterator() const;
 
-  /**
-   * @brief The transaction's unique timestamp.
-   *
-   */
-  uint64_t ts_ = 0;
+  ObLsm                    *db_              = nullptr;
+  uint64_t                  ts_              = 0;
+  uint64_t                  trx_uid_         = 0;
+  TransactionIsolationLevel isolation_level_ = TransactionIsolationLevel::SNAPSHOT_ISOLATION;
 
-  /**
-   * @brief In-memory store for transactional changes.
-   *
-   * This map holds key-value pairs that have been inserted or removed within the
-   * transaction scope but not yet committed to the database. It's used to track changes
-   * and ensure atomicity during commit operations.
-   */
-  map<string, string> inner_store_;
+  map<string, string>           inner_store_;
+  size_t                        current_batch_bytes_ = 0;
+  size_t                        max_batch_bytes_     = 4 * 1024 * 1024;
+  vector<shared_ptr<ObSSTable>> spill_sstables_;
+
+  std::unordered_set<string> read_set_;
+  std::unordered_set<string> write_set_;
+  bool                       committed_   = false;
+  bool                       rolled_back_ = false;
 };
 
 /**
@@ -119,5 +81,50 @@ private:
  * @brief An iterator for traversing the transaction's in-memory store
  */
 class TrxInnerMapIterator : public ObLsmIterator
-{};
+{
+public:
+  explicit TrxInnerMapIterator(const map<string, string> &store) : store_(store), iter_(store_.end()), valid_(false) {}
+  ~TrxInnerMapIterator() override = default;
+
+  bool valid() const override { return valid_ && iter_ != store_.end(); }
+
+  void seek_to_first() override
+  {
+    iter_  = store_.begin();
+    valid_ = (iter_ != store_.end());
+  }
+
+  void seek_to_last() override
+  {
+    if (store_.empty()) {
+      iter_  = store_.end();
+      valid_ = false;
+    } else {
+      iter_  = std::prev(store_.end());
+      valid_ = true;
+    }
+  }
+
+  void seek(const string_view &key) override
+  {
+    iter_  = store_.lower_bound(string(key));
+    valid_ = (iter_ != store_.end());
+  }
+
+  void next() override
+  {
+    if (valid_ && iter_ != store_.end()) {
+      ++iter_;
+      valid_ = (iter_ != store_.end());
+    }
+  }
+
+  string_view key() const override { return iter_->first; }
+  string_view value() const override { return iter_->second; }
+
+private:
+  const map<string, string>          &store_;
+  map<string, string>::const_iterator iter_;
+  bool                                valid_ = false;
+};
 }  // namespace oceanbase
