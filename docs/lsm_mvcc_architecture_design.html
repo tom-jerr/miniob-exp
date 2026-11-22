@@ -1,0 +1,567 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>MiniOB LSM-Tree · MVCC/OCC · SQL 聚合与工程门禁 架构设计手册</title>
+  <style>
+    :root {
+      --bg: #f8fafc;
+      --surface: #ffffff;
+      --surface-alt: #f1f5f9;
+      --text: #0f172a;
+      --text-muted: #475569;
+      --border: #e2e8f0;
+      --accent: #2563eb;
+      --accent-soft: #eff6ff;
+      --teal: #0d9488;
+      --teal-soft: #f0fdfa;
+      --purple: #7c3aed;
+      --purple-soft: #f5f3ff;
+      --amber: #d97706;
+      --amber-soft: #fffbeb;
+      --ok: #16a34a;
+      --ok-soft: #f0fdf4;
+      --code-bg: #0f172a;
+      --code-text: #e2e8f0;
+      --shadow: 0 1px 3px rgba(15, 23, 42, 0.06), 0 6px 16px rgba(15, 23, 42, 0.05);
+      --radius: 12px;
+    }
+
+    [data-theme="dark"] {
+      --bg: #0b1120;
+      --surface: #111827;
+      --surface-alt: #1e293b;
+      --text: #f1f5f9;
+      --text-muted: #94a3b8;
+      --border: #1f2937;
+      --accent: #60a5fa;
+      --accent-soft: rgba(59, 130, 246, 0.14);
+      --teal: #2dd4bf;
+      --teal-soft: rgba(20, 184, 166, 0.14);
+      --purple: #c084fc;
+      --purple-soft: rgba(168, 85, 247, 0.14);
+      --amber: #fbbf24;
+      --amber-soft: rgba(245, 158, 11, 0.14);
+      --ok: #4ade80;
+      --ok-soft: rgba(34, 197, 94, 0.14);
+      --code-bg: #020617;
+      --code-text: #e2e8f0;
+      --shadow: 0 2px 10px rgba(0, 0, 0, 0.4);
+    }
+
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      line-height: 1.68;
+    }
+
+    .layout {
+      display: grid;
+      grid-template-columns: 260px 1fr;
+      max-width: 1380px;
+      margin: 0 auto;
+      gap: 24px;
+      padding: 24px 20px 64px;
+    }
+
+    @media (max-width: 960px) {
+      .layout { grid-template-columns: 1fr; }
+      .sidebar { position: static !important; }
+    }
+
+    /* Sidebar */
+    .sidebar {
+      position: sticky;
+      top: 20px;
+      align-self: start;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 18px 16px;
+      box-shadow: var(--shadow);
+    }
+    .sidebar h2 {
+      margin: 0 0 12px;
+      font-size: 0.92rem;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+    .nav-list {
+      list-style: none;
+      margin: 0;
+      padding: 0;
+    }
+    .nav-list li { margin-bottom: 4px; }
+    .nav-list a {
+      display: block;
+      padding: 7px 10px;
+      border-radius: 8px;
+      color: var(--text);
+      text-decoration: none;
+      font-size: 0.88rem;
+      font-weight: 500;
+      transition: background 0.15s, color 0.15s;
+    }
+    .nav-list a:hover, .nav-list a.active {
+      background: var(--accent-soft);
+      color: var(--accent);
+    }
+    .theme-btn {
+      margin-top: 14px;
+      width: 100%;
+      padding: 8px 12px;
+      border-radius: 8px;
+      border: 1px solid var(--border);
+      background: var(--surface-alt);
+      color: var(--text);
+      cursor: pointer;
+      font-size: 0.85rem;
+      font-weight: 600;
+    }
+
+    /* Hero */
+    .hero {
+      background: linear-gradient(135deg, #0f172a 0%, #1d4ed8 60%, #0d9488 100%);
+      color: #fff;
+      padding: 32px 36px;
+      border-radius: 16px;
+      margin-bottom: 24px;
+      box-shadow: var(--shadow);
+    }
+    .hero h1 {
+      margin: 0 0 8px;
+      font-size: 1.72rem;
+      line-height: 1.3;
+    }
+    .hero p {
+      margin: 0;
+      color: #dbeafe;
+      font-size: 0.95rem;
+      max-width: 820px;
+    }
+    .pill-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-top: 14px;
+    }
+    .pill {
+      font-size: 0.78rem;
+      font-weight: 600;
+      padding: 4px 10px;
+      border-radius: 999px;
+      background: rgba(255, 255, 255, 0.16);
+      border: 1px solid rgba(255, 255, 255, 0.25);
+    }
+
+    /* Cards & Sections */
+    .section-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 24px 28px;
+      margin-bottom: 22px;
+      box-shadow: var(--shadow);
+      scroll-margin-top: 20px;
+    }
+    .section-head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 10px;
+      padding-bottom: 12px;
+      margin-bottom: 16px;
+      border-bottom: 2px solid var(--border);
+    }
+    .section-head h2 {
+      margin: 0;
+      font-size: 1.24rem;
+    }
+    .badge {
+      font-size: 0.78rem;
+      font-weight: 600;
+      padding: 3px 10px;
+      border-radius: 999px;
+    }
+    .badge-blue { background: var(--accent-soft); color: var(--accent); }
+    .badge-teal { background: var(--teal-soft); color: var(--teal); }
+    .badge-purple { background: var(--purple-soft); color: var(--purple); }
+    .badge-amber { background: var(--amber-soft); color: var(--amber); }
+    .badge-ok { background: var(--ok-soft); color: var(--ok); }
+
+    h3 {
+      margin: 18px 0 8px;
+      font-size: 1.03rem;
+      color: var(--text);
+    }
+    p, li { font-size: 0.93rem; }
+    ul, ol { padding-left: 20px; margin: 6px 0 12px; }
+
+    /* Subgrid */
+    .grid-2 {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(290px, 1fr));
+      gap: 14px;
+      margin: 12px 0;
+    }
+    .mini-box {
+      background: var(--surface-alt);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 14px 16px;
+    }
+    .mini-box h4 {
+      margin: 0 0 6px;
+      font-size: 0.94rem;
+      color: var(--accent);
+    }
+
+    /* Flow Steps */
+    .flow-steps {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(175px, 1fr));
+      gap: 10px;
+      margin: 14px 0;
+    }
+    .step {
+      background: var(--surface-alt);
+      border: 1px solid var(--border);
+      border-top: 3px solid var(--accent);
+      border-radius: 10px;
+      padding: 12px 14px;
+      font-size: 0.87rem;
+    }
+    .step-num {
+      font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+      font-size: 0.76rem;
+      font-weight: 700;
+      color: var(--accent);
+      margin-bottom: 4px;
+    }
+    .step strong { display: block; margin-bottom: 4px; }
+
+    /* SVG Diagram */
+    .diagram-wrap {
+      background: var(--surface-alt);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 14px;
+      overflow-x: auto;
+      margin: 12px 0;
+    }
+    svg text {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", sans-serif;
+    }
+
+    /* Tables */
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.88rem;
+      margin: 10px 0;
+    }
+    th, td {
+      padding: 9px 12px;
+      border-bottom: 1px solid var(--border);
+      text-align: left;
+      vertical-align: top;
+    }
+    th {
+      background: var(--surface-alt);
+      color: var(--text-muted);
+      font-weight: 600;
+    }
+
+    code {
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+      font-size: 0.85em;
+      background: var(--surface-alt);
+      padding: 2px 6px;
+      border-radius: 5px;
+      border: 1px solid var(--border);
+    }
+    pre {
+      background: var(--code-bg);
+      color: var(--code-text);
+      padding: 13px 16px;
+      border-radius: 9px;
+      overflow-x: auto;
+      font-size: 0.83rem;
+      line-height: 1.5;
+      margin: 10px 0;
+    }
+    pre code {
+      background: none;
+      border: none;
+      padding: 0;
+      color: inherit;
+    }
+  </style>
+</head>
+<body>
+  <div class="layout">
+    <aside class="sidebar">
+      <h2>架构文档导航</h2>
+      <ul class="nav-list">
+        <li><a href="#overview" class="active">1. 总体分层架构</a></li>
+        <li><a href="#lsm-core">2. LAB#1 LSM-Tree 核心</a></li>
+        <li><a href="#pluggable-mem">3. 可插拔 MemTable (B+Tree/SkipList)</a></li>
+        <li><a href="#mvcc-occ">4. LSM MVCC / OCC 与大事务 Spill</a></li>
+        <li><a href="#sql-agg">5. SQL 聚合与负数字面量</a></li>
+        <li><a href="#tpcc-gate">6. Pre-Commit 门禁与 TPC-C 自测</a></li>
+      </ul>
+      <button class="theme-btn" id="themeBtn" type="button">切换深色 / 浅色</button>
+    </aside>
+
+    <main>
+      <header class="hero">
+        <h1>MiniOB LSM-Tree · MVCC/OCC · SQL 聚合与工程化门禁 架构设计手册</h1>
+        <p>全面梳理本次提交涵盖的 5 大子系统：LAB#1 LSM-Tree 存储内核、可插拔并发 MemTable、Snapshot Isolation / Serializable MVCC+OCC 与 Spill WriteBatch、SQL 聚合与负数字面量解析，以及 Pre-Commit + TPC-C 压测体系。</p>
+        <div class="pill-row">
+          <span class="pill">ObLsm (SkipList CAS / BlockCache / Leveled)</span>
+          <span class="pill">ObMemBPlusTree</span>
+          <span class="pill">MVCC + OCC + Spill SST</span>
+          <span class="pill">MIN / MAX / COUNT / SUM / AVG</span>
+          <span class="pill">TPC-C LSM 4-Thread</span>
+        </div>
+      </header>
+
+      <!-- 1. Overview -->
+      <section class="section-card" id="overview">
+        <div class="section-head">
+          <h2>1. 总体分层架构</h2>
+          <span class="badge badge-blue">End-to-End Architecture</span>
+        </div>
+        <p>MiniOB 的 SQL 执行层、事务管理层与 LSM 存储引擎通过清晰接口解耦：SQL 解析与算子层负责语法、表达式求值与标量/分组聚合；<code>LsmTableEngine</code> 与 <code>LsmMvccTrx</code> 将关系表 CRUD 与二级索引点查接入 <code>ObLsmTransaction</code>；底层 <code>ObLsmImpl</code> 提供可插拔 MemTable、WAL 持久化、Block Cache、SSTable 与 Leveled Compaction。</p>
+
+        <div class="diagram-wrap">
+          <svg viewBox="0 0 920 340" width="100%" height="auto" role="img" aria-label="MiniOB LSM 总体分层架构图">
+            <defs>
+              <marker id="arrow" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+                <path d="M 0 1 L 10 5 L 0 9 z" fill="#64748b"/>
+              </marker>
+            </defs>
+            <!-- Layer 1: SQL -->
+            <rect x="20" y="14" width="880" height="62" rx="10" fill="#eff6ff" stroke="#3b82f6" stroke-width="1.5"/>
+            <text x="38" y="38" fill="#1d4ed8" font-size="13" font-weight="700">SQL 解析与执行层 (yacc_sql.y · aggregator.cpp · ScalarGroupBy · Update/Delete · IndexScan)</text>
+            <text x="38" y="59" fill="#334155" font-size="12">MIN / MAX / COUNT / SUM / AVG · 0 行空聚合 · signed_value 负数字面量 · IndexScan 不可见记录跳过</text>
+
+            <line x1="460" y1="76" x2="460" y2="100" stroke="#64748b" stroke-width="1.8" marker-end="url(#arrow)"/>
+
+            <!-- Layer 2: Engine & Trx -->
+            <rect x="20" y="102" width="880" height="72" rx="10" fill="#f0fdfa" stroke="#0d9488" stroke-width="1.5"/>
+            <text x="38" y="126" fill="#0f766e" font-size="13" font-weight="700">存储引擎与事务适配层 (LsmTableEngine · LsmMvccTrx · LsmSecondaryIndex)</text>
+            <text x="38" y="147" fill="#334155" font-size="12">Record / Key 编码 (Codec) · UPDATE/DELETE 事务写入 · 二级索引通过 Trx* 走主表 MVCC 快照回表过滤</text>
+            <text x="38" y="164" fill="#334155" font-size="12">默认 Snapshot Isolation (OCC 写写冲突) · 可选 Serializable (读写集冲突防 Write Skew)</text>
+
+            <line x1="460" y1="174" x2="460" y2="198" stroke="#64748b" stroke-width="1.8" marker-end="url(#arrow)"/>
+
+            <!-- Layer 3: ObLsm Transaction & MemTable -->
+            <rect x="20" y="200" width="430" height="122" rx="10" fill="#f5f3ff" stroke="#7c3aed" stroke-width="1.5"/>
+            <text x="38" y="224" fill="#6d28d9" font-size="13" font-weight="700">ObLsmTransaction (MVCC + OCC + Spill)</text>
+            <text x="38" y="246" fill="#334155" font-size="12">• ts_ = seq_.load() (1-based 已提交版本水位)</text>
+            <text x="38" y="265" fill="#334155" font-size="12">• inner_store_ 超限溢出至 trx_spill_*.sst</text>
+            <text x="38" y="284" fill="#334155" font-size="12">• TrxIterator 归并 Active + Spill + DB Snapshot</text>
+            <text x="38" y="303" fill="#334155" font-size="12">• batch_put 先写 WAL 后批量落 MemTable</text>
+
+            <rect x="470" y="200" width="430" height="122" rx="10" fill="#fffbeb" stroke="#d97706" stroke-width="1.5"/>
+            <text x="488" y="224" fill="#b45309" font-size="13" font-weight="700">ObLsmImpl (可插拔 MemTable &amp; SSTable)</text>
+            <text x="488" y="246" fill="#334155" font-size="12">• MemTable: SkipList (CAS) / ObMemBPlusTree</text>
+            <text x="488" y="265" fill="#334155" font-size="12">• Block Cache: 线程安全 O(1) ObLRUCache</text>
+            <text x="488" y="284" fill="#334155" font-size="12">• LeveledCompactionPicker: L0-&gt;L1 &amp; Li-&gt;Li+1</text>
+            <text x="488" y="303" fill="#334155" font-size="12">• POSIX unlink 安全并发读 + ObManifest fstat</text>
+          </svg>
+        </div>
+      </section>
+
+      <!-- 2. LAB#1 -->
+      <section class="section-card" id="lsm-core">
+        <div class="section-head">
+          <h2>2. LAB#1 LSM-Tree 核心实现</h2>
+          <span class="badge badge-amber">Storage Kernel</span>
+        </div>
+
+        <div class="grid-2">
+          <div class="mini-box">
+            <h4>任务 1：SkipList 无锁并发写入</h4>
+            <ul>
+              <li>实现 <code>find_greater_or_equal</code>，自顶向下定位每层前驱节点数组 <code>prev[]</code>；</li>
+              <li><code>insert</code> 用于单写者路径；<code>insert_concurrently</code> 使用 <code>thread_local</code> 随机数生成器避免跨线程伪共享，并自底向上逐层执行 <code>compare_exchange_strong</code>（CAS），失败时在当前层重新推进前驱节点再重试；</li>
+              <li><code>seq</code>/<code>acquire-release</code> 内存序保证并发读者无需加锁即可安全遍历。</li>
+            </ul>
+          </div>
+          <div class="mini-box">
+            <h4>任务 2：Block Cache 与 SSTable 读写</h4>
+            <ul>
+              <li><code>ObLRUCache</code> 采用双向链表 + 哈希表 + 互斥锁，实现线程安全 O(1) <code>get/put</code>；</li>
+              <li><code>ObBlock::decode</code> 按小端长度前缀解码 KV 与重启点元数据；</li>
+              <li><code>ObSSTable::init</code> 读取 Footer 还原 Index Block，<code>read_block_with_cache</code> 先查 <code>(sst_id, block_offset)</code> 缓存，未命中再 <code>pread</code> 回填。</li>
+            </ul>
+          </div>
+        </div>
+
+        <h3>任务 3：Leveled Compaction 流程</h3>
+        <div class="flow-steps">
+          <div class="step">
+            <div class="step-num">STEP 1 · PICK</div>
+            <strong>范围选盘</strong>
+            <code>LeveledCompactionPicker::pick</code> 优先检查 L0 文件数是否超阈，否则选最大字节溢出层 <code>L_i</code>；计算 <code>[min_user_key, max_user_key]</code> 并选出 <code>L_{i+1}</code> 重叠 SSTables。
+          </div>
+          <div class="step">
+            <div class="step-num">STEP 2 · MERGE</div>
+            <strong>多路归并去重</strong>
+            <code>do_compaction</code> 构造多路归并迭代器，保留相同 user_key 的最新 <code>seq</code>（若所有快照都不再需要旧版本且无更低层数据，清理墓碑）。
+          </div>
+          <div class="step">
+            <div class="step-num">STEP 3 · BUILD</div>
+            <strong>流式落盘</strong>
+            通过 <code>ObSSTableBuilder</code>（<code>open/add/finish</code>）按目标 <code>table_size</code> 切分生成新 SSTable，直接写入 <code>L_{i+1}</code>。
+          </div>
+          <div class="step">
+            <div class="step-num">STEP 4 · SWITCH</div>
+            <strong>原子切换与回收</strong>
+            持久化 <code>ObManifest</code>，持锁切换版本列表；旧 SSTable 仅执行 POSIX <code>unlink</code>，由并发读线程的 <code>shared_ptr</code> RAII 安全关闭 <code>fd</code>。
+          </div>
+        </div>
+      </section>
+
+      <!-- 3. Pluggable MemTable -->
+      <section class="section-card" id="pluggable-mem">
+        <div class="section-head">
+          <h2>3. 可插拔 MemTable（SkipList / 并发 B+Tree）</h2>
+          <span class="badge badge-purple">ObMemBPlusTree</span>
+        </div>
+        <p>通过 <code>ObLsmOptions::memtable_type</code>（<code>MemTableType::SKIPLIST</code> / <code>MemTableType::BPLUS_TREE</code>）在运行期无感切换内存索引结构，二者向上暴露完全统一的 <code>ObMemTable::new_iterator()</code> 接口并刷写为完全一致的磁盘 SSTable 格式。</p>
+        <ul>
+          <li><strong>并发控制</strong>：<code>ObMemBPlusTree</code> 使用节点/树级 <code>std::shared_mutex</code>（读共享、写独占），支持节点自动分裂与根节点上升；</li>
+          <li><strong>抗游标漂移迭代器</strong>：<code>ObMemBPlusTree::Iterator</code> 缓存上一次返回的 <code>current_key_</code>。在两次调用间隙若写线程向同一叶子插入更小键导致数组右移，<code>next()</code> 重新持锁后校验偏移并自动回退至 <code>std::upper_bound(current_key_)</code> 重定位，严格保证扫描单调不重复。</li>
+        </ul>
+      </section>
+
+      <!-- 4. MVCC + OCC + Spill -->
+      <section class="section-card" id="mvcc-occ">
+        <div class="section-head">
+          <h2>4. LSM MVCC / OCC 事务引擎与 Spill-to-Disk</h2>
+          <span class="badge badge-teal">Concurrency &amp; Scalability</span>
+        </div>
+
+        <h3>4.1 快照版本与隔离级别控制</h3>
+        <table>
+          <thead>
+            <tr>
+              <th>机制维度</th>
+              <th>默认：Snapshot Isolation (SI)</th>
+              <th>可选：Serializable</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><strong>快照水位</strong></td>
+              <td>开启事务时读取 <code>ts_ = seq_.load()</code>（1-based 分配，保证空库 <code>ts_=0</code> 不越界）</td>
+              <td>同左</td>
+            </tr>
+            <tr>
+              <td><strong>写集缓存</strong></td>
+              <td>未提交写暂存 <code>inner_store_</code>（读己之写优先命中写集）</td>
+              <td>同左 + <code>read_set_</code> / <code>scan_ranges_</code> 记录读轨迹</td>
+            </tr>
+            <tr>
+              <td><strong>提交校验 (OCC)</strong></td>
+              <td>在 <code>commit_mtx_</code> 临界区检查写集中每个键的最新提交序号是否 <code>&gt; ts_</code>（First-Committer-Wins，消除 Lost Update）</td>
+              <td>额外校验 <code>read_set_</code> 与区间扫描范围内是否有并发提交更新（消除 Write Skew）</td>
+            </tr>
+            <tr>
+              <td><strong>原子持久化</strong></td>
+              <td><code>ObLsmImpl::batch_put</code> 先写整体 WAL 批次，再统一分配新 <code>seq</code> 写入 MemTable</td>
+              <td>同左</td>
+            </tr>
+          </tbody>
+        </table>
+
+        <h3>4.2 大事务 Spill-to-Disk WriteBatch 与二级索引协同</h3>
+        <div class="grid-2">
+          <div class="mini-box">
+            <h4>Spill-to-Disk 溢出流程</h4>
+            <ol>
+              <li>当事务写集字节数超过 <code>max_write_batch_size</code>，将当前 <code>inner_store_</code> 流式刷写为临时 <code>trx_{uid}_spill_{idx}.sst</code> 并清空内存表；</li>
+              <li><code>get()</code> / <code>TrxIterator</code> 按「Active 内存写集 → 逆序 Spill SSTables → DB Snapshot」三级归并读取；</li>
+              <li><code>commit()</code> 时通过 <code>MultiLevelWriteBatchIterator</code> 分块流式调用 <code>batch_put</code> 落盘，提交/回滚/析构时自动清理所有临时 Spill 文件。</li>
+            </ol>
+          </div>
+          <div class="mini-box">
+            <h4>LsmTableEngine &amp; 二级索引</h4>
+            <ol>
+              <li><code>LsmSecondaryIndex::get_record(key, rid, trx)</code> 接收 <code>Trx *</code> 参数，经由 <code>LsmMvccTrx</code> 的 <code>ObLsmTransaction::get()</code> 读取主表快照，不可见则返回 <code>RC::RECORD_INVISIBLE</code>；</li>
+              <li><code>IndexScanPhysicalOperator</code> 遇到 <code>RECORD_INVISIBLE</code> 自动跳过；</li>
+              <li><code>LsmTableEngine::update_record_with_trx</code> 支持 LSM MVCC <code>UPDATE</code>：保留旧二级索引条目供历史快照回表，更新非索引列时忽略同键 <code>RECORD_DUPLICATE_KEY</code>。</li>
+            </ol>
+          </div>
+        </div>
+      </section>
+
+      <!-- 5. SQL Aggregation -->
+      <section class="section-card" id="sql-agg">
+        <div class="section-head">
+          <h2>5. SQL 聚合函数与负数字面量解析</h2>
+          <span class="badge badge-blue">SQL Frontend &amp; Executor</span>
+        </div>
+        <ul>
+          <li><strong>语法扩展（0 Bison 冲突）</strong>：在 <code>yacc_sql.y</code> 增加 <code>ID LBRACE expression RBRACE</code> 与 <code>ID LBRACE RBRACE</code> 解析聚合调用；新增独立非终结符 <code>signed_value</code>（支持 <code>value | '-' NUMBER | '-' FLOAT</code>）用于 <code>INSERT</code>、<code>UPDATE</code>、<code>WHERE</code> 与 <code>SET</code>，避免与表达式一元负号 <code>'-' expression %prec UMINUS</code> 冲突。</li>
+          <li><strong>全量聚合算子</strong>：在 <code>aggregator.h/.cpp</code> 与 <code>expression.cpp</code> 实现 NULL-safe 的 <code>MIN</code>、<code>MAX</code>、<code>COUNT</code>、<code>SUM</code>、<code>AVG</code>，正确推导 <code>COUNT(*)->INTS</code> 与 <code>AVG->FLOATS</code>；</li>
+          <li><strong>空表标量聚合</strong>：<code>ScalarGroupByPhysicalOperator</code> 在子算子返回 0 行时仍初始化空分组产出 1 行（<code>COUNT(*)=0</code>，其余为 <code>UNDEFINED</code> 并在 <code>Value::to_string()</code> 输出 <code>"NULL"</code>）。</li>
+        </ul>
+      </section>
+
+      <!-- 6. Pre-commit & TPC-C -->
+      <section class="section-card" id="tpcc-gate">
+        <div class="section-head">
+          <h2>6. Pre-Commit 门禁与 TPC-C 自测体系</h2>
+          <span class="badge badge-ok">Quality &amp; Benchmark</span>
+        </div>
+        <p>本地日常提交通过 <code>tools/pre_commit_check.sh</code> 执行快速静态与并发门禁（约 1 分钟）；全量 LSM MVCC 4 线程 TPC-C 压测与磁盘长压测按需在自测阶段显式开启。</p>
+        <pre><code># 1. TPC-C 4 线程并发性能 LSM MVCC 自测命令（400 事务，验证 CC1~CC6）
+python3 test/tpcc/miniob_tpcc.py \
+  --observer "$(pwd)/build_release/bin/observer" \
+  --engine lsm --trx lsm --threads 4 --transactions 400 --seed 42
+
+# 2. 完整自测模式（含全量 CTest + MVCC 并发测试 + TPC-C 1T/4T 基线回归校验）
+RUN_TPCC=1 TPCC_FAIL_ON_REGRESSION=1 CTEST_EXCLUDE=memtracer_test bash tools/pre_commit_check.sh</code></pre>
+      </section>
+    </main>
+  </div>
+
+  <script>
+    (function () {
+      const root = document.documentElement;
+      const btn = document.getElementById("themeBtn");
+      if (localStorage.getItem("miniob-arch-theme") === "dark") {
+        root.setAttribute("data-theme", "dark");
+      }
+      btn.addEventListener("click", () => {
+        const next = root.getAttribute("data-theme") === "dark" ? "" : "dark";
+        if (next) {
+          root.setAttribute("data-theme", "dark");
+          localStorage.setItem("miniob-arch-theme", "dark");
+        } else {
+          root.removeAttribute("data-theme");
+          localStorage.removeItem("miniob-arch-theme");
+        }
+      });
+
+      const links = Array.from(document.querySelectorAll(".nav-list a"));
+      links.forEach((a) => {
+        a.addEventListener("click", () => {
+          links.forEach((x) => x.classList.remove("active"));
+          a.classList.add("active");
+        });
+      });
+    })();
+  </script>
+</body>
+</html>
